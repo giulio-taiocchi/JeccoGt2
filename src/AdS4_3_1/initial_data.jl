@@ -65,7 +65,6 @@ Base.@kwdef struct BoostedBBnumerical{T} <: InitialData
     AH_pos      :: T   = 1.0
     ahf         :: AHF = AHF()
     a3_ampx	:: T = 0.0
-    fx_amp	:: T = 0.0
     a3_translx	:: T = 0.0
     A		:: T = 0.0
     B		:: T = 0.0
@@ -101,14 +100,15 @@ function (id::InitialData)(bulkconstrains, bulkevols, bulkderivs, boundary::Boun
 
     # solve nested system for the constrained variables
     nested(bulkevols, boundary, gauge, evoleq)
-
+    println("solved first nested")
     # find the Apparent Horizon
     sigma = similar(gauge.xi)
     fill!(sigma, 1/AH_pos)  # initial guess
+    println("AH_pos")
     find_AH!(sigma, bulkconstrains[end], bulkevols[end], bulkderivs[end], gauge,
              horizoncache, systems[end], id.ahf)
     MaxAH=maximum(sigma)
-    println("The horizon found is r=$MaxAH")
+    println("The horizon found is at rax=$MaxAH")
     println("AH_pos is $AH_pos")
     nothing
 end
@@ -470,41 +470,7 @@ function init_data!(ff::Gauge, sys::System, id::BlackBranePert)
     ff
 end
 
-analytic_B(u, x, y) = 0
-analytic_G(u, x, y)  = 0
 
-function init_data!(ff::Boundary, sys::System)
-    a3  = geta3(ff)
-    fx1 = getfx1(ff)
-    fy1 = getfy1(ff)
-
-    epsilon = id.energy_dens
-
-
-    a30 = (-epsilon) / 2
-
-    fill!(a3, a30)
-    fill!(fx1, 0)
-    fill!(fy1, 0)
-
-    ff
-end
-
-function init_data!(ff::Gauge, sys::System)
-    epsilon = id.energy_dens
-    AH_pos  = id.AH_pos
-
-    a30 = (-epsilon) / 2
-
-    # TODO: this guess works best for the conformal case. is there a better one?
-    xi0 = (-a30)^0.25 - 1/AH_pos
-
-    xi  = getxi(ff)
-
-    fill!(xi, xi0)
-
-    ff
-end
 
 
 #QNM in 1D initial data
@@ -678,6 +644,7 @@ function analytic_B(i, j, k, u, x, y, id::BoostedBBnumerical, whichsystem)
 	
 	#println("B in u=$uu index: $i is $Bvalue")
 	#println("THIS IS SYSTEM NUMBER $whichsystem")
+	
 	Bvalue
 end
 analytic_G(i, j, k, u, x, y, id::BoostedBBnumerical,whichsystem)  = 0
@@ -694,7 +661,6 @@ function init_data!(ff::Boundary, sys::System, id::BoostedBBnumerical)
     fy1 = getfy1(ff)
     ampx = id.a3_ampx
     transl = id.a3_translx
-    ampfx = id.fx_amp
     phfx = id.phase_fx
     pha = id.phase_a
     AA = id.A

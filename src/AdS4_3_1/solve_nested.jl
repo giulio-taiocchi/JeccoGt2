@@ -192,7 +192,6 @@ function solve_S!(bulk::Bulk, bc::BC, gauge::Gauge, deriv::BulkDeriv, aux_acc,
 
         end
     end
-    println("S solved")
 
     nothing
 end
@@ -318,7 +317,6 @@ function solve_Fxy!(bulk::Bulk, bc::BC, gauge::Gauge, deriv::BulkDeriv, aux_acc,
 
         end
     end
-    println("Fxy solved")
     nothing
 end
 
