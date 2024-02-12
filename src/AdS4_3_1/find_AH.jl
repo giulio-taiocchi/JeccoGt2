@@ -357,6 +357,8 @@ function find_AH!(sigma::Array, bulkconstrain::BulkConstrained,
         # interpolate bulk functions (and u-derivatives) to the 1/u = r = sigma surface
         @inbounds Threads.@threads for j in 1:Ny
             @inbounds for i in 1:Nx
+                sigmaij = sigma[1,i,j]
+                println("$sigmaij")
                 uAH = 1 / sigma[1,i,j]
                 u2  = uAH * uAH
                 u3  = uAH * uAH * uAH
@@ -385,6 +387,7 @@ function find_AH!(sigma::Array, bulkconstrain::BulkConstrained,
         end
 
         compute_residual_AH!(res, sigma, gauge, cache, sys)
+        println("After residual computation")
         max_res = maximum(abs.(res))
         println("    $it \t $max_res")
 
