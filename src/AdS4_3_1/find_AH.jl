@@ -358,7 +358,6 @@ function find_AH!(sigma::Array, bulkconstrain::BulkConstrained,
         @inbounds Threads.@threads for j in 1:Ny
             @inbounds for i in 1:Nx
                 sigmaij = sigma[1,i,j]
-                println("$sigmaij")
                 uAH = 1 / sigma[1,i,j]
                 u2  = uAH * uAH
                 u3  = uAH * uAH * uAH
@@ -387,8 +386,9 @@ function find_AH!(sigma::Array, bulkconstrain::BulkConstrained,
         end
 
         compute_residual_AH!(res, sigma, gauge, cache, sys)
-        println("After residual computation")
         max_res = maximum(abs.(res))
+        min_res = minimun(abs.(res))
+        println("After residual computation, max $max_res, min $min_res")
         println("    $it \t $max_res")
 
         if max_res < ahf.epsilon
