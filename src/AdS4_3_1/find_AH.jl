@@ -387,7 +387,7 @@ function find_AH!(sigma::Array, bulkconstrain::BulkConstrained,
 
         compute_residual_AH!(res, sigma, gauge, cache, sys)
         max_res = maximum(abs.(res))
-        min_res = minimun(abs.(res))
+        min_res = -maximum(-abs.(res))
         println("After residual computation, max $max_res, min $min_res")
         println("    $it \t $max_res")
 

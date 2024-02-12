@@ -103,7 +103,6 @@ function (id::InitialData)(bulkconstrains, bulkevols, bulkderivs, boundary::Boun
     # find the Apparent Horizon
     sigma = similar(gauge.xi)
     fill!(sigma, 1/AH_pos)  # initial guess
-    println("$AH_pos")
     find_AH!(sigma, bulkconstrains[end], bulkevols[end], bulkderivs[end], gauge,
              horizoncache, systems[end], id.ahf)
     MaxAH=maximum(sigma)
