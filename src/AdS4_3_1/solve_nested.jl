@@ -905,20 +905,10 @@ function set_innerBCs!(bc::BC, bulk::BulkEvolved, boundary::Boundary,
             
             bc.Fy[i,j]   = fy1
             #bc.Fy_u[i,j] = - 2 * fy1 * xi + 3/2 * (b13_y+ g3_x)
-            bc.Fy_u[i,j] = - fy1 * xi + 3/4 * (b13_y+ g3_x)
+            bc.Fy_u[i,j] = 0#- fy1 * xi + 3/4 * (b13_y+ g3_x)
            
             
-            #fyu = - 2 * fy1 * xi + 3/2 * (b13_y+ g3_x)
-            #if i==1
-            #	if j==5
-            #		println("b13= $b13")
-            #		println("fy1 = $fy1")
-            #		println("xi = $xi")
-            #		println("b13_y = $b13_y")
-            #		println("g3_x = $g3_x")
-            #		println("fyu = $fyu")
-            #	end
-            #end
+            
 
             bc.Sd[i,j] = a3 /2
 
