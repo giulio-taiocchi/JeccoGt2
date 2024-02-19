@@ -143,26 +143,32 @@ function solve_S!(bulk::Bulk, bc::BC, gauge::Gauge, deriv::BulkDeriv, aux_acc,
     # Dxx = sys.Dxx
     # Dy  = sys.Dy
     # Dyy = sys.Dyy
+    source = evoleq.source
 
 
     @fastmath @inbounds @threads for j in 1:Ny
+    	y = sys.ycoord[j]
         @inbounds for i in 1:Nx
             id  = Threads.threadid()
             aux = aux_acc[id]
 
             xi  = gauge.xi[1,i,j]
+            x = sys.xcoord[i]
 
             @inbounds @simd for a in 1:Nu
-                u     = sys.ucoord[a]
+                u = sys.ucoord[a]
+                
 
-                B    = bulk.B[a,i,j]
-                G     = bulk.G[a,i,j]
+                B = bulk.B[a,i,j]
+                G = bulk.G[a,i,j]
 
 
-                Bp   = -u*u * Du_B[a,i,j]
-                Gp    = -u*u * Du_G[a,i,j]
+                Bp = -u*u * Du_B[a,i,j]
+                Gp = -u*u * Du_G[a,i,j]
+                S0 = S0(x, y, source)
+                S0_t = S0_t(x, y, source)
 
-                vars = (u, xi, B, Bp, G, Gp)
+                vars = (S0, S0_t, u, xi, B, Bp, G, Gp)
 
                 S_eq_coeff!(aux.ABCS, vars, sys.gridtype)
 
@@ -214,6 +220,7 @@ function solve_Fxy!(bulk::Bulk, bc::BC, gauge::Gauge, deriv::BulkDeriv, aux_acc,
     Dy  = sys.Dy
     Dyy = sys.Dyy
 
+    
 
     @fastmath @inbounds @threads for j in 1:Ny
         @inbounds for i in 1:Nx
