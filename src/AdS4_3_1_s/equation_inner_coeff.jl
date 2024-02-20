@@ -59,8 +59,6 @@ end
 function S_eq_coeff!(ABCS::Vector, vars::Tuple, ::Inner)
     (S0, S0_t, u, xi, B, Bp, G, Gp) = vars
 
-  test = S0
-  println("$test")
 x0 = u ^ 6
 x1 = u ^ 5
 x2 = u ^ 4

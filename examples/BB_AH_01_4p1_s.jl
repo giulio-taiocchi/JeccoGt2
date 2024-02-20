@@ -24,8 +24,8 @@ id   = BlackBrane(
 
 
 evoleq = AffineNull(
-    source = NoSource()
-    #gaugecondition = ConstantAH(u_AH = 1.0),
+    source = NoSource(),
+    gaugecondition = ConstantAH(u_AH = 1.0),
     #gaugecondition = ConstantAH(u_AH = 0.5),
 )
 
@@ -33,7 +33,7 @@ io = InOut(
     out_boundary_every  = 10,
     #out_bulk_every      = 500,
     out_gauge_every     = 10,
-    # remove_existing     = true,
+    remove_existing     = true,
 )
 
 integration = Integration(

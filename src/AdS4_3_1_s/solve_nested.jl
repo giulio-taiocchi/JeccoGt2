@@ -164,8 +164,7 @@ function solve_S!(bulk::Bulk, bc::BC, gauge::Gauge, deriv::BulkDeriv, aux_acc,
 
 
                 Bp = -u*u * Du_B[a,i,j]
-                Gp = -u*u * Du_G[a,i,j]
-                println("$x , $y")
+                Gp = -u*u * Du_G[a,i,j]          
                 S0 = Sz(x, y, source)
                 S0_t = Sz_t(x, y, source)
 
