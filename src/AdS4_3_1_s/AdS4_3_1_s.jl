@@ -60,6 +60,9 @@ include("utils.jl")
 include("recipes.jl")
 
 
+include("source.jl")
+
+
 # always set the number of BLAS threads to 1 upon loading the module. by default
 # it uses a bunch of them and we don't want that since they trample over each
 # other when solving the nested systems equations. it's much better to thread
@@ -74,7 +77,7 @@ function __init__()
 end
 
 export SpecCartGrid3D
-export Source, NoSource
+export source, NoSource
 export BlackBrane, BlackBranePert, BlackBrane_xi1
 export Advect_xi, ConstantAH, AHF
 export AffineNull, EvolTest0
