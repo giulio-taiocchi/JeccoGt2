@@ -71,6 +71,10 @@ function setup_rhs(tmp::EvolVars, bulkconstrains::BulkPartition{Nsys},
         end
         sync_bulkevolved!(bulkevols_t, bulkconstrains, gauge_t, systems, evoleq)
 
+	println("t in setup_RHS is $t")
+	sour = evoleq.source
+	sour.time = t
+	
         nothing
     end
 end

@@ -165,6 +165,9 @@ function run_model(grid::SpecCartGrid3D, id::InitialData, evoleq::EvolutionEquat
         # diagnostics
         vprint("INFO: diagnostics")
         diag()
+        
+        # update time for the source
+        ###               ###
 
         # checkpoint
         if telapsed >= last_checkpoint_walltime + io.checkpoint_every_walltime_hours
