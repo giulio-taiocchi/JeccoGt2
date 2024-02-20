@@ -1,4 +1,3 @@
-
 using Jecco.AdS4_3_1
 
 grid = SpecCartGrid3D(
