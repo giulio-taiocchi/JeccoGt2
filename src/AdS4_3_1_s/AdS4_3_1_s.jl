@@ -18,7 +18,7 @@ include("types.jl")
 
 include("system.jl")
 
-#include("potential.jl")
+include("potential.jl")
 
 include("initial_data.jl")		
 
