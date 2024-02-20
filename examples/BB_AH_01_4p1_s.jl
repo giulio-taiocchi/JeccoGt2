@@ -21,8 +21,11 @@ id   = BlackBrane(
    AH_pos = 1.0001,
 )
 
+
+
 evoleq = AffineNull(
-    gaugecondition = ConstantAH(u_AH = 1.0),
+    source = NoSource()
+    #gaugecondition = ConstantAH(u_AH = 1.0),
     #gaugecondition = ConstantAH(u_AH = 0.5),
 )
 

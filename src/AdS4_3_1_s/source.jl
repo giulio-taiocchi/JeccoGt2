@@ -1,8 +1,8 @@
 
 struct NoSource <: Source end
 
-S0(x, y, ::NoSource) = 1
-S0_t(x, y, ::NoSource) = 0
+Sz(x, y, ::NoSource) = 1
+Sz_t(x, y, ::NoSource) = 0
 
 
 

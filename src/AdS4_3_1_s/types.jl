@@ -1,6 +1,6 @@
 
 """
-Extend this type for different `Potential` choices
+Extend this type for different `Source` choices
 """
 abstract type Source end
 
