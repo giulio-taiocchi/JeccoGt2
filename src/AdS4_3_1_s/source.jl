@@ -7,6 +7,6 @@ Sz(x, y, ::NoSource) = 1
 Sz_t(x, y, ::NoSource) = 0
 
 
-
+@inline getSourcetime(ff::Source) = ff.time
 
 

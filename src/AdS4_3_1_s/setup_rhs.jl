@@ -73,7 +73,8 @@ function setup_rhs(tmp::EvolVars, bulkconstrains::BulkPartition{Nsys},
 
 	println("t in setup_RHS is $t")
 	sour = evoleq.source
-	sour.time = t
+	time = getSourcetime(sour)
+	time = t
 	
         nothing
     end
