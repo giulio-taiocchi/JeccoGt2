@@ -144,7 +144,8 @@ function solve_S!(bulk::Bulk, bc::BC, gauge::Gauge, deriv::BulkDeriv, aux_acc,
     # Dy  = sys.Dy
     # Dyy = sys.Dyy
     source = evoleq.source
-
+    test = source.time
+    println("$test")
 
     @fastmath @inbounds @threads for j in 1:Ny
     	y = sys.ycoord[j]
