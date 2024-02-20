@@ -30,9 +30,9 @@ evoleq = AffineNull(
 )
 
 io = InOut(
-    out_boundary_every  = 10,
-    #out_bulk_every      = 500,
-    out_gauge_every     = 10,
+    #out_boundary_every  = 10,
+    out_bulk_every      = 1,
+    #out_gauge_every     = 10,
     remove_existing     = true,
 )
 

@@ -53,7 +53,7 @@ end
 # (A d_uu + B d_u + C Id) f = -S
 
 function S_eq_coeff!(ABCS::Vector, vars::Tuple, ::Outer)
-    (u, xi, B, Bp, G, Gp) = vars
+    (S0, S0_t, u, xi, B, Bp, G, Gp) = vars
 	
 	ABCS[1] = 4*u^4
 
