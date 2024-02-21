@@ -2,7 +2,7 @@
 """
 Extend this type for different `Source` choices
 """
-abstract type Source end
+abstract type Source{T} end
 
 """
 Extend this type for different `InitialData` choices
@@ -120,6 +120,8 @@ end
 
 
 abstract type AbstractVars{T} <: AbstractVector{T} end
+
+
 
 struct BulkEvolved{T} <: AbstractVars{T}
     B  :: Array{T,3}

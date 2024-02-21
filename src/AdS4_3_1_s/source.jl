@@ -1,5 +1,5 @@
 
-Base.@kwdef struct NoSource{T} <: Source 
+Base.@kwdef struct NoSource{T} <: Source{T} 
 	time :: T = 0.0
 end
 
