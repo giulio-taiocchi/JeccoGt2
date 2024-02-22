@@ -2,7 +2,7 @@
 """
 Extend this type for different `Source` choices
 """
-abstract type Source{T}  end
+abstract type Source  end
 
 """
 Extend this type for different `InitialData` choices

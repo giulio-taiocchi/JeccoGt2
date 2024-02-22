@@ -60,7 +60,7 @@ Base.@kwdef struct QNM_1D{T} <: InitialData
     ahf         :: AHF = AHF()
 end
 
-Base.@kwdef struct BoostedBBnumerical{T} <: InitialData
+Base.@kwdef struct BoostedBBnumerical{T} <: ID_ConstantAH
     #energy_dens :: T   = 5.0
     AH_pos      :: T   = 1.0
     ahf         :: AHF = AHF()
