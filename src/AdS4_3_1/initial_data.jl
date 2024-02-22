@@ -68,6 +68,7 @@ Base.@kwdef struct BoostedBBnumerical{T} <: ID_ConstantAH
     a3_translx	:: T = 0.0
     A		:: T = 0.0
     B		:: T = 0.0
+    C		:: T = 0.0
     phase_a	:: T = 0.0
     phase_fx	:: T = 0.0
 end
@@ -663,6 +664,7 @@ function init_data!(ff::Boundary, sys::System, id::BoostedBBnumerical)
     pha = id.phase_a
     AA = id.A
     BB = id.B
+    CC = id.C
 
 
     fill!(a3, 0)
@@ -673,7 +675,7 @@ function init_data!(ff::Boundary, sys::System, id::BoostedBBnumerical)
                 x = xx[i]
                 y = yy[j]         
                 a3[1,i,j] = transl + ampx * cos(pha*π*y)
-                fx1[1,i,j] = AA * cos(phfx*π*y) * sqrt(BB+cos(phfx*π*y) *cos(phfx*π*y))
+                fx1[1,i,j] = AA * cos(phfx*π*y) * sqrt(BB+ CC * cos(phfx*π*y) *cos(phfx*π*y))
         end
     end
     ff
