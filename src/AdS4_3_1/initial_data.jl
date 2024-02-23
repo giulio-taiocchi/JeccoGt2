@@ -60,7 +60,7 @@ Base.@kwdef struct QNM_1D{T} <: InitialData
     ahf         :: AHF = AHF()
 end
 
-Base.@kwdef struct BoostedBBnumerical{T} <: ID_ConstantAH
+Base.@kwdef struct BoostedBBSeminumerical{T} <: ID_ConstantAH
     #energy_dens :: T   = 5.0
     AH_pos      :: T   = 1.0
     ahf         :: AHF = AHF()
@@ -71,6 +71,12 @@ Base.@kwdef struct BoostedBBnumerical{T} <: ID_ConstantAH
     C		:: T = 0.0
     phase_a	:: T = 0.0
     phase_fx	:: T = 0.0
+end
+
+Base.@kwdef struct BoostedBBnumerical{T} <: ID_ConstantAH
+    #energy_dens :: T   = 5.0
+    AH_pos      :: T   = 1.0
+    ahf         :: AHF = AHF()
 end
 
 Base.@kwdef struct BBnumerical{T} <: InitialData
@@ -614,43 +620,25 @@ function init_data!(ff::Gauge, sys::System, id::BB3Dnumerical)
     ff
 end
 
-#numerical boosted Black Brane
-function analytic_B(i, j, k, u, x, y, id::BoostedBBnumerical, whichsystem)
+#Semi numerical boosted Black Brane
+function analytic_B(i, j, k, u, x, y, id::BoostedBBSeminumerical, whichsystem)
 	uu = u
 	initialB=h5open("/home/giulio/University/PhD/JeccoNewTest/Jecco_G/examples/InitialB_BBB.h5")
 	system_index = string(whichsystem+1)
 	dset=initialB[system_index]
 	B=read(dset)
-	#Bvalue = parse(Float64,B[i])
 	# here the indecex have to be inverted since julia and mathematica input and output mechanism is the opposite
 	# should be B[i,j,k]
 	Bvalue = B[k,j,i]
 	
-	#if i==1
-	#	if j==5					        
-	#		println("k = $k  ::  y = $y")
-	#	end
-	#end
-	
-	#if j==5
-	#	if k==5
-	#		if whichsystem==0
-	#		        
-	#			println("B in u=$uu index: $i is $Bvalue with pecision $Bprec")
-	#		end
-	#	end
-	#end
-	
-	#println("B in u=$uu index: $i is $Bvalue")
-	#println("THIS IS SYSTEM NUMBER $whichsystem")
 	
 	Bvalue
 end
-analytic_G(i, j, k, u, x, y, id::BoostedBBnumerical,whichsystem)  = 0
+analytic_G(i, j, k, u, x, y, id::BoostedBBSeminumerical,whichsystem)  = 0
 
 
 
-function init_data!(ff::Boundary, sys::System, id::BoostedBBnumerical)
+function init_data!(ff::Boundary, sys::System, id::BoostedBBSeminumerical)
     _, Nx, Ny = size(sys)
     xx = sys.xcoord
     yy = sys.ycoord
@@ -681,6 +669,80 @@ function init_data!(ff::Boundary, sys::System, id::BoostedBBnumerical)
     ff
 end
 
+function init_data!(ff::Gauge, sys::System, id::BoostedBBSeminumerical)
+    _, Nx, Ny = size(sys)
+    xx = sys.xcoord
+    yy = sys.ycoord
+    AH_pos  = id.AH_pos
+    
+    xi  = getxi(ff)
+    fill!(xi, 0)
+    
+    
+    #for j in 1:Ny
+    #    for i in 1:Nx      
+    #            x = xx[i]
+    #            y = yy[j]         
+    #            xi[1,i,j] = 1/4*(1-cos(2*π*x)*cos(2*π*x))
+    #    end
+    #end
+    ff
+end
+
+
+# Numerical boosted Black Brane
+function analytic_B(i, j, k, u, x, y, id::BoostedBBnumerical, whichsystem)
+	uu = u
+	initialB=h5open("/home/giulio/University/PhD/JeccoNewTest/Jecco_G/examples/InitialB_BBB.h5")
+	system_index = string(whichsystem+1)
+	dset=initialB[system_index]
+	B=read(dset)
+	# here the indecex have to be inverted since julia and mathematica input and output mechanism is the opposite
+	# should be B[i,j,k]
+	Bvalue = B[k,j,i]
+	
+	
+	Bvalue
+end
+analytic_G(i, j, k, u, x, y, id::BoostedBBnumerical,whichsystem)  = 0
+
+
+
+function init_data!(ff::Boundary, sys::System, id::BoostedBBnumerical)
+    _, Nx, Ny = size(sys)
+    xx = sys.xcoord
+    yy = sys.ycoord
+    
+    a3  = geta3(ff)
+    fx1 = getfx1(ff)
+    fy1 = getfy1(ff)
+    ampx = id.a3_ampx
+    transl = id.a3_translx
+    phfx = id.phase_fx
+    pha = id.phase_a
+    AA = id.A
+    BB = id.B
+    CC = id.C
+
+
+    fill!(a3, 0)
+    fill!(fx1, 0)
+    fill!(fy1, 0)
+    a3data = h5open("/home/giulio/University/PhD/JeccoNewTest/Jecco_G/examples/Initiala3_BBB.h5")
+    fxdata = h5open("/home/giulio/University/PhD/JeccoNewTest/Jecco_G/examples/Initialfx_BBB.h5")
+    a3read = read(a3data[a3])
+    fxread = read(fxdata[fx])
+    for j in 1:Ny
+        for i in 1:Nx      
+                x = xx[i]
+                y = yy[j]         
+                a3[1,i,j] = a3read[j,i]
+                fx1[1,i,j] = fxread[j,i]
+        end
+    end
+    ff
+end
+
 function init_data!(ff::Gauge, sys::System, id::BoostedBBnumerical)
     _, Nx, Ny = size(sys)
     xx = sys.xcoord
@@ -700,5 +762,6 @@ function init_data!(ff::Gauge, sys::System, id::BoostedBBnumerical)
     #end
     ff
 end
+
 
 
