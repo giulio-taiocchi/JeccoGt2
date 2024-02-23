@@ -716,13 +716,7 @@ function init_data!(ff::Boundary, sys::System, id::BoostedBBnumerical)
     a3  = geta3(ff)
     fx1 = getfx1(ff)
     fy1 = getfy1(ff)
-    ampx = id.a3_ampx
-    transl = id.a3_translx
-    phfx = id.phase_fx
-    pha = id.phase_a
-    AA = id.A
-    BB = id.B
-    CC = id.C
+    
 
 
     fill!(a3, 0)
