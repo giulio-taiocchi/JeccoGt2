@@ -220,6 +220,9 @@ function solve_Fxy!(bulk::Bulk, bc::BC, gauge::Gauge, deriv::BulkDeriv, aux_acc,
     Dxx = sys.Dxx
     Dy  = sys.Dy
     Dyy = sys.Dyy
+    
+    source = evoleq.source
+    test = source.time
 
     
 
@@ -262,9 +265,11 @@ function solve_Fxy!(bulk::Bulk, bc::BC, gauge::Gauge, deriv::BulkDeriv, aux_acc,
                 Spp   = 2*u3 * Du_S[a,i,j] + u4 * Duu_S[a,i,j]
                 Sp_x  = -u2 * Dx(Du_S, a,i,j)
                 Sp_y  = -u2 * Dy(Du_S, a,i,j)
+                S0 = Sz(test, x, y, source)
+                S0_t = Sz_t(test, x, y, source)
 
                 vars = (
-                    u, xi, xi_x, xi_y,
+                    S0, S0_t, u, xi, xi_x, xi_y,
                     B     ,     G      ,       S      ,
                     Bp    ,     Gp     ,       Sp     ,
                     Bpp   ,     Gpp    ,       Spp    ,
@@ -348,6 +353,9 @@ function solve_Sd!(bulk::Bulk, bc::BC, gauge::Gauge, deriv::BulkDeriv, aux_acc,
     Dxx = sys.Dxx
     Dy  = sys.Dy
     Dyy = sys.Dyy
+    
+    source = evoleq.source
+    test = source.time
 
     #potential = evoleq.potential
 
@@ -425,9 +433,11 @@ function solve_Sd!(bulk::Bulk, bc::BC, gauge::Gauge, deriv::BulkDeriv, aux_acc,
 
                 G_xy       = Dx(Dy, bulk.G,  a,i,j)
                 S_xy       = Dx(Dy, bulk.S,  a,i,j)
+                S0 = Sz(test, x, y, source)
+                S0_t = Sz_t(test, x, y, source)
 
                 vars = (
-                     u, xi, xi_x, xi_y, xi_xx, xi_yy, xi_xy,
+                     S0, S0_t, u, xi, xi_x, xi_y, xi_xx, xi_yy, xi_xy,
         B     ,        G      ,        S      ,    Fx     ,    Fy     ,
         Bp    ,        Gp     ,        Sp     ,    Fxp    ,    Fyp    ,
         Bpp   ,        Gpp    ,        Spp    ,    Fxpp   ,    Fypp   ,
@@ -490,6 +500,8 @@ function solve_BdGd!(bulk::Bulk, bc::BC, gauge::Gauge, deriv::BulkDeriv, aux_acc
     Dy  = sys.Dy
     Dyy = sys.Dyy
 
+    source = evoleq.source
+    test = source.time
 
     @fastmath @inbounds @threads for j in 1:Ny
         @inbounds for i in 1:Nx
@@ -567,9 +579,11 @@ function solve_BdGd!(bulk::Bulk, bc::BC, gauge::Gauge, deriv::BulkDeriv, aux_acc
 
                 G_xy       = Dx(Dy, bulk.G,  a,i,j)
                 S_xy       = Dx(Dy, bulk.S,  a,i,j)
+                S0 = Sz(test, x, y, source)
+                S0_t = Sz_t(test, x, y, source)
 
                 vars = (
-                    u, xi, xi_x, xi_y, xi_xx, xi_yy, xi_xy,
+                    S0, S0_t, u, xi, xi_x, xi_y, xi_xx, xi_yy, xi_xy,
                     B     ,        G      ,    S      ,    Fx     ,    Fy     ,  Sd,
                     Bp    ,        Gp     ,    Sp     ,    Fxp    ,    Fyp    ,
                     Bpp   ,        Gpp    ,    Spp    ,    Fxpp   ,    Fypp   ,
@@ -643,6 +657,9 @@ function solve_A!(bulk::Bulk, bc::BC, gauge::Gauge, deriv::BulkDeriv, aux_acc,
     Dxx = sys.Dxx
     Dy  = sys.Dy
     Dyy = sys.Dyy
+    
+    source = evoleq.source
+    test = source.time
 
     #potential = evoleq.potential
 
@@ -723,9 +740,11 @@ function solve_A!(bulk::Bulk, bc::BC, gauge::Gauge, deriv::BulkDeriv, aux_acc,
 
                 G_xy       = Dx(Dy, bulk.G,  a,i,j)
                 S_xy       = Dx(Dy, bulk.S,  a,i,j)
+                S0 = Sz(test, x, y, source)
+                S0_t = Sz_t(test, x, y, source)
 
                 vars = (
-                     u, xi, xi_x, xi_y, xi_xx, xi_yy, xi_xy,
+                     S0, S0_t, u, xi, xi_x, xi_y, xi_xx, xi_yy, xi_xy,
                     B   , G   , S    , Fx    , Fy    , Sd, Bd, Gd, 
                     Bp  , Gp  , Sp   , Fxp   , Fyp   ,
                     Bpp  ,Gpp , Spp  , Fxpp  , Fypp  ,
