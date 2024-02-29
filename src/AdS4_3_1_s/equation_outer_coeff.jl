@@ -453,7 +453,7 @@ end
 
 function xi_t_eq_coeff(vars::Tuple, ::Outer)
     (
-        kappa, xi, xi_x, xi_y, xi_xx, xi_yy, xi_xy,
+       S0, S0_t,  kappa, xi, xi_x, xi_y, xi_xx, xi_yy, xi_xy,
         B   ,  G   ,  S    , Fx    , Fy    , Sd ,  Bd  , Gd,  A   ,
         Bp  ,  Gp  ,  Sp   , Fxp   , Fyp   , Sdp,  Bdp , Gdp, Ap  ,
         Bpp ,  Gpp ,  Spp  , Fxpp  , Fypp  ,                   App ,

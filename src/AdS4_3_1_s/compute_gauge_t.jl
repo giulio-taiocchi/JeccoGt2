@@ -61,12 +61,16 @@ function compute_xi_t!(gauge_t::Gauge, bulkconstrain::BulkConstrained,
                        gaugecondition::ConstantAH, evoleq::AffineNull)
     _, Nx, Ny = size(sys)
     bulk = Bulk(bulkevol, bulkconstrain)
-
+    
     Du  = sys.Du
     Dx  = sys.Dx
     Dxx = sys.Dxx
     Dy  = sys.Dy
     Dyy = sys.Dyy
+
+    # calling the time from the evoleq structure, needed for a time dependent source.
+    source = evoleq.source
+    test = source.time
 
     interp = sys.uinterp
 
@@ -168,7 +172,9 @@ function compute_xi_t!(gauge_t::Gauge, bulkconstrain::BulkConstrained,
 
     # coefficients of the derivative operators
     @fastmath @inbounds Threads.@threads for j in 1:Ny
+        y = sys.ycoord[j]
         @inbounds for i in 1:Nx
+            x = sys.xcoord[i]
             idx   = ind2D[i,j]
 
             xi    = gauge.xi[1,i,j]
@@ -263,9 +269,12 @@ function compute_xi_t!(gauge_t::Gauge, bulkconstrain::BulkConstrained,
             B_xy    = Dx(Dy, B_uAH,  1,i,j)
             G_xy    = Dx(Dy, G_uAH,  1,i,j)
             S_xy    = Dx(Dy, S_uAH,  1,i,j)
+            
+            S0 = Sz(test, x, y, source)
+            S0_t = Sz_t(test, x, y, source)
 
             vars =  (
-                kappa, xi, xi_x, xi_y, xi_xx, xi_yy, xi_xy,
+                S0, S0_t, kappa, xi, xi_x, xi_y, xi_xx, xi_yy, xi_xy,
                 B   , G   ,  S    , Fx    , Fy    , Sd ,  Bd  , Gd, A   ,
                 Bp  , Gp  ,  Sp   , Fxp   , Fyp   , Sdp,  Bdp , Gdp,       Ap  ,
                 Bpp , Gpp ,        Spp  , Fxpp  , Fypp  ,                                App ,
