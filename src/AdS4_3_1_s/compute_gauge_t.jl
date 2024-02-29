@@ -1,7 +1,7 @@
 
 function compute_xi_t!(gauge_t::Gauge, bulkconstrain::BulkConstrained,
                        bulkevol::BulkEvolved, deriv::BulkDeriv, gauge::Gauge,
-                       cache::HorizonCache, sys::System{Outer}, ::ConstantGauge)
+                       cache::HorizonCache, sys::System{Outer}, ::ConstantGauge,evoleq::AffineNull)
     xi_t = getxi(gauge_t)
     fill!(xi_t, 0)
     nothing
@@ -10,7 +10,7 @@ end
 
 function compute_xi_t!(gauge_t::Gauge, bulkconstrain::BulkConstrained,
                        bulkevol::BulkEvolved, deriv::BulkDeriv, gauge::Gauge,
-                       cache::HorizonCache, sys::System{Outer}, gaugecondition::Advect_xi)
+                       cache::HorizonCache, sys::System{Outer}, gaugecondition::Advect_xi,evoleq::AffineNull)
     _, Nx, Ny = size(sys)
 
     Dx  = sys.Dx
@@ -58,7 +58,7 @@ convergence order.
 function compute_xi_t!(gauge_t::Gauge, bulkconstrain::BulkConstrained,
                        bulkevol::BulkEvolved, deriv::BulkDeriv, gauge::Gauge,
                        cache::HorizonCache, sys::System{Outer},
-                       gaugecondition::ConstantAH)
+                       gaugecondition::ConstantAH, evoleq::AffineNull)
     _, Nx, Ny = size(sys)
     bulk = Bulk(bulkevol, bulkconstrain)
 

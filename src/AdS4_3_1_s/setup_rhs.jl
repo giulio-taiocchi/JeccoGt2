@@ -59,7 +59,7 @@ function setup_rhs(tmp::EvolVars, bulkconstrains::BulkPartition{Nsys},
 	#println("exit nested from setup rhs")
         vprint("INFO: compute_xi_t")
         compute_xi_t!(gauge_t, bulkconstrains[Nsys], bulkevols[Nsys], bulkderivs[Nsys],
-                      gauge, cache, systems[Nsys], evoleq.gaugecondition)
+                      gauge, cache, systems[Nsys], evoleq.gaugecondition,evoleq)
 
         vprint("INFO: bulkevolved_t")
         # TODO: check if this loop is thread-safe
