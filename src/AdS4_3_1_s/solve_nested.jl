@@ -227,6 +227,7 @@ function solve_Fxy!(bulk::Bulk, bc::BC, gauge::Gauge, deriv::BulkDeriv, aux_acc,
     
 
     @fastmath @inbounds @threads for j in 1:Ny
+    y = sys.ycoord[j]
         @inbounds for i in 1:Nx
             id  = Threads.threadid()
             aux = aux_acc[id]
@@ -234,6 +235,8 @@ function solve_Fxy!(bulk::Bulk, bc::BC, gauge::Gauge, deriv::BulkDeriv, aux_acc,
             xi    = gauge.xi[1,i,j]
             xi_x  = Dx(gauge.xi, 1,i,j)
             xi_y  = Dy(gauge.xi, 1,i,j)
+            
+            x = sys.xcoord[i]
 
             @inbounds @simd for a in 1:Nu
                 u     = sys.ucoord[a]
@@ -265,6 +268,7 @@ function solve_Fxy!(bulk::Bulk, bc::BC, gauge::Gauge, deriv::BulkDeriv, aux_acc,
                 Spp   = 2*u3 * Du_S[a,i,j] + u4 * Duu_S[a,i,j]
                 Sp_x  = -u2 * Dx(Du_S, a,i,j)
                 Sp_y  = -u2 * Dy(Du_S, a,i,j)
+                
                 S0 = Sz(test, x, y, source)
                 S0_t = Sz_t(test, x, y, source)
 
@@ -360,6 +364,7 @@ function solve_Sd!(bulk::Bulk, bc::BC, gauge::Gauge, deriv::BulkDeriv, aux_acc,
     #potential = evoleq.potential
 
     @fastmath @inbounds @threads for j in 1:Ny
+    y = sys.ycoord[j]
         @inbounds for i in 1:Nx
             id   = Threads.threadid()
             aux  = aux_acc[id]
@@ -370,6 +375,8 @@ function solve_Sd!(bulk::Bulk, bc::BC, gauge::Gauge, deriv::BulkDeriv, aux_acc,
             xi_xx = Dxx(gauge.xi, 1,i,j)
             xi_yy = Dyy(gauge.xi, 1,i,j)
             xi_xy = Dx(Dy, gauge.xi, 1,i,j)
+            
+            x = sys.xcoord[i]
 
             @inbounds @simd for a in 1:Nu
                 u     = sys.ucoord[a]
@@ -504,6 +511,7 @@ function solve_BdGd!(bulk::Bulk, bc::BC, gauge::Gauge, deriv::BulkDeriv, aux_acc
     test = source.time
 
     @fastmath @inbounds @threads for j in 1:Ny
+    y = sys.ycoord[j]
         @inbounds for i in 1:Nx
             id  = Threads.threadid()
             aux = aux_acc[id]
@@ -514,6 +522,8 @@ function solve_BdGd!(bulk::Bulk, bc::BC, gauge::Gauge, deriv::BulkDeriv, aux_acc
             xi_xx = Dxx(gauge.xi, 1,i,j)
             xi_yy = Dyy(gauge.xi, 1,i,j)
             xi_xy = Dx(Dy, gauge.xi, 1,i,j)
+            
+            x = sys.xcoord[i]
 
             @inbounds @simd for a in 1:Nu
                 u     = sys.ucoord[a]
@@ -664,6 +674,7 @@ function solve_A!(bulk::Bulk, bc::BC, gauge::Gauge, deriv::BulkDeriv, aux_acc,
     #potential = evoleq.potential
 
     @fastmath @inbounds @threads for j in 1:Ny
+    y = sys.ycoord[j]
         @inbounds for i in 1:Nx
             id  = Threads.threadid()
             aux = aux_acc[id]
@@ -674,6 +685,8 @@ function solve_A!(bulk::Bulk, bc::BC, gauge::Gauge, deriv::BulkDeriv, aux_acc,
             xi_xx = Dxx(gauge.xi, 1,i,j)
             xi_yy = Dyy(gauge.xi, 1,i,j)
             xi_xy = Dx(Dy, gauge.xi, 1,i,j)
+            
+            x = sys.xcoord[i]
 
             @inbounds @simd for a in 1:Nu
                 u     = sys.ucoord[a]
