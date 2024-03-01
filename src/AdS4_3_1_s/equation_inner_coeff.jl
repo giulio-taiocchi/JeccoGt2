@@ -64,12 +64,10 @@ x1 = u ^ 5
 x2 = u ^ 4
 x3 = 3 * u
 x4 = (-B * x3 + Bp) ^ 2 * cosh(G * u ^ 3) ^ 2
-x5 = (-G * x3 + Gp) ^ 2
-x6 = x0 * xi
 ABCS[1] = 4 * x0
 ABCS[2] = 24 * x1
 ABCS[3] = x2 * (9 * G ^ 2 * x0 - 6 * G * Gp * x1 + Gp ^ 2 * x2 + x2 * x4 + 24)
-ABCS[4] = x1 * x4 + x1 * x5 + x4 * x6 + x5 * x6
+ABCS[4] = x0 * (x4 + (-G * x3 + Gp) ^ 2) * (S0 * (xi + 1 / u) + S0_t)
 
     nothing
 end
