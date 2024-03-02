@@ -90,6 +90,8 @@ function Fxy_eq_coeff!(AA::Matrix, BB::Matrix, CC::Matrix, SS::Vector, vars::Tup
         Bp_y  ,        Gp_y   ,       Sp_y   ,
        
     ) = vars
+    println("u is $u")
+    println("S0 is $S0")
     
 x0 = S0_t * u
 x1 = u * xi
