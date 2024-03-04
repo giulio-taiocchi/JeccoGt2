@@ -158,7 +158,7 @@ end
 
 function Sd_eq_coeff!(ABCS::Vector, vars::Tuple, ::Outer)
     (
-          S0, S0_t,u, xi, xi_x, xi_y, xi_xx, xi_yy, xi_xy,
+         S0, S0_x, S0_y, S0_t, S0_tx, S0_ty, xi, xi_x, xi_y, xi_xx, xi_yy, xi_xy,
         B     ,        G      ,        S      ,    Fx     ,    Fy     ,
         Bp    ,        Gp     ,        Sp     ,    Fxp    ,    Fyp    ,
         Bpp   ,        Gpp    ,        Spp    ,    Fxpp   ,    Fypp   ,
@@ -267,7 +267,7 @@ end
 
 function BdGd_eq_coeff!(AA::Matrix, BB::Matrix, CC::Matrix, SS::Vector, vars::Tuple, ::Outer)
     (
-       S0, S0_t,u, xi, xi_x, xi_y, xi_xx, xi_yy, xi_xy,
+       S0, S0_x, S0_y, S0_t, S0_tx, S0_ty,u, xi, xi_x, xi_y, xi_xx, xi_yy, xi_xy,
         B     ,      G      ,        S      ,    Fx     ,    Fy     ,  Sd,
         Bp    ,      Gp     ,        Sp     ,    Fxp    ,    Fyp    ,
         Bpp   ,      Gpp    ,        Spp    ,    Fxpp   ,    Fypp   ,
@@ -362,7 +362,7 @@ end
 
 function A_eq_coeff!(ABCS::Vector, vars::Tuple, ::Outer)
     (
-         S0, S0_t,u, xi, xi_x, xi_y, xi_xx, xi_yy, xi_xy,
+         S0, S0_x, S0_y, S0_t, S0_tx, S0_ty,u, xi, xi_x, xi_y, xi_xx, xi_yy, xi_xy,
         B   ,  G   ,  S    , Fx    , Fy    , Sd, Bd, Gd, 
         Bp  ,  Gp  ,  Sp   , Fxp   , Fyp   ,
         Bpp ,  Gpp ,  Spp  , Fxpp  , Fypp  ,
@@ -453,7 +453,7 @@ end
 
 function xi_t_eq_coeff(vars::Tuple, ::Outer)
     (
-       S0, S0_t,  kappa, xi, xi_x, xi_y, xi_xx, xi_yy, xi_xy,
+       S0, S0_x, S0_y, S0_t, S0_tx, S0_ty,  kappa, xi, xi_x, xi_y, xi_xx, xi_yy, xi_xy,
         B   ,  G   ,  S    , Fx    , Fy    , Sd ,  Bd  , Gd,  A   ,
         Bp  ,  Gp  ,  Sp   , Fxp   , Fyp   , Sdp,  Bdp , Gdp, Ap  ,
         Bpp ,  Gpp ,  Spp  , Fxpp  , Fypp  ,                   App ,

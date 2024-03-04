@@ -271,10 +271,14 @@ function compute_xi_t!(gauge_t::Gauge, bulkconstrain::BulkConstrained,
             S_xy    = Dx(Dy, S_uAH,  1,i,j)
             
             S0 = Sz(test, x, y, source)
+            S0_x = Sz_x(test, x, y, source)
+            S0_y = Sz_y(test, x, y, source)
             S0_t = Sz_t(test, x, y, source)
+            S0_tx = Sz_tx(test, x, y, source)
+            S0_ty = Sz_ty(test, x, y, source)
 
             vars =  (
-                S0, S0_t, kappa, xi, xi_x, xi_y, xi_xx, xi_yy, xi_xy,
+                S0, S0_x, S0_y, S0_t, S0_tx, S0_ty, kappa, xi, xi_x, xi_y, xi_xx, xi_yy, xi_xy,
                 B   , G   ,  S    , Fx    , Fy    , Sd ,  Bd  , Gd, A   ,
                 Bp  , Gp  ,  Sp   , Fxp   , Fyp   , Sdp,  Bdp , Gdp,       Ap  ,
                 Bpp , Gpp ,        Spp  , Fxpp  , Fypp  ,                                App ,

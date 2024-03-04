@@ -327,8 +327,8 @@ function solve_Fxy!(bulk::Bulk, bc::BC, gauge::Gauge, deriv::BulkDeriv, aux_acc,
                 aux.A_mat2[Nu,aa]      = Du[1,aa]
                 aux.A_mat2[2*Nu,aa+Nu] = Du[1,aa]
             end
-	    detA2= det(aux.A_mat2)
-	    println("in ( $x $y ) detA2 is $detA2, source is $S0")
+	    #detA2= det(aux.A_mat2)
+	    #println("in ( $x $y ) detA2 is $detA2, source is $S0")
             solve_lin_system_pivot!(aux.A_mat2, aux.b_vec2)
 
             @inbounds @simd for aa in 1:Nu
@@ -382,7 +382,12 @@ function solve_Sd!(bulk::Bulk, bc::BC, gauge::Gauge, deriv::BulkDeriv, aux_acc,
             xi_xy = Dx(Dy, gauge.xi, 1,i,j)
             
             x = sys.xcoord[i]
-
+	    S0 = Sz(test, x, y, source)
+            S0_x = Sz_x(test, x, y, source)
+            S0_y = Sz_y(test, x, y, source)
+            S0_t = Sz_t(test, x, y, source)
+            S0_tx = Sz_tx(test, x, y, source)
+            S0_ty = Sz_ty(test, x, y, source)
             @inbounds @simd for a in 1:Nu
                 u     = sys.ucoord[a]
                 u2    = u * u
@@ -449,7 +454,7 @@ function solve_Sd!(bulk::Bulk, bc::BC, gauge::Gauge, deriv::BulkDeriv, aux_acc,
                 S0_t = Sz_t(test, x, y, source)
 
                 vars = (
-                     S0, S0_t, u, xi, xi_x, xi_y, xi_xx, xi_yy, xi_xy,
+                     S0, S0_x, S0_y, S0_t, S0_tx, S0_ty, xi, xi_x, xi_y, xi_xx, xi_yy, xi_xy,
         B     ,        G      ,        S      ,    Fx     ,    Fy     ,
         Bp    ,        Gp     ,        Sp     ,    Fxp    ,    Fyp    ,
         Bpp   ,        Gpp    ,        Spp    ,    Fxpp   ,    Fypp   ,
@@ -529,7 +534,12 @@ function solve_BdGd!(bulk::Bulk, bc::BC, gauge::Gauge, deriv::BulkDeriv, aux_acc
             xi_xy = Dx(Dy, gauge.xi, 1,i,j)
             
             x = sys.xcoord[i]
-
+	    S0 = Sz(test, x, y, source)
+            S0_x = Sz_x(test, x, y, source)
+            S0_y = Sz_y(test, x, y, source)
+            S0_t = Sz_t(test, x, y, source)
+            S0_tx = Sz_tx(test, x, y, source)
+            S0_ty = Sz_ty(test, x, y, source)
             @inbounds @simd for a in 1:Nu
                 u     = sys.ucoord[a]
                 u2    = u * u
@@ -598,7 +608,7 @@ function solve_BdGd!(bulk::Bulk, bc::BC, gauge::Gauge, deriv::BulkDeriv, aux_acc
                 S0_t = Sz_t(test, x, y, source)
 
                 vars = (
-                    S0, S0_t, u, xi, xi_x, xi_y, xi_xx, xi_yy, xi_xy,
+                    S0, S0_x, S0_y, S0_t, S0_tx, S0_ty, u, xi, xi_x, xi_y, xi_xx, xi_yy, xi_xy,
                     B     ,        G      ,    S      ,    Fx     ,    Fy     ,  Sd,
                     Bp    ,        Gp     ,    Sp     ,    Fxp    ,    Fyp    ,
                     Bpp   ,        Gpp    ,    Spp    ,    Fxpp   ,    Fypp   ,
@@ -692,7 +702,12 @@ function solve_A!(bulk::Bulk, bc::BC, gauge::Gauge, deriv::BulkDeriv, aux_acc,
             xi_xy = Dx(Dy, gauge.xi, 1,i,j)
             
             x = sys.xcoord[i]
-
+	    S0 = Sz(test, x, y, source)
+            S0_x = Sz_x(test, x, y, source)
+            S0_y = Sz_y(test, x, y, source)
+            S0_t = Sz_t(test, x, y, source)
+            S0_tx = Sz_tx(test, x, y, source)
+            S0_ty = Sz_ty(test, x, y, source)
             @inbounds @simd for a in 1:Nu
                 u     = sys.ucoord[a]
                 u2    = u * u
@@ -762,7 +777,7 @@ function solve_A!(bulk::Bulk, bc::BC, gauge::Gauge, deriv::BulkDeriv, aux_acc,
                 S0_t = Sz_t(test, x, y, source)
 
                 vars = (
-                     S0, S0_t, u, xi, xi_x, xi_y, xi_xx, xi_yy, xi_xy,
+                     S0, S0_x, S0_y, S0_t, S0_tx, S0_ty, u, xi, xi_x, xi_y, xi_xx, xi_yy, xi_xy,
                     B   , G   , S    , Fx    , Fy    , Sd, Bd, Gd, 
                     Bp  , Gp  , Sp   , Fxp   , Fyp   ,
                     Bpp  ,Gpp , Spp  , Fxpp  , Fypp  ,
