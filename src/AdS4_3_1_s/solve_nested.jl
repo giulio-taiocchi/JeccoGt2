@@ -237,6 +237,12 @@ function solve_Fxy!(bulk::Bulk, bc::BC, gauge::Gauge, deriv::BulkDeriv, aux_acc,
             xi_y  = Dy(gauge.xi, 1,i,j)
             
             x = sys.xcoord[i]
+            S0 = Sz(test, x, y, source)
+            S0_x = Sz_x(test, x, y, source)
+            S0_y = Sz_y(test, x, y, source)
+            S0_t = Sz_t(test, x, y, source)
+            S0_tx = Sz_tx(test, x, y, source)
+            S0_ty = Sz_ty(test, x, y, source)
 
             @inbounds @simd for a in 1:Nu
                 u     = sys.ucoord[a]
@@ -269,12 +275,7 @@ function solve_Fxy!(bulk::Bulk, bc::BC, gauge::Gauge, deriv::BulkDeriv, aux_acc,
                 Sp_x  = -u2 * Dx(Du_S, a,i,j)
                 Sp_y  = -u2 * Dy(Du_S, a,i,j)
                 
-                S0 = Sz(test, x, y, source)
-                S0_x = Sz_x(test, x, y, source)
-                S0_y = Sz_y(test, x, y, source)
-                S0_t = Sz_t(test, x, y, source)
-                S0_tx = Sz_tx(test, x, y, source)
-                S0_ty = Sz_ty(test, x, y, source)
+                
 
                 vars = (
                     S0, S0_x, S0_y, S0_t, S0_tx, S0_ty, u, xi, xi_x, xi_y,
