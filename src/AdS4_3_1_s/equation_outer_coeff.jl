@@ -74,7 +74,7 @@ end
 
 function Fxy_eq_coeff!(AA::Matrix, BB::Matrix, CC::Matrix, SS::Vector, vars::Tuple, ::Outer)
     (
-       S0, S0_t, u, xi, xi_x, xi_y,
+       S0, S0_x, S0_y, S0_t, S0_tx, S0_ty, u, xi, xi_x, xi_y,
         B     ,        G      ,        S      ,
         Bp    ,        Gp     ,        Sp     ,
         Bpp   ,        Gpp    ,        Spp    ,
