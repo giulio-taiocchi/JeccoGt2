@@ -326,7 +326,8 @@ function solve_Fxy!(bulk::Bulk, bc::BC, gauge::Gauge, deriv::BulkDeriv, aux_acc,
                 aux.A_mat2[Nu,aa]      = Du[1,aa]
                 aux.A_mat2[2*Nu,aa+Nu] = Du[1,aa]
             end
-
+	    detA2= det(aux.A_mat2)
+	    println("detA2 is $detA2")
             solve_lin_system_pivot!(aux.A_mat2, aux.b_vec2)
 
             @inbounds @simd for aa in 1:Nu
