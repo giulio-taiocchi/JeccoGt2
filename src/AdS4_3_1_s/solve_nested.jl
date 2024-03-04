@@ -609,7 +609,7 @@ function solve_BdGd!(bulk::Bulk, bc::BC, gauge::Gauge, deriv::BulkDeriv, aux_acc
                 
 
                 vars = (
-                    S0, S0_x, S0_y, S0_t, S0_tx, S0_ty, u, xi, xi_x, xi_y, xi_xx, xi_yy, xi_xy,
+                    S0, S0_x, S0_y, S0_t, S0_tx, S0_ty,S0_xx, S0_yy, u, xi, xi_x, xi_y, xi_xx, xi_yy, xi_xy,
                     B     ,        G      ,    S      ,    Fx     ,    Fy     ,  Sd,
                     Bp    ,        Gp     ,    Sp     ,    Fxp    ,    Fyp    ,
                     Bpp   ,        Gpp    ,    Spp    ,    Fxpp   ,    Fypp   ,
