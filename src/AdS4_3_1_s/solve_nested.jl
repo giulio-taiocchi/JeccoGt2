@@ -385,6 +385,8 @@ function solve_Sd!(bulk::Bulk, bc::BC, gauge::Gauge, deriv::BulkDeriv, aux_acc,
 	    S0 = Sz(test, x, y, source)
             S0_x = Sz_x(test, x, y, source)
             S0_y = Sz_y(test, x, y, source)
+            S0_xx = Sz_xx(test, x, y, source)
+            S0_yy = Sz_yy(test, x, y, source)
             S0_t = Sz_t(test, x, y, source)
             S0_tx = Sz_tx(test, x, y, source)
             S0_ty = Sz_ty(test, x, y, source)
