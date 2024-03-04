@@ -286,7 +286,7 @@ function solve_Fxy!(bulk::Bulk, bc::BC, gauge::Gauge, deriv::BulkDeriv, aux_acc,
                     Bp_x  ,     Gp_x   ,       Sp_x   ,
                     Bp_y  ,     Gp_y   ,       Sp_y
                 )
-
+		println("u is $u")
                 Fxy_eq_coeff!(aux.AA, aux.BB, aux.CC, aux.SS, vars, sys.gridtype)
 
                 aux.b_vec2[a]    = -aux.SS[1]

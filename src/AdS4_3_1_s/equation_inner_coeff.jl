@@ -453,10 +453,18 @@ A11=AA[1,1]
 A12=AA[1,2]
 A21=AA[2,1]
 A22=AA[2,2]
-
+B11=BB[1,1]
+B12=BB[1,2]
+B21=BB[2,1]
+B22=BB[2,2]
+C11=CC[1,1]
+C12=CC[1,1]
+C21=CC[1,1]
+C22=CC[1,1]
+S22=SS[2]
 S11=SS[1]
 
-println("Matrix AA11 $A11 CC11 $CC[1,1] S1=$S11")
+println("Matrix C11 = $C11")
     nothing
 end
 
