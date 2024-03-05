@@ -10,7 +10,10 @@ Sz_xx(t, x, y, ::NoSource) = 0.0
 Sz_yy(t, x, y, ::NoSource) = 0.0
 Sz_t(t, x, y, ::NoSource) = 0.0
 Sz_tx(t, x, y, ::NoSource) = 0.0
+Sz_txx(t, x, y, ::NoSource) = 0.0
 Sz_ty(t, x, y, ::NoSource) = 0.0
+Sz_tyy(t, x, y, ::NoSource) = 0.0
+Sz_txy(t, x, y, ::NoSource) = 0.0
 
 
 @inline getSourcetime(ff::Source) = ff.time
