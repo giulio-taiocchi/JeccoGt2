@@ -678,7 +678,7 @@ end
 
 function BdGd_eq_coeff!(AA::Matrix, BB::Matrix, CC::Matrix, SS::Vector, vars::Tuple, ::Inner)
     (
-        S0, S0_x, S0_y, S0_t, S0_tx, S0_ty, S0_xx, S0_yy, u, xi, xi_x, xi_y, xi_xx, xi_yy, xi_xy,
+        S0, S0_x, S0_y, S0_t, S0_tx, S0_ty,S0_xx, S0_yy, S0_txx, S0_tyy, S0_txy, u, xi, xi_x, xi_y, xi_xx, xi_yy, xi_xy,
         B     ,       G      ,        S      ,    Fx     ,    Fy     ,  Sd,
         Bp    ,       Gp     ,        Sp     ,    Fxp    ,    Fyp    ,
         Bpp   ,       Gpp    ,        Spp    ,    Fxpp   ,    Fypp   ,
