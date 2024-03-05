@@ -888,6 +888,9 @@ function A_eq_coeff!(ABCS::Vector, vars::Tuple, ::Inner)
 
     @tilde_inner("Fxp")
     @tilde_inner("Fyp")
+    @tilde_inner("Sp")
+    @tilde_inner("Gp")
+    @tilde_inner("Bp")
 
     @hat_inner("Fxp")
     @hat_inner("Fyp")
