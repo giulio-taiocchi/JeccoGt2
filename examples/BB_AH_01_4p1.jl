@@ -9,7 +9,7 @@ grid = SpecCartGrid3D(
     y_nodes          =  12,
     u_outer_min      =  0.1,
     u_outer_max      =  1.3,
-    u_outer_domains  =  3,
+    u_outer_domains  =  2,
     u_outer_nodes    =  24,
     u_inner_nodes    =  12,
     fd_order         =  4,
@@ -18,7 +18,7 @@ grid = SpecCartGrid3D(
 
 id   = BlackBrane(
    #AH_pos = 1.001,
-   AH_pos = 1.0001,
+   AH_pos = 1.000,
 )
 
 evoleq = AffineNull(
@@ -29,10 +29,11 @@ evoleq = AffineNull(
 )
 
 io = InOut(
-    out_boundary_every  = 10,
-    #out_bulk_every      = 500,
-    out_gauge_every     = 10,
-    # remove_existing     = true,
+    out_boundary_every  = 1,
+    out_bulk_every      = 1,
+    out_gauge_every     = 1,
+    out_bulkconstrained_every = 1,
+    remove_existing     = true,
 )
 
 integration = Integration(

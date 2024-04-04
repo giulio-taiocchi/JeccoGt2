@@ -12,14 +12,14 @@ grid = SpecCartGrid3D(
     u_outer_max      =  1.01,
     u_outer_domains  =  8,
     u_outer_nodes    =  12,
-    u_inner_nodes    =  12,
+    u_inner_nodes    =  36,
     fd_order         =  4,
     sigma_diss       =  0.2,
 )
 
 
 id = AdS4_3_1.BoostedBBnumerical(
-    AH_pos = 0.9,
+    AH_pos = 1.0
 )
 
 evoleq = AffineNull(
@@ -30,7 +30,7 @@ evoleq = AffineNull(
 io = InOut(
     out_boundary_every  = 5,
     out_bulk_every      = 10,
-    out_bulkconstrained_every = 50,
+    out_bulkconstrained_every = 1,
     #out_gauge_every     = 1,
     remove_existing     = true,
 )
