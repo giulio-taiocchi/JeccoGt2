@@ -395,6 +395,7 @@ function A_eq_coeff!(ABCS::Vector, vars::Tuple, ::Outer)
     @tilde_outer("Fyp")
     @tilde_outer("Sp")
     @tilde_outer("Gp")
+    @tilde_outer("Bp")
 
     @hat_outer("Fxp")
     @hat_outer("Fyp")
