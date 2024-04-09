@@ -304,6 +304,7 @@ function BdGd_eq_coeff!(AA::Matrix, BB::Matrix, CC::Matrix, SS::Vector, vars::Tu
 
     @hat_outer("Fxp")
     @hat_outer("Fyp")
+    @hat_outer("Sp")
 
     @cross_outer("G")
     @cross_outer("S")
@@ -399,6 +400,9 @@ function A_eq_coeff!(ABCS::Vector, vars::Tuple, ::Outer)
 
     @hat_outer("Fxp")
     @hat_outer("Fyp")
+    @hat_outer("Sp")
+    @hat_outer("Gp")
+    @hat_outer("Bp")
 
     @cross_outer("G")
     @cross_outer("S")
