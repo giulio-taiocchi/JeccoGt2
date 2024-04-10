@@ -23,6 +23,7 @@ function compute_boundary_t!(boundary_t::Boundary, bulk::BulkEvolved,
     _, Nx, Ny = size(sys)
 
     a3_t, fx1_t, fy1_t = unpack(boundary_t)
+    
     source = evoleq.source
     test = source.time
 
@@ -50,16 +51,22 @@ function compute_boundary_t!(boundary_t::Boundary, bulk::BulkEvolved,
             xi_x    = Dx(gauge.xi, 1,i,j)
             xi_y    = Dy(gauge.xi, 1,i,j)
 
+	    b13	    = bulk.B[1,i,j]
             b13_x   = Dx(bulk.B, 1,i,j)
             b13_y   = Dy(bulk.B, 1,i,j)
 
+	    g3	    = bulk.G[1,i,j]
             g3_x    = Dx(bulk.G, 1,i,j)
             g3_y    = Dy(bulk.G, 1,i,j)
-
+            
+	    a3      = boundary.a3[1,i,j]
             a3_x    = Dx(boundary.a3, 1,i,j)
             a3_y    = Dy(boundary.a3, 1,i,j)
 
+	    
+	    fx1     = boundary.fx1[1,i,j]
             fx1_x   = Dx(boundary.fx1, 1,i,j)
+            fy1     = boundary.fy1[1,i,j]
             fy1_y   = Dy(boundary.fy1, 1,i,j)
 
             a3_t[1,i,j]  =(-3*S0^6*(fx1_x) - 3*S0^6*(fy1_y) - 6*a3*S0^7*(S0_t) + 20*(S0_x)^4 - 32*S0*(S0_x)^2*(S0_xx) + 5*S0^2*(S0_xx)^2 + 8*S0^2*(S0_x)*(S0_xxx) - S0^3*(S0_xxxx) - 2*S0^3*(S0_xxyy) + 4*S0^2*(S0_xy)^2 + 8*S0^2*(S0_x)*(S0_xyy) + 8*S0^2*(S0_xxy)*(S0_y) - 32*S0*(S0_x)*(S0_xy)*(S0_y) + 40*(S0_x)^2*(S0_y)^2 - 16*S0*(S0_xx)*(S0_y)^2 + 20*(S0_y)^4 - 16*S0*(S0_x)^2*(S0_yy) + 6*S0^2*(S0_xx)*(S0_yy) - 32*S0*(S0_y)^2*(S0_yy) + 5*S0^2*(S0_yy)^2 + 8*S0^2*(S0_y)*(S0_yyy) - S0^3*(S0_yyyy))/(2*S0^8)
