@@ -27,6 +27,8 @@ function compute_bulkevolved_t!(bulkevol_t::BulkEvolved,
     Nu, Nx, Ny = size(sys)
 
     B_t, G_t= unpack(bulkevol_t)
+    source = evoleq.source
+    test = source.time
 
     # u = 0
     @fastmath @inbounds @threads for j in 1:Ny
@@ -41,6 +43,8 @@ function compute_bulkevolved_t!(bulkevol_t::BulkEvolved,
 
             Bd_u  = Du(bulkconstrain.Bd, 1,i,j)
             Gd_u   = Du(bulkconstrain.Gd,  1,i,j)
+	    
+	    # the u->0 limit should stay the same since the source appears at higher orders
 
             B_t[1,i,j]  = Bd_u + 2 * B_u  + 3 * B * xi
             G_t[1,i,j]  = Gd_u + 2 * G_u  + 3 * G * xi
@@ -49,10 +53,20 @@ function compute_bulkevolved_t!(bulkevol_t::BulkEvolved,
   
     # remaining inner grid points
     @fastmath @inbounds for j in 1:Ny
+    	y = sys.ycoord[j]
         @inbounds for i in 1:Nx
+            x = sys.xcoord[i]
             xi    = gauge.xi[1,i,j]
             xi_t  = gauge_t.xi[1,i,j]
             @inbounds @simd for a in 2:Nu
+            
+                S0 = Sz(test, x, y, source)
+                S0_x = Sz_x(test, x, y, source)
+                S0_y = Sz_y(test, x, y, source)
+                S0_t = Sz_t(test, x, y, source)
+                S0_xx = Sz_xx(test, x, y, source)
+                S0_yy = Sz_yy(test, x, y, source)
+                S0_tt = Sz_tt(test, x, y, source)
                 u      = uu[a]
                 u3     = u * u * u 
 
@@ -66,14 +80,10 @@ function compute_bulkevolved_t!(bulkevol_t::BulkEvolved,
                 B_u   = Du(bulkevol.B, a,i,j)
                 G_u    = Du(bulkevol.G,  a,i,j)
 
-		B_t[a,i,j] = ((3* B + u * B_u) *
-                               (-2 * u * u * xi_t + A * u3 +
-                                (xi * u + 1) * (xi * u + 1))+ 2 * Bd)/(2 * u) 
+		B_t[a,i,j] = (2*Bd + ((3*B + u*(B_u))*(S0^2*u^2*(S0_t)^2 - 2*S0^3*u^2*(S0_tt) + u^2*((S0_x)^2 + (S0_y)^2) - S0*u^2*((S0_xx) + (S0_yy)) + S0^4*(A*u^3 + (1 + u*xi)^2 - 2*u^2*(xi_t))))/S0^4)/(2*u)
                                 
 
-		G_t[a,i,j] =((3 * G + u * G_u) *
-                               (-2 * u * u * xi_t + A * u3 +
-                                (xi * u + 1) * (xi * u + 1)) + 2 * Gd)/(2 * u)                                
+		G_t[a,i,j] =(2*Gd + ((3*G + u*(G_u))*(S0^2*u^2*(S0_t)^2 - 2*S0^3*u^2*(S0_tt) + u^2*((S0_x)^2 + (S0_y)^2) - S0*u^2*((S0_xx) + (S0_yy)) + S0^4*(A*u^3 + (1 + u*xi)^2 - 2*u^2*(xi_t))))/S0^4)/(2*u)                        
             end
         end
     end
