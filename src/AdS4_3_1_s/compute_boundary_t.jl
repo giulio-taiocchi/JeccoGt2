@@ -23,9 +23,25 @@ function compute_boundary_t!(boundary_t::Boundary, bulk::BulkEvolved,
     _, Nx, Ny = size(sys)
 
     a3_t, fx1_t, fy1_t = unpack(boundary_t)
+    source = evoleq.source
+    test = source.time
 
     @fastmath @inbounds for j in 1:Ny
         @inbounds for i in 1:Nx
+            #importing the source and its derivatives
+            S0 = Sz(test, x, y, source)
+            S0_x = Sz_x(test, x, y, source)
+            S0_y = Sz_y(test, x, y, source)
+            S0_t = Sz_t(test, x, y, source)
+            S0_xx = Sz_xx(test, x, y, source)
+            S0_yy = Sz_yy(test, x, y, source)
+            S0_xy = Sz_xy(test, x, y, source)
+            S0_tx = Sz_tx(test, x, y, source)
+            S0_txx = Sz_txx(test, x, y, source)
+            S0_ty = Sz_ty(test, x, y, source)
+            S0_tyy = Sz_tyy(test, x, y, source)
+            S0_txy = Sz_txy(test, x, y, source)
+            
             xi      = gauge.xi[1,i,j]
             xi3     = xi*xi*xi
 
@@ -44,10 +60,10 @@ function compute_boundary_t!(boundary_t::Boundary, bulk::BulkEvolved,
             fx1_x   = Dx(boundary.fx1, 1,i,j)
             fy1_y   = Dy(boundary.fy1, 1,i,j)
 
-            a3_t[1,i,j]  = -3//2 * (fx1_x + fy1_y)
+            a3_t[1,i,j]  =(-3*S0^6*(fx1_x) - 3*S0^6*(fy1_y) - 6*a3*S0^7*(S0_t) + 20*(S0_x)^4 - 32*S0*(S0_x)^2*(S0_xx) + 5*S0^2*(S0_xx)^2 + 8*S0^2*(S0_x)*(S0_xxx) - S0^3*(S0_xxxx) - 2*S0^3*(S0_xxyy) + 4*S0^2*(S0_xy)^2 + 8*S0^2*(S0_x)*(S0_xyy) + 8*S0^2*(S0_xxy)*(S0_y) - 32*S0*(S0_x)*(S0_xy)*(S0_y) + 40*(S0_x)^2*(S0_y)^2 - 16*S0*(S0_xx)*(S0_y)^2 + 20*(S0_y)^4 - 16*S0*(S0_x)^2*(S0_yy) + 6*S0^2*(S0_xx)*(S0_yy) - 32*S0*(S0_y)^2*(S0_yy) + 5*S0^2*(S0_yy)^2 + 8*S0^2*(S0_y)*(S0_yyy) - S0^3*(S0_yyyy))/(2*S0^8)
 
-            fx1_t[1,i,j] = g3_y - b13_x - 1//3 * a3_x 
-            fy1_t[1,i,j] = g3_x + b13_y - 1//3 * a3_y 
+            fx1_t[1,i,j] = (-(S0*(a3_x)) + 3*S0*(b13_x) + 3*S0*(g3_y) - 6*fx1*(S0_t) + 6*b13*(S0_x) + 6*g3*(S0_y))/(3*S0)
+            fy1_t[1,i,j] = (-(S0*(a3_y)) - 3*S0*(b13_y) + 3*S0*(g3_x) - 6*fy1*(S0_t) + 6*g3*(S0_x) - 6*b13*(S0_y))/(3*S0) 
         end
     end
 

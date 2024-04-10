@@ -13,10 +13,10 @@ function setup_rhs(tmp::EvolVars, bulkconstrains::BulkPartition{Nsys},
     gauge_cache       = getgauge(diss_cache)
 
     function (ff_t::EvolVars, ff::EvolVars, evoleq::EvolutionEquations, t)
-        println("t in setup_RHS is $t")
+        #println("t in setup_RHS is $t")
 	evoleq.source.time = t
 	timing = getSourcetime(evoleq.source)
-	println("source time in setup_RHS is $timing")
+	#println("source time in setup_RHS is $timing")
         bulkevols_t = getbulkevolvedpartition(ff_t)
         boundary_t  = getboundary(ff_t)
         gauge_t     = getgauge(ff_t)
