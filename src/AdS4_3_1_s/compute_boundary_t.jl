@@ -27,7 +27,9 @@ function compute_boundary_t!(boundary_t::Boundary, bulk::BulkEvolved,
     test = source.time
 
     @fastmath @inbounds for j in 1:Ny
+        y = sys.ycoord[j]
         @inbounds for i in 1:Nx
+            x = sys.xcoord[i]
             #importing the source and its derivatives
             S0 = Sz(test, x, y, source)
             S0_x = Sz_x(test, x, y, source)
