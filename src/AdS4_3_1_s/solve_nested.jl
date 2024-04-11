@@ -1016,6 +1016,9 @@ function set_outerBCs!(bc::BC, bulk::BulkConstrained, gauge::Gauge,
     # we are here assuming that the inner and outer grids merely touch at the
     # interface, so we pass the values at this point without any interpolation
     u0 = sys.ucoord[end]
+    source = evoleq.source
+    test = source.time
+
 
     @fastmath @inbounds @threads for j in 1:Ny
         y = sys.ycoord[j]
