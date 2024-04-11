@@ -1064,7 +1064,7 @@ function set_outerBCs!(bc::BC, bulk::BulkConstrained, gauge::Gauge,
             bc.Bd[i,j] = Bd_inner_to_outer(Bd, u0)
             bc.Gd[i,j]  = Bd_inner_to_outer(Gd, u0)
 
-            bc.A[i,j]   = A_inner_to_outer(A, u0, xi, xi_t, S0, S0_t, S0_tt, S0_x, S0_xx, S0_y, S0_yy)
+            bc.A[i,j]   = A_inner_to_outer(A, u0, xi, S0, S0_t, S0_tt, S0_x, S0_xx, S0_y, S0_yy)
             bc.A_u[i,j] = A_u_inner_to_outer(A_u, A, u0, xi)
         end
     end
