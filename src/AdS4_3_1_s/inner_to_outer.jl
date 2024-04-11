@@ -7,7 +7,7 @@
 
 
 @inline A_inner_to_outer(A_in, u, xi, S0, S0_t, S0_tt, S0_x, S0_xx, S0_y, S0_yy) =
-u^(-2) + Afin*u + (2*xi)/u + xi^2 + (S0_t)^2/S0^2 - (2*(S0_tt))/S0 + (S0_x)^2/S0^4 - (S0_xx)/S0^3 + (S0_y)^2/S0^4 - (S0_yy)/S0^3
+u^(-2) + A_in*u + (2*xi)/u + xi^2 + (S0_t)^2/S0^2 - (2*(S0_tt))/S0 + (S0_x)^2/S0^4 - (S0_xx)/S0^3 + (S0_y)^2/S0^4 - (S0_yy)/S0^3
    
 
 
