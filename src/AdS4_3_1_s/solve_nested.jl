@@ -1046,12 +1046,15 @@ function set_outerBCs!(bc::BC, bulk::BulkConstrained, gauge::Gauge,
             S0_yy = Sz_yy(test, x, y, source)
             S0_t = Sz_t(test, x, y, source)
             S0_tt = Sz_tt(test, x, y, source)
+            
+            S0_tx = Sz_tx(test, x, y, source)
+            S0_ty = Sz_ty(test, x, y, source)
 
             bc.S[i,j]   = S_inner_to_outer(S, u0, xi,S0,S0_t)
             bc.S_u[i,j] = S_u_inner_to_outer(S_u, S, u0, xi,S0)
 
-            bc.Fx[i,j]   = F_inner_to_outer(Fx, u0, S0, S0_x, S0_t, S0_tx)
-            bc.Fy[i,j]   = F_inner_to_outer(Fy, u0, S0, S0_x, S0_t, S0_tx)
+            bc.Fx[i,j]   = Fx_inner_to_outer(Fx, u0, S0, S0_x, S0_t, S0_tx)
+            bc.Fy[i,j]   = Fy_inner_to_outer(Fy, u0, S0, S0_x, S0_t, S0_ty)
             bc.Fx_u[i,j] = F_u_inner_to_outer(Fx_u, Fx, u0)
             bc.Fy_u[i,j] = F_u_inner_to_outer(Fy_u, Fy, u0)
 
