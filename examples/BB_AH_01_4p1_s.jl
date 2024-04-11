@@ -24,13 +24,13 @@ id   = BlackBrane(
 
 
 evoleq = AffineNull(
-    source = NoSource(time = 0.0),
+    source = GaussianSource(time = 0.0),
     gaugecondition = ConstantAH(u_AH = 1.0),
     #gaugecondition = ConstantAH(u_AH = 0.5),
 )
 
 io = InOut(
-    #out_boundary_every  = 10,
+    out_boundary_every  = 5,
     out_bulk_every      = 1,
     #out_gauge_every     = 10,
     remove_existing     = true,
@@ -38,7 +38,7 @@ io = InOut(
 
 integration = Integration(
     dt              = 0.001,
-    tmax            = 30.0,
+    tmax            = 50.0,
     #ODE_method      = AdS4_3_1.AB3(),
     filter_poststep = true,
 )

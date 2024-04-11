@@ -55,7 +55,7 @@ Sz_ty(t, x, y, ::GaussianSource) = -(E^(-1/2*x^2 - y^2/2)*y*Sech[12 - t]^2)
 Sz_tyy(t, x, y, ::GaussianSource) = (-E^(-1/2*x^2 - y^2/2) + E^(-1/2*x^2 - y^2/2)*y^2)*Sech[12 - t]^2
 Sz_txy(t, x, y, ::GaussianSource) = E^(-1/2*x^2 - y^2/2)*x*y*Sech[12 - t]^2
 
-Sz_tt(t, x, y, ::NoSource) = 2*E^(-1/2*x^2 - y^2/2)*Sech[12 - t]^2*Tanh[12 - t]
+Sz_tt(t, x, y, ::GaussianSource) = 2*E^(-1/2*x^2 - y^2/2)*Sech[12 - t]^2*Tanh[12 - t]
 
 
 
