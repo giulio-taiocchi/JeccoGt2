@@ -1018,7 +1018,9 @@ function set_outerBCs!(bc::BC, bulk::BulkConstrained, gauge::Gauge,
     u0 = sys.ucoord[end]
 
     @fastmath @inbounds @threads for j in 1:Ny
+        y = sys.ycoord[j]
         @inbounds @simd for i in 1:Nx
+            x = sys.xcoord[i]
             xi     = gauge.xi[1,i,j]
 
             S      = bulk.S[end,i,j]
@@ -1033,22 +1035,27 @@ function set_outerBCs!(bc::BC, bulk::BulkConstrained, gauge::Gauge,
             Fx_u   = deriv.Du_Fx[end,i,j]
             Fy_u   = deriv.Du_Fy[end,i,j]
             A_u    = deriv.Du_A[end,i,j]
+            
+            S0 = Sz(test, x, y, source)
+            S0_x = Sz_x(test, x, y, source)
+            S0_y = Sz_y(test, x, y, source)
+            S0_t = Sz_t(test, x, y, source)
 
-            bc.S[i,j]   = S_inner_to_outer(S, u0, xi)
-            bc.S_u[i,j] = S_u_inner_to_outer(S_u, S, u0, xi)
+            bc.S[i,j]   = S_inner_to_outer(S, u0, xi,S0,S0_t)
+            bc.S_u[i,j] = S_u_inner_to_outer(S_u, S, u0, xi,S0)
 
-            bc.Fx[i,j]   = F_inner_to_outer(Fx, u0)
-            bc.Fy[i,j]   = F_inner_to_outer(Fy, u0)
+            bc.Fx[i,j]   = F_inner_to_outer(Fx, u0, S0, S0_x, S0_t, S0_tx)
+            bc.Fy[i,j]   = F_inner_to_outer(Fy, u0, S0, S0_x, S0_t, S0_tx)
             bc.Fx_u[i,j] = F_u_inner_to_outer(Fx_u, Fx, u0)
             bc.Fy_u[i,j] = F_u_inner_to_outer(Fy_u, Fy, u0)
 
-            bc.Sd[i,j]  = Sd_inner_to_outer(Sd, u0, xi)
+            bc.Sd[i,j]  = Sd_inner_to_outer(Sd, u0, xi, S0, S0_t, S0_x, S0_xx, S0_y, S0_yy)
 
             # Bd and Gd transform in the same way
             bc.Bd[i,j] = Bd_inner_to_outer(Bd, u0)
             bc.Gd[i,j]  = Bd_inner_to_outer(Gd, u0)
 
-            bc.A[i,j]   = A_inner_to_outer(A, u0, xi)
+            bc.A[i,j]   = A_inner_to_outer(A, u0, xi, xi_t, S0, S0_t, S0_tt, S0_x, S0_xx, S0_y, S0_yy)
             bc.A_u[i,j] = A_u_inner_to_outer(A_u, A, u0, xi)
         end
     end
