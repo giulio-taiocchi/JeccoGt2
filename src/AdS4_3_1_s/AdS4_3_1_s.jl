@@ -77,7 +77,7 @@ function __init__()
 end
 
 export SpecCartGrid3D
-export Source, NoSource
+export Source, NoSource, GaussianSource
 export BlackBrane, BlackBranePert, BlackBrane_xi1
 export Advect_xi, ConstantAH, AHF
 export AffineNull, EvolTest0
