@@ -24,7 +24,7 @@ id   = BlackBrane(
 
 
 evoleq = AffineNull(
-    source = NoSource(time = 0.0),
+    source = GaussianSource(time = 0.0),
     gaugecondition = ConstantAH(u_AH = 1.0),
     #gaugecondition = ConstantAH(u_AH = 0.5),
 )

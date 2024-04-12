@@ -33,20 +33,20 @@ Base.@kwdef mutable struct GaussianSource{T} <: Source
 	time :: T = 0.0
 end
 
-Sz(t, x, y, ::GaussianSource) = exp(-1/2*x^2 - y^2/2)*(2 - tanh(12 - t))
-Sz_x(t, x, y, ::GaussianSource) = -(exp(-1/2*x^2 - y^2/2)*x*(2 - tanh(12 - t)))
-Sz_y(t, x, y, ::GaussianSource) = -(exp(-1/2*x^2 - y^2/2)*y*(2 - tanh(12 - t)))
+Sz(t, x, y, ::GaussianSource) = 1+exp(-1/2*x^2 - y^2/2)*(1 - tanh(12 - t))
+Sz_x(t, x, y, ::GaussianSource) = -(exp(-1/2*x^2 - y^2/2)*x*(1 - tanh(12 - t)))
+Sz_y(t, x, y, ::GaussianSource) = -(exp(-1/2*x^2 - y^2/2)*y*(1 - tanh(12 - t)))
 
-Sz_xx(t, x, y, ::GaussianSource) = (-exp(-1/2*x^2 - y^2/2) + exp(-1/2*x^2 - y^2/2)*x^2)*(2 - tanh(12 - t))
-Sz_yy(t, x, y, ::GaussianSource) = (-exp(-1/2*x^2 - y^2/2) + exp(-1/2*x^2 - y^2/2)*y^2)*(2 - tanh(12 - t))
-Sz_xxx(t, x, y, ::GaussianSource) = (3*exp(-1/2*x^2 - y^2/2)*x - exp(-1/2*x^2 - y^2/2)*x^3)*(2 - tanh(12 - t))
-Sz_yyy(t, x, y, ::GaussianSource) = (3*exp(-1/2*x^2 - y^2/2)*y - exp(-1/2*x^2 - y^2/2)*y^3)*(2 - tanh(12 - t))
-Sz_xxxx(t, x, y, ::GaussianSource) = (3*exp(-1/2*x^2 - y^2/2) - 6*exp(-1/2*x^2 - y^2/2)*x^2 + exp(-1/2*x^2 - y^2/2)*x^4)*(2 - tanh(12 - t))
-Sz_yyyy(t, x, y, ::GaussianSource) = (3*exp(-1/2*x^2 - y^2/2) - 6*exp(-1/2*x^2 - y^2/2)*y^2 + exp(-1/2*x^2 - y^2/2)*y^4)*(2 - tanh(12 - t))
-Sz_xy(t, x, y, ::GaussianSource) = exp(-1/2*x^2 - y^2/2)*x*y*(2 - tanh(12 - t))
-Sz_xxy(t, x, y, ::GaussianSource) = (exp(-1/2*x^2 - y^2/2)*y - exp(-1/2*x^2 - y^2/2)*x^2*y)*(2 - tanh(12 - t))
-Sz_xyy(t, x, y, ::GaussianSource) = x*(exp(-1/2*x^2 - y^2/2) - exp(-1/2*x^2 - y^2/2)*y^2)*(2 - tanh(12 - t))
-Sz_xxyy(t, x, y, ::GaussianSource) = (exp(-1/2*x^2 - y^2/2) - exp(-1/2*x^2 - y^2/2)*y^2 + x^2*(-exp(-1/2*x^2 - y^2/2) + exp(-1/2*x^2 - y^2/2)*y^2))*(2 - tanh(12 - t))
+Sz_xx(t, x, y, ::GaussianSource) = (-exp(-1/2*x^2 - y^2/2) + exp(-1/2*x^2 - y^2/2)*x^2)*(1 - tanh(12 - t))
+Sz_yy(t, x, y, ::GaussianSource) = (-exp(-1/2*x^2 - y^2/2) + exp(-1/2*x^2 - y^2/2)*y^2)*(1 - tanh(12 - t))
+Sz_xxx(t, x, y, ::GaussianSource) = (3*exp(-1/2*x^2 - y^2/2)*x - exp(-1/2*x^2 - y^2/2)*x^3)*(1 - tanh(12 - t))
+Sz_yyy(t, x, y, ::GaussianSource) = (3*exp(-1/2*x^2 - y^2/2)*y - exp(-1/2*x^2 - y^2/2)*y^3)*(1 - tanh(12 - t))
+Sz_xxxx(t, x, y, ::GaussianSource) = (3*exp(-1/2*x^2 - y^2/2) - 6*exp(-1/2*x^2 - y^2/2)*x^2 + exp(-1/2*x^2 - y^2/2)*x^4)*(1 - tanh(12 - t))
+Sz_yyyy(t, x, y, ::GaussianSource) = (3*exp(-1/2*x^2 - y^2/2) - 6*exp(-1/2*x^2 - y^2/2)*y^2 + exp(-1/2*x^2 - y^2/2)*y^4)*(1 - tanh(12 - t))
+Sz_xy(t, x, y, ::GaussianSource) = exp(-1/2*x^2 - y^2/2)*x*y*(1 - tanh(12 - t))
+Sz_xxy(t, x, y, ::GaussianSource) = (exp(-1/2*x^2 - y^2/2)*y - exp(-1/2*x^2 - y^2/2)*x^2*y)*(1 - tanh(12 - t))
+Sz_xyy(t, x, y, ::GaussianSource) = x*(exp(-1/2*x^2 - y^2/2) - exp(-1/2*x^2 - y^2/2)*y^2)*(1 - tanh(12 - t))
+Sz_xxyy(t, x, y, ::GaussianSource) = (exp(-1/2*x^2 - y^2/2) - exp(-1/2*x^2 - y^2/2)*y^2 + x^2*(-exp(-1/2*x^2 - y^2/2) + exp(-1/2*x^2 - y^2/2)*y^2))*(1 - tanh(12 - t))
 
 Sz_t(t, x, y, ::GaussianSource) = exp(-1/2*x^2 - y^2/2)*sech(12 - t)^2
 Sz_tx(t, x, y, ::GaussianSource) = -(exp(-1/2*x^2 - y^2/2)*x*sech(12 - t)^2)
