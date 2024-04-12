@@ -24,13 +24,14 @@ id   = BlackBrane(
 
 
 evoleq = AffineNull(
-    source = GaussianSource(time = 0.0),
+    source = NoSource(time = 0.0),
     gaugecondition = ConstantAH(u_AH = 1.0),
     #gaugecondition = ConstantAH(u_AH = 0.5),
 )
 
 io = InOut(
-    out_boundary_every  = 5,
+    out_boundary_every  = 1,
+    out_bulkconstrained_every = 1,
     out_bulk_every      = 1,
     #out_gauge_every     = 10,
     remove_existing     = true,
