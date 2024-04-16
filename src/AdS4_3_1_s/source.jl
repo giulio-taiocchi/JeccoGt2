@@ -57,8 +57,7 @@ Sz_txx(t, x, y, ::GaussianSource) = ((-(exp(-1/2*x^2/sigmax^2 - y^2/(2*sigmay^2)
 Sz_ty(t, x, y, ::GaussianSource) = -((exp(-1/2*x^2/sigmax^2 - y^2/(2*sigmay^2))*y*sech(12 - t)^2)/(sigmax*sigmay^3))
 Sz_tyy(t, x, y, ::GaussianSource) = ((-(exp(-1/2*x^2/sigmax^2 - y^2/(2*sigmay^2))/sigmay^2) + (exp(-1/2*x^2/sigmax^2 - y^2/(2*sigmay^2))*y^2)/sigmay^4)*sech(12 - t)^2)/(sigmax*sigmay)
 Sz_txy(t, x, y, ::GaussianSource) = (exp(-1/2*x^2/sigmax^2 - y^2/(2*sigmay^2))*x*y*sech(12 - t)^2)/(sigmax^3*sigmay^3)
-(2*exp(-1/2*x^2/sigmax^2 - y^2/(2*sigmay^2))*sech(12 - t)^2*tanh(12 - t))/(sigmax*sigmay)2*exp(-1/2*x^2 - y^2/2)*sech(12 - t)^2*tanh(12 - t)
-
+Sz_tt(t, x, y, ::GaussianSource) = (2*exp(-1/2*x^2/sigmax^2 - y^2/(2*sigmay^2))*sech(12 - t)^2*tanh(12 - t))/(sigmax*sigmay)
 
 
 
