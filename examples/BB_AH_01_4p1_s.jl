@@ -3,24 +3,30 @@ using Jecco.AdS4_3_1_s
 grid = SpecCartGrid3D(
     x_min            = -5.0,
     x_max            =  5.0,
-    x_nodes          =  12,
+    x_nodes          =  60,
     y_min            = -5.0,
     y_max            =  5.0,
-    y_nodes          =  12,
+    y_nodes          =  60,
     u_outer_min      =  0.1,
-    u_outer_max      =  1.3,
-    u_outer_domains  =  3,
+    u_outer_max      =  1.01,
+    u_outer_domains  =  4,
     u_outer_nodes    =  24,
     u_inner_nodes    =  12,
     fd_order         =  4,
     sigma_diss       =  0.2,
 )
 
-id   = BlackBrane(
-   #AH_pos = 1.001,
-   AH_pos = 1.0001,
-)
 
+
+id = AdS4_3_1_s.BoostedBBnumerical(
+    AH_pos = 1.0,
+    a3_ampx	= 0.,
+    a3_translx	= -5/2,
+    A = 1.,
+    B = 1.0,
+    phase_a = 0.,
+    phase_fx = 0.,
+)
 
 
 evoleq = AffineNull(
