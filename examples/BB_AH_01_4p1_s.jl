@@ -8,9 +8,9 @@ grid = SpecCartGrid3D(
     y_max            =  5.0,
     y_nodes          =  96,
     u_outer_min      =  0.1,
-    u_outer_max      =  1.01,
-    u_outer_domains  =  8,
-    u_outer_nodes    =  24,
+    u_outer_max      =  1.05,
+    u_outer_domains  =  9,
+    u_outer_nodes    =  12,
     u_inner_nodes    =  12,
     fd_order         =  4,
     sigma_diss       =  0.2,
@@ -30,7 +30,7 @@ id = AdS4_3_1_s.BoostedBBnumerical(
 
 
 evoleq = AffineNull(
-    source = GaussianSource(time = 0.0, sigmax=1,sigmay=1),
+    source = GaussianSource(time = 0.0, sigmax=0.5,sigmay=0.5,x0=-2.0),
     gaugecondition = ConstantAH(u_AH = 1.0),
     #gaugecondition = ConstantAH(u_AH = 0.5),
 )
