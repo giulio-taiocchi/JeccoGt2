@@ -32,12 +32,12 @@ Sz_tt(t, x, y, ::NoSource) = 0.0
 #Gaussian source
 Base.@kwdef mutable struct GaussianSource{T} <: Source
 	time :: T = 0.0
-	Amp :: T = 1./100.
+	Amp :: T = 1.0 /100.0
 	x0 :: T = 0.0
 	y0 :: T = 0.0
 	sigmax :: T = 0.5
 	sigmay :: T = 0.5
-	t0 :: T = 10
+	t0 :: T = 10.0
 end
 
 Sz(t, x, y, GS ::GaussianSource) = 1 + (GaussianSource.Amp*exp(-1/2*(x - GaussianSource.x0)^2/GaussianSource.sigmax^2 - (y - GaussianSource.y0)^2/(2*GaussianSource.sigmay^2))*(1 + tanh(t - GaussianSource.t0)))/(2*Pi*GaussianSource.sigmax*GaussianSource.sigmay)
