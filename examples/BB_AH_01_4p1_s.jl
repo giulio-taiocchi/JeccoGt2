@@ -1,15 +1,15 @@
 using Jecco.AdS4_3_1_s
 
 grid = SpecCartGrid3D(
-    x_min            = -5.0,
-    x_max            =  5.0,
-    x_nodes          =  96,
-    y_min            = -5.0,
-    y_max            =  5.0,
-    y_nodes          =  96,
+    x_min            = -50.0,
+    x_max            =  50.0,
+    x_nodes          =  150,
+    y_min            = -50.0,
+    y_max            =  50.0,
+    y_nodes          =  150,
     u_outer_min      =  0.1,
     u_outer_max      =  1.05,
-    u_outer_domains  =  9,
+    u_outer_domains  =  7,
     u_outer_nodes    =  12,
     u_inner_nodes    =  12,
     fd_order         =  4,
@@ -21,26 +21,27 @@ grid = SpecCartGrid3D(
 id = AdS4_3_1_s.BoostedBBnumerical(
     AH_pos = 1.0,
     a3_ampx	= 0.,
-    a3_translx	= -5/2,
-    A = 1.,
-    B = 1.0,
+    a3_translx	= -1.375,
+    A = 0.559017,
+    B = 0.0,
     phase_a = 0.,
     phase_fx = 0.,
 )
 
 
 evoleq = AffineNull(
-    source = GaussianSource(time = 0.0, sigmax=0.5,sigmay=0.5,x0=-2.0),
+    source = GaussianSource(time = 0.0, sigmax=1.0,sigmay=1.0,Amp=1.0,t0=5.0),
     gaugecondition = ConstantAH(u_AH = 1.0),
     #gaugecondition = ConstantAH(u_AH = 0.5),
 )
 
 io = InOut(
-    out_boundary_every  = 1,
-    out_bulkconstrained_every = 1,
-    out_bulk_every      = 1,
-    #out_gauge_every     = 10,
+    out_boundary_every  = 100,
+    out_bulkconstrained_every = 25,
+    out_bulk_every      = 500,
+    #out_gauge_every     = 100,
     remove_existing     = true,
+    checkpoint_every_walltime_hours = 1,
 )
 
 integration = Integration(
