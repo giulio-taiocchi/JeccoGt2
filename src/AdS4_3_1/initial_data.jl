@@ -724,14 +724,17 @@ function init_data!(ff::Boundary, sys::System, id::BoostedBBnumerical)
     fill!(fy1, 0)
     a3data = h5open("/home/giulio/University/PhD/JeccoNewTest/Jecco_G/examples/Initiala3_BBB.h5")
     fxdata = h5open("/home/giulio/University/PhD/JeccoNewTest/Jecco_G/examples/Initialfx_BBB.h5")
+    fydata = h5open("/home/giulio/University/PhD/JeccoNewTest/Jecco_G/examples/Initialfy_BBB.h5")
     a3read = read(a3data["a3"])
     fxread = read(fxdata["fx"])
+    fyread = read(fydata["fy"])
     for j in 1:Ny
         for i in 1:Nx      
                 x = xx[i]
                 y = yy[j]         
                 a3[1,i,j] = a3read[j,i]
                 fx1[1,i,j] = fxread[j,i]
+                fy1[1,i,j] = fyread[j,i]
         end
     end
     ff
