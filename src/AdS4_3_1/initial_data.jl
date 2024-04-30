@@ -60,6 +60,12 @@ Base.@kwdef struct QNM_1D{T} <: InitialData
     ahf         :: AHF = AHF()
 end
 
+Base.@kwdef struct QNM_1DG{T} <: InitialData
+    energy_dens :: T   = 1.0
+    AH_pos      :: T   = 1.0
+    ahf         :: AHF = AHF()
+end
+
 Base.@kwdef struct BoostedBBSeminumerical{T} <: ID_ConstantAH
     #energy_dens :: T   = 5.0
     AH_pos      :: T   = 1.0
@@ -513,6 +519,40 @@ function init_data!(ff::Gauge, sys::System, id::QNM_1D)
     ff
 end
 
+#QNM in 1D initial data for the tensor sector
+analytic_B(i, j, k,u, x, y, id::QNM_1DG, whichsystem)  = 0
+analytic_G(i, j, k,u, x, y, id::QNM_1DG, whichsystem)  =  3/2*0.1 * u^6
+
+function init_data!(ff::Boundary, sys::System, id::QNM_1DG)
+    a3  = geta3(ff)
+    fx1 = getfx1(ff)
+    fy1 = getfy1(ff)
+
+    epsilon = id.energy_dens
+
+    a30 = (-epsilon) / 2
+
+    fill!(a3, a30)
+    fill!(fx1, 0)
+    fill!(fy1, 0)
+
+    ff
+end
+
+function init_data!(ff::Gauge, sys::System, id::QNM_1DG)
+    epsilon = id.energy_dens
+    AH_pos  = id.AH_pos
+
+    a30 = (-epsilon) / 2
+
+    xi0 = 0
+
+    xi  = getxi(ff)
+
+    fill!(xi, xi0)
+
+    ff
+end
 
 #numerical Black Brane
 function analytic_B(i, j, k, u, x, y, id::BBnumerical, whichsystem)
