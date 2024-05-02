@@ -25,6 +25,15 @@ Base.@kwdef struct BlackBrane{T} <: ID_ConstantAH
     ahf           :: AHF = AHF()
 end
 
+
+
+Base.@kwdef struct BlackBraneNumericalphi{T} <: ID_ConstantAH
+    energy_dens   :: T   = 1.0
+    AH_pos        :: T   = 1.0
+    phi0          :: T   = 0.0
+    ahf           :: AHF = AHF()
+end
+
 Base.@kwdef struct BlackBranePert{T} <: ID_ConstantAH
     energy_dens   :: T   = 1.0
     AH_pos        :: T   = 1.0
@@ -190,11 +199,16 @@ end
 function init_data!(bulkevols, gauge::Gauge, systems::SystemPartition,
                     id::InitialData)
     # the Ref() makes its argument a scalar with respect to broadcast
-    init_data!.(bulkevols, Ref(gauge), systems, Ref(id))
+    #init_data!.(bulkevols, Ref(gauge), systems, Ref(id))
+    counting = 0
+    for k in systems
+    	init_data!.(Ref(bulkevols.x[counting+1]), Ref(gauge), Ref(k), Ref(id),Ref(counting))
+    	counting = counting + 1
+    end
 end
 
 function init_data!(bulk::BulkEvolved, gauge::Gauge, sys::System{Inner},
-                    id::InitialData)
+                    id::InitialData,counting)
     Nu, Nx, Ny = size(sys)
     xx = sys.xcoord
     yy = sys.ycoord
@@ -245,7 +259,7 @@ function init_data!(bulk::BulkEvolved, gauge::Gauge, sys::System{Inner},
                     aux3    = aux * aux * aux
                     aux4    = aux * aux3
                     u_old   = u / aux
-                    phi_old = analytic_phi(u_old, x, y, id)
+                    phi_old = analytic_phi(a, i, j, u_old, x, y, id, counting)
 
                     phi[a,i,j] = xi_ij * xi_ij / (phi0 * phi0 * aux) +
                         phi_old / aux3
@@ -258,7 +272,7 @@ function init_data!(bulk::BulkEvolved, gauge::Gauge, sys::System{Inner},
 end
 
 function init_data!(bulk::BulkEvolved, gauge::Gauge, sys::System{Outer},
-                    id::InitialData)
+                    id::InitialData,counting)
     Nu, Nx, Ny = size(sys)
     xx = sys.xcoord
     yy = sys.ycoord
@@ -312,7 +326,7 @@ function init_data!(bulk::BulkEvolved, gauge::Gauge, sys::System{Outer},
                     aux3      = aux * aux * aux
                     aux4      = aux * aux3
                     u_old     = u / aux
-                    phi_old   = analytic_phi(u_old, x, y, id)
+                    phi_old   = analytic_phi(a, i, j, u_old, x, y, id, counting)
                     phi_inner = xi_ij * xi_ij / (phi0 * phi0 * aux) +
                         phi_old / aux3
 
@@ -837,6 +851,51 @@ function init_data!(ff::Gauge, sys::System, id::BlackBraneNoise)
     else
         xi0 = id.xi0
     end
+
+    xi  = getxi(ff)
+
+    fill!(xi, xi0)
+
+    ff
+end
+
+
+# analytic BlackBrane with  numerical initial data for the potential 
+
+analytic_B1(u, x, y, id::BlackBraneNumericalphi)  = 0
+analytic_B2(u, x, y, id::BlackBraneNumericalphi)  = 0
+analytic_G(u, x, y, id::BlackBraneNumericalphi)   = 0
+#analytic_phi(u, x, y, id::BlackBrane) = 0
+function analytic_phi(i, j, k, u, x, y, id::BlackBraneNumericalphi, whichsystem)
+	uu = u
+	initialphi=h5open("/home/giulio/University/PhD/JeccoNewTest/Jecco_G/examples/Initialphi_BB.h5")
+	system_index = string(whichsystem+1)
+	dset=initialphi[system_index]
+	phi=read(dset)
+	# here the indecex have to be inverted since julia and mathematica input and output mechanism is the opposite
+	# should be B[i,j,k]
+	phivalue = phi[k,j,i]
+	phivalue
+end
+
+function init_data!(ff::Boundary, sys::System, id::BlackBrane)
+    a40 = -id.energy_dens/0.75
+
+    a4  = geta4(ff)
+    fx2 = getfx2(ff)
+    fy2 = getfy2(ff)
+
+    fill!(a4, a40)
+    fill!(fx2, 0)
+    fill!(fy2, 0)
+
+    ff
+end
+
+function init_data!(ff::Gauge, sys::System, id::BlackBrane)
+    a40     = -id.energy_dens/0.75
+    AH_pos  = id.AH_pos
+    xi0     = (-a40)^0.25 - 1/AH_pos
 
     xi  = getxi(ff)
 

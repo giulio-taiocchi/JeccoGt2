@@ -17,7 +17,7 @@ grid = SpecCartGrid3D(
     sigma_diss       =  0.2,
 )
 
-id   = BlackBrane(
+id   = BlackBraneNumericalphi(
     AH_pos = 1.001,
 )
 

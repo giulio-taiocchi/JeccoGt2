@@ -29,9 +29,9 @@ evoleq = AffineNull(
 
 io = InOut(
     out_boundary_every  = 1,
-    #out_bulk_every      = 1,
-    #out_gauge_every     = 1,
-    #out_bulkconstrained_every = 1,
+    out_bulk_every      = 50,
+    out_gauge_every     = 50,
+    out_bulkconstrained_every = 50,
     remove_existing     = true,
 )
 
