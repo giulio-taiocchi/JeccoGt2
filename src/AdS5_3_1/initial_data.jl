@@ -878,7 +878,7 @@ function analytic_phi(i, j, k, u, x, y, id::BlackBraneNumericalphi, whichsystem)
 	phivalue
 end
 
-function init_data!(ff::Boundary, sys::System, id::BlackBrane)
+function init_data!(ff::Boundary, sys::System, id::BlackBraneNumericalphi)
     a40 = -id.energy_dens/0.75
 
     a4  = geta4(ff)
@@ -892,7 +892,7 @@ function init_data!(ff::Boundary, sys::System, id::BlackBrane)
     ff
 end
 
-function init_data!(ff::Gauge, sys::System, id::BlackBrane)
+function init_data!(ff::Gauge, sys::System, id::BlackBraneNumericalphi)
     a40     = -id.energy_dens/0.75
     AH_pos  = id.AH_pos
     xi0     = (-a40)^0.25 - 1/AH_pos

@@ -18,7 +18,7 @@ grid = SpecCartGrid3D(
 )
 
 id   = BlackBraneNumericalphi(
-    AH_pos = 1.001,
+    #AH_pos = 1.001,
 )
 
 evoleq = AffineNull(
