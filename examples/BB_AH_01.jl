@@ -29,14 +29,15 @@ evoleq = AffineNull(
 
 io = InOut(
     out_boundary_every  = 1,
-    out_bulk_every      = 1,
-    out_gauge_every     = 1,
+    out_bulk_every      = 50,
+    out_gauge_every     = 50,
+    out_bulkconstrained_every = 50,
     remove_existing     = true,
 )
 
 integration = Integration(
     dt              = 0.001,
-    tmax            = 1.0,
+    tmax            = 50.0,
     ODE_method      = AdS5_3_1.AB3(),
     filter_poststep = true,
 )
