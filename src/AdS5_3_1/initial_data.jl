@@ -875,6 +875,7 @@ function analytic_phi(i, j, k, u, x, y, id::BlackBraneNumericalphi, whichsystem)
 	# here the indecex have to be inverted since julia and mathematica input and output mechanism is the opposite
 	# should be B[i,j,k]
 	phivalue = phi[k,j,i]
+	println("phi in u=$uu index: $i is $phivalue")
 	phivalue
 end
 
