@@ -1,16 +1,16 @@
 using Jecco.AdS4_3_1_s
 
 grid = SpecCartGrid3D(
-    x_min            = -50.0,
-    x_max            =  50.0,
-    x_nodes          =  150,
-    y_min            = -50.0,
-    y_max            =  50.0,
-    y_nodes          =  150,
+    x_min            = -100000.0,
+    x_max            =  100000.0,
+    x_nodes          =  10,
+    y_min            = -100000.0,
+    y_max            =  100000.0,
+    y_nodes          =  100,
     u_outer_min      =  0.1,
-    u_outer_max      =  1.05,
-    u_outer_domains  =  7,
-    u_outer_nodes    =  12,
+    u_outer_max      =  1.03,
+    u_outer_domains  =  3,
+    u_outer_nodes    =  24,
     u_inner_nodes    =  12,
     fd_order         =  4,
     sigma_diss       =  0.2,
@@ -20,17 +20,11 @@ grid = SpecCartGrid3D(
 
 id = AdS4_3_1_s.BoostedBBnumerical(
     AH_pos = 1.0,
-    a3_ampx	= 0.,
-    a3_translx	= -1.375,
-    A = 0.559017,
-    B = 0.0,
-    phase_a = 0.,
-    phase_fx = 0.,
 )
 
 
 evoleq = AffineNull(
-    source = GaussianSource(time = 0.0, sigmax=0.015625,sigmay=0.015625,Amp=1.0,t0=0.8),
+    source = GaussianSource(time = 0.0, sigmax=0.015625,sigmay=0.015625,x0=-0.9 pi, y0=0,Amp=1.0,t0=0.8),
     gaugecondition = ConstantAH(u_AH = 1.0),
     #gaugecondition = ConstantAH(u_AH = 0.5),
 )
