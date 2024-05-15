@@ -24,7 +24,7 @@ id = AdS4_3_1_s.BoostedBBnumerical(
 
 
 evoleq = AffineNull(
-    source = GaussianSource(time = 0.0, sigmax=0.015625,sigmay=0.015625,x0=-0.9 pi, y0=0,Amp=1.0,t0=0.8),
+    source = GaussianSource(time = 0.0, sigmax=0.015625,sigmay=0.015625, x0=-2.827433388230814, y0=0.0,Amp=1.0,t0=0.8),
     gaugecondition = ConstantAH(u_AH = 1.0),
     #gaugecondition = ConstantAH(u_AH = 0.5),
 )
