@@ -927,14 +927,14 @@ function analytic_B(i, j, k, u, x, y, id::BoostedBBnumerical, whichsystem)
 	Bvalue
 end
 
-analytic_G(i, j, k, u, x, y, id::BoostedBBnumerical,whichsystem)  = 
+function analytic_G(i, j, k, u, x, y, id::BoostedBBnumerical,whichsystem)  
 	uu = u
 	initialG=h5open("/home/giulio/University/PhD/JeccoNewTest/Jecco_G/examples/InitialG_BBB.h5")
 	system_index = string(whichsystem+1)
 	dset=initialG[system_index]
 	G=read(dset)
 	# here the indecex have to be inverted since julia and mathematica input and output mechanism is the opposite
-	# should be B[i,j,k]
+	# should be G[i,j,k]
 	Gvalue = G[k,j,i]
 	Gvalue
 end
