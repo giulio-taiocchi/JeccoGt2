@@ -79,6 +79,8 @@ Base.@kwdef struct BoostedBBSeminumerical{T} <: ID_ConstantAH
     phase_fx	:: T = 0.0
 end
 
+#does this should be InitialData ot ID_ConstantAh type
+
 Base.@kwdef struct BoostedBBnumerical{T} <: ID_ConstantAH
     #energy_dens :: T   = 5.0
     AH_pos      :: T   = 1.0

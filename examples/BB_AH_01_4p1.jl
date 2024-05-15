@@ -1,15 +1,16 @@
 using Jecco.AdS4_3_1
 
+
 grid = SpecCartGrid3D(
-    x_min            = -5.0,
-    x_max            =  5.0,
-    x_nodes          =  12,
-    y_min            = -5.0,
-    y_max            =  5.0,
-    y_nodes          =  12,
+    x_min            = -750.0,
+    x_max            =  750.0,
+    x_nodes          =  100,
+    y_min            = -750.0,
+    y_max            =  750.0,
+    y_nodes          =  100,
     u_outer_min      =  0.1,
-    u_outer_max      =  1.3,
-    u_outer_domains  =  2,
+    u_outer_max      =  1.03,
+    u_outer_domains  =  4,
     u_outer_nodes    =  24,
     u_inner_nodes    =  12,
     fd_order         =  4,
