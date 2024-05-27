@@ -377,7 +377,7 @@ end
 # BlackBranePert initial data
 
 
-function analytic_B(u, x, y, id::BlackBranePert)
+function analytic_B(i, j, k,u, x, y, id::BlackBranePert, whichsystem)
     # add the perturbation on B
     pert_amp = id.B_amp
     xmax     = id.xmax
@@ -393,7 +393,7 @@ function analytic_B(u, x, y, id::BlackBranePert)
 end
 
 
-function analytic_G(u, x, y, id::BlackBranePert)
+function analytic_G(i, j, k,u, x, y, id::BlackBranePert, whichsystem)
     # add the perturbation on G
     pert_amp = id.G_amp
     xmax     = id.xmax

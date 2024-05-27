@@ -97,6 +97,7 @@ function System(gridtype::GT, ucoord::GaussLobattoCoord,
     uinterp = ChebInterpolator(ucoord.min, ucoord.max, ucoord.nodes)
 
     KO_order = ord + 1
+    #KO_order = ord + 2
     filters  = Filters(filter_gamma, KO_order, sigma_diss, ucoord.nodes,
                        xcoord.nodes, ycoord.nodes)
 

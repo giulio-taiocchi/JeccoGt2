@@ -1,11 +1,11 @@
 using Jecco.AdS4_3_1_s
 
 grid = SpecCartGrid3D(
-    x_min            = -100000.0,
-    x_max            =  100000.0,
-    x_nodes          =  10,
-    y_min            = -100000.0,
-    y_max            =  100000.0,
+    x_min            = -250.0,
+    x_max            =  250.0,
+    x_nodes          =  100,
+    y_min            = -250.0,
+    y_max            =  250.0,
     y_nodes          =  100,
     u_outer_min      =  0.1,
     u_outer_max      =  1.03,
@@ -19,24 +19,25 @@ grid = SpecCartGrid3D(
 
 
 id = AdS4_3_1_s.BoostedBBnumerical(
-    AH_pos = 1.0,
+    AH_pos = 0.997514,
 )
 
 
 evoleq = AffineNull(
-    source = GaussianSource(time = 0.0, sigmax=1.0,sigmay=1.0, x0=0.0, y0=0.0,Amp=1.0,t0=1.0, L=100000.0),
-    
+    source = GaussianSource(time = 0.0, sigmax=0.8,sigmay=0.8, x0=0.0, y0=0.0,Amp=2.6,t0=-2.0, L=500.0),
+    #source = NoSource(),
     gaugecondition = ConstantAH(u_AH = 1.0),
-    #gaugecondition = ConstantAH(u_AH = 0.5),
 )
 
 io = InOut(
-    out_boundary_every  = 100,
-    out_bulkconstrained_every = 25,
-    out_bulk_every      = 500,
-    #out_gauge_every     = 100,
+    #out_boundary_every  = 10,
+    out_bulkconstrained_every = 200,
+    #out_bulk_every      = 10,
+    #out_gauge_every     = 1,
     remove_existing     = true,
-    checkpoint_every_walltime_hours = 1,
+    checkpoint_every_walltime_hours = 0.1,
+    #recover                     = :yes,
+    #recover_dir                 = "/home/giulio/University/PhD/JeccoGt2/examples/BB_AH_01_4p1_sA0d25XY300L500"
 )
 
 integration = Integration(
