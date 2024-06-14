@@ -10,11 +10,11 @@ grid = SpecCartGrid3D(
     y_nodes          =  32,
     u_outer_min      =  0.1,
     u_outer_max      =  1.2,
-    u_outer_domains  =  2,
-    u_outer_nodes    =  32,
+    u_outer_domains  =  3,
+    u_outer_nodes    =  28,
     u_inner_nodes    =  12,
     fd_order         =  4,
-    sigma_diss       =  0.2,
+    sigma_diss       =  0.01,
 )
 
 id = BlackBrane_xi1(
@@ -22,9 +22,9 @@ id = BlackBrane_xi1(
     AH_pos = 1.0,
     xi_0   = 0.0,
     xi_nx  = 1,
-    xi_Ax  = 0.05,
-    xi_ny  = 1,
-    xi_Ay  = 0.05,
+    xi_Ax  = 0.1,
+    xi_ny  = 0,
+    xi_Ay  = 0.0,
     xmax = grid.x_max,
     xmin = grid.x_min,
     ymax = grid.y_max,
@@ -43,8 +43,8 @@ diag = DiagAH(
 
 io = InOut(
     #out_boundary_every  = 10,
-    out_bulk_every      = 100,
-    #out_gauge_every     = 10,
+    out_bulkconstrained_every      = 100,
+    out_gauge_every     = 100,
 )
 
 integration = Integration(

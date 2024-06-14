@@ -1,14 +1,15 @@
-using Jecco.AdS4_3_1
+
+using Jecco.AdS5_3_1
 
 grid = SpecCartGrid3D(
     x_min            = -1.0,
     x_max            =  1.0,
-    x_nodes          =  80,
+    x_nodes          =  10,
     y_min            = -1.0,
     y_max            =  1.0,
-    y_nodes          =  80,
+    y_nodes          =  10,
     u_outer_min      =  0.1,
-    u_outer_max      =  1.03,
+    u_outer_max      =  1.1,
     u_outer_domains  =  6,
     u_outer_nodes    =  12,
     u_inner_nodes    =  12,
@@ -17,35 +18,34 @@ grid = SpecCartGrid3D(
 )
 
 id = BlackBranePert(
-    #B_amp  = 0.1,
-    energy_dens  = 2.0,
-    #B_ny = 1,
-    #a3_ampx = 0.1,
-    #a3_kx  = 2,
-    a3_ampy = 0.05,
-    #a3_ky  = 10,
-    xmax = grid.x_max,
-    xmin = grid.x_min,
-    ymax = grid.y_max,
-    ymin = grid.y_min,
+    energy_dens = 0.75,
+    a4_ampx  = 0.05,
+    #a4_kx    = 1,
+    #AH_pos   = 1.0,
+    xmax     = grid.x_max,
+    xmin     = grid.x_min,
+    ymin     = grid.y_min,
+    ymax     = grid.y_max,
 )
 
 evoleq = AffineNull(
+    phi0           = 0.0,
+    potential      = ZeroPotential(),
     gaugecondition = ConstantAH(u_AH = 1.0),
 )
 
 io = InOut(
-    #out_boundary_every   = 1,
-    #out_bulk_every        = 1,
-    out_bulkconstrained_every = 20,
-    #out_gauge_every      = 10,
+    #out_boundary_every  = 200,
+    out_bulkconstrained_every = 50,
+    #out_bulk_every      = 1000,
+    #out_gauge_every     = 200,
     remove_existing     = true,
 )
 
 integration = Integration(
     dt              = 0.001,
     tmax            = 20.0,
-    ODE_method      = AdS4_3_1.AB4(),
+    ODE_method      = AdS5_3_1.AB4(),
     filter_poststep = true,
 )
 
