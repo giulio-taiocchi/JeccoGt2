@@ -946,28 +946,28 @@ function init_data!(ff::Boundary, sys::System, id::BoostedBBnumerical)
     xx = sys.xcoord
     yy = sys.ycoord
     
-    a3  = geta3(ff)
-    fx1 = getfx1(ff)
-    fy1 = getfy1(ff)
+    a4  = geta4(ff)
+    fx2 = getfx2(ff)
+    fy2 = getfy2(ff)
+
+    fill!(a4, a40)
+    fill!(fx2, 0)
+    fill!(fy2, 0)
     
-
-
-    fill!(a3, 0)
-    fill!(fx1, 0)
-    fill!(fy1, 0)
-    a3data = h5open("/home/giulio/University/PhD/JeccoNewTest/Jecco_G/examples/Initiala3_BBB.h5")
-    fxdata = h5open("/home/giulio/University/PhD/JeccoNewTest/Jecco_G/examples/Initialfx_BBB.h5")
-    fydata = h5open("/home/giulio/University/PhD/JeccoNewTest/Jecco_G/examples/Initialfy_BBB.h5")
-    a3read = read(a3data["a3"])
-    fxread = read(fxdata["fx"])
-    fyread = read(fydata["fy"])
+   
+    a4data = h5open("/home/giulio/University/PhD/JeccoNewTest/Jecco_G/examples/Initiala3_BBB.h5")
+    fx2data = h5open("/home/giulio/University/PhD/JeccoNewTest/Jecco_G/examples/Initialfx_BBB.h5")
+    fy2data = h5open("/home/giulio/University/PhD/JeccoNewTest/Jecco_G/examples/Initialfy_BBB.h5")
+    a4read = read(a4data["a3"])
+    fx2read = read(fx2data["fx"])
+    fy2read = read(fy2data["fy"])
     for j in 1:Ny
         for i in 1:Nx      
                 x = xx[i]
                 y = yy[j]         
-                a3[1,i,j] = a3read[j,i]
-                fx1[1,i,j] = fxread[j,i]
-                fy1[1,i,j] = fyread[j,i]
+                a4[1,i,j] = a3read[j,i]
+                fx2[1,i,j] = fx2read[j,i]
+                fy2[1,i,j] = fy2read[j,i]
         end
     end
     ff
