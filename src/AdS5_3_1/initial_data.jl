@@ -950,7 +950,7 @@ function init_data!(ff::Boundary, sys::System, id::BoostedBBnumerical)
     fx2 = getfx2(ff)
     fy2 = getfy2(ff)
 
-    fill!(a4, a40)
+    fill!(a4, 0)
     fill!(fx2, 0)
     fill!(fy2, 0)
     
