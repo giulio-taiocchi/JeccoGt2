@@ -37,7 +37,7 @@ end
 Base.@kwdef struct BoostedBBnumerical{T} <: ID_ConstantAH
     #energy_dens :: T   = 5.0
     AH_pos      :: T   = 1.0
-    phi0          :: T   = 0.0
+    phi0        :: T   = 0.0
     ahf         :: AHF = AHF()
 end
 
@@ -240,9 +240,9 @@ function init_data!(bulk::BulkEvolved, gauge::Gauge, sys::System{Inner},
                 aux3    = aux * aux * aux
                 aux4    = aux * aux3
                 u_old   = u / aux
-                B1_old  = analytic_B1(u_old, x, y, id)
-                B2_old  = analytic_B2(u_old, x, y, id)
-                G_old   = analytic_G(u_old, x, y, id)
+                B1_old  = analytic_B1(a, i, j, u_old, x, y, id, counting)
+                B2_old  = analytic_B2(a, i, j, u_old, x, y, id, counting)
+                G_old   = analytic_G(a, i, j, u_old, x, y, id, counting)
 
                 B1[a,i,j]  = B1_old / aux4
                 B2[a,i,j]  = B2_old / aux4
@@ -304,9 +304,9 @@ function init_data!(bulk::BulkEvolved, gauge::Gauge, sys::System{Outer},
                 aux3      = aux * aux * aux
                 aux4      = aux * aux3
                 u_old     = u / aux
-                B1_old    = analytic_B1(u_old, x, y, id)
-                B2_old    = analytic_B2(u_old, x, y, id)
-                G_old     = analytic_G(u_old, x, y, id)
+                B1_old    = analytic_B1(a, i, j, u_old, x, y, id, counting)
+                B2_old    = analytic_B2(a, i, j, u_old, x, y, id, counting)
+                G_old     = analytic_G(a, i, j, u_old, x, y, id, counting)
                 B1_inner  = B1_old / aux4
                 B2_inner  = B2_old / aux4
                 G_inner   = G_old  / aux4
