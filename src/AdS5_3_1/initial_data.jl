@@ -954,7 +954,6 @@ function init_data!(ff::Boundary, sys::System, id::BoostedBBnumerical)
     fill!(fx2, 0)
     fill!(fy2, 0)
     
-   
     a4data = h5open("/home/giulio/University/PhD/JeccoNewTest/Jecco_G/examples/Initiala3_BBB.h5")
     fx2data = h5open("/home/giulio/University/PhD/JeccoNewTest/Jecco_G/examples/Initialfx_BBB.h5")
     fy2data = h5open("/home/giulio/University/PhD/JeccoNewTest/Jecco_G/examples/Initialfy_BBB.h5")
@@ -965,7 +964,7 @@ function init_data!(ff::Boundary, sys::System, id::BoostedBBnumerical)
         for i in 1:Nx      
                 x = xx[i]
                 y = yy[j]         
-                a4[1,i,j] = a3read[j,i]
+                a4[1,i,j] = a4read[j,i]
                 fx2[1,i,j] = fx2read[j,i]
                 fy2[1,i,j] = fy2read[j,i]
         end
