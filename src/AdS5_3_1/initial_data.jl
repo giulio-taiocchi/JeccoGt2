@@ -933,7 +933,11 @@ analytic_B2(i, j, k, u, x, y, id::BoostedBBnumerical, whichsystem)  = 0
 function analytic_G(i, j, k, u, x, y, id::BoostedBBnumerical,whichsystem)  
 	uu = u
 	indexi = i
-	println("index i $indexi, u value:$uu")
+	if j==1 
+		if k==1
+			println("index i $indexi, u value:$uu")
+		end
+	end
 	initialG=h5open("/home/giulio/University/PhD/JeccoNewTest/Jecco_G/examples/InitialG_BBB.h5")
 	system_index = string(whichsystem+1)
 	dset=initialG[system_index]
