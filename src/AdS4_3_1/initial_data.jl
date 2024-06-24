@@ -295,8 +295,8 @@ end
 
 # BlackBrane_xi1
 
-analytic_B(u, x, y, id::BlackBrane_xi1)  = 0
-analytic_G(u, x, y, id::BlackBrane_xi1)   = 0
+analytic_B(i, j, k, u, x, y, id::BlackBrane_xi1, whichsystem)   = 0
+analytic_G(i, j, k, u, x, y,  id::BlackBrane_xi1, whichsystem)    = 0
 
 function init_data!(ff::Boundary, sys::System, id::BlackBrane_xi1)
     a30 = id.a30
