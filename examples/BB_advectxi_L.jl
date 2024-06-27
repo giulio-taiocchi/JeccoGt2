@@ -1,5 +1,5 @@
 
-using Jecco.AdS4_3_1
+using Jecco.AdS5_3_1
 
 grid = SpecCartGrid3D(
     x_min            = -5.0,
@@ -50,7 +50,7 @@ io = InOut(
 integration = Integration(
     dt              = 0.002,
     tmax            = 20.0,
-    ODE_method      = AdS4_3_1.AB3(),
+    ODE_method      = AdS5_3_1.AB3(),
     filter_poststep = true,
 )
 

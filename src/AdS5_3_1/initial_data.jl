@@ -349,10 +349,10 @@ end
 
 # BlackBrane_xi1
 
-analytic_B1(u, x, y, id::BlackBrane_xi1)  = 0
-analytic_B2(u, x, y, id::BlackBrane_xi1)  = 0
-analytic_G(u, x, y, id::BlackBrane_xi1)   = 0
-analytic_phi(u, x, y, id::BlackBrane_xi1) = 0
+analytic_B1(i, j, k, u, x, y,  id::BlackBrane_xi1, whichsystem)  = 0
+analytic_B2(i, j, k, u, x, y, id::BlackBrane_xi1, whichsystem)  = 0
+analytic_G(i, j, k, u, x, y,  id::BlackBrane_xi1, whichsystem)   = 0
+analytic_phi(i, j, k, u, x, y, id::BlackBrane_xi1, whichsystem) = 0
 
 function init_data!(ff::Boundary, sys::System, id::BlackBrane_xi1)
     a40 = id.a40

@@ -1,5 +1,5 @@
 
-using Jecco.AdS4_3_1
+using Jecco.AdS5_3_1
 
 grid = SpecCartGrid3D(
     x_min            = -5.0,
@@ -18,7 +18,7 @@ grid = SpecCartGrid3D(
 )
 
 id = BlackBrane_xi1(
-    a40    = -1.0,
+    #a40    = -1.0,
     AH_pos = 1.0,
     xi_0   = 0.0,
     xi_nx  = 1,
@@ -50,7 +50,7 @@ io = InOut(
 integration = Integration(
     dt              = 0.002,
     tmax            = 20.0,
-    ODE_method      = AdS4_3_1.AB3(),
+    ODE_method      = AdS5_3_1.AB3(),
     filter_poststep = true,
 )
 
