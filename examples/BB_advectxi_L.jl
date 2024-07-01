@@ -45,6 +45,7 @@ io = InOut(
     #out_boundary_every  = 10,
     out_bulkconstrained_every      = 100,
     out_gauge_every     = 100,
+    remove_existing     = true,
 )
 
 integration = Integration(

@@ -18,7 +18,7 @@ grid = SpecCartGrid3D(
 )
 
 id = BlackBrane_xi1(
-    #a40    = -1.0,
+    a40    = -1.0,
     AH_pos = 1.0,
     xi_0   = 0.0,
     xi_nx  = 1,
@@ -45,6 +45,7 @@ io = InOut(
     #out_boundary_every  = 10,
     out_bulkconstrained_every      = 100,
     out_gauge_every     = 100,
+    remove_existing     = true,
 )
 
 integration = Integration(

@@ -916,19 +916,19 @@ end
 # Numerical boosted Black Brane
 analytic_phi(i, j, k, u, x, y, id::BoostedBBnumerical, whichsystem) = 0
 analytic_B1(i, j, k, u, x, y, id::BoostedBBnumerical, whichsystem)  = 0
-analytic_B2(i, j, k, u, x, y, id::BoostedBBnumerical, whichsystem)  = 0
+#analytic_B2(i, j, k, u, x, y, id::BoostedBBnumerical, whichsystem)  = 0
 
-#function analytic_B1(i, j, k, u, x, y, id::BoostedBBnumerical, whichsystem)
-#	uu = u
-#	initialB1=h5open("/home/giulio/University/PhD/JeccoNewTest/Jecco_G/examples/InitialB1_BBB.h5")
-#	system_index = string(whichsystem+1)
-#	dset=initialB1[system_index]
-#	B1=read(dset)
+function analytic_B2(i, j, k, u, x, y, id::BoostedBBnumerical, whichsystem)
+	uu = u
+	initialB1=h5open("/home/giulio/University/PhD/JeccoNewTest/Jecco_G/examples/InitialB2_BBB.h5")
+	system_index = string(whichsystem+1)
+	dset=initialB2[system_index]
+	B2=read(dset)
 	# here the indecex have to be inverted since julia and mathematica input and output mechanism is the opposite
 	# should be B[i,j,k]
-#	Bvalue1 = B1[k,j,i]	
-#	Bvalue1
-#end
+	Bvalue2 = B2[k,j,i]	
+	Bvalue2
+end
 
 function analytic_G(i, j, k, u, x, y, id::BoostedBBnumerical,whichsystem)  
 	uu = u
