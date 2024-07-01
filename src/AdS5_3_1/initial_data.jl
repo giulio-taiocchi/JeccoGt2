@@ -920,7 +920,7 @@ analytic_B1(i, j, k, u, x, y, id::BoostedBBnumerical, whichsystem)  = 0
 
 function analytic_B2(i, j, k, u, x, y, id::BoostedBBnumerical, whichsystem)
 	uu = u
-	initialB1=h5open("/home/giulio/University/PhD/JeccoNewTest/Jecco_G/examples/InitialB2_BBB.h5")
+	initialB2=h5open("/home/giulio/University/PhD/JeccoNewTest/Jecco_G/examples/InitialB2_BBB.h5")
 	system_index = string(whichsystem+1)
 	dset=initialB2[system_index]
 	B2=read(dset)
