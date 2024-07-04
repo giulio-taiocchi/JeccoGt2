@@ -11,10 +11,10 @@ grid = SpecCartGrid3D(
     u_outer_min      =  0.1,
     u_outer_max      =  1.2,
     u_outer_domains  =  3,
-    u_outer_nodes    =  24,
+    u_outer_nodes    =  28,
     u_inner_nodes    =  12,
-    fd_order         =  4,
-    sigma_diss       =  0.001,
+    fd_order         =  2,
+    sigma_diss       =  0.01,
 )
 
 id = BlackBranePert(
@@ -44,7 +44,7 @@ io = InOut(
 
 integration = Integration(
     #dt              = 0.001,
-    tmax            = 20.0,
+    tmax            = 10.0,
     ODE_method      = AdS5_3_1.VCABM3(),
     filter_poststep = true,
 )

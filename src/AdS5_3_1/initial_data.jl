@@ -430,9 +430,9 @@ end
 
 # BlackBranePert initial data
 
-analytic_phi(u, x, y, id::BlackBranePert) = id.phi2 / id.phi0^3 + id.phi5 / id.phi0^3*u
+analytic_phi(i, j, k, u, x, y,  id::BlackBranePert, whichsystem) = id.phi2 / id.phi0^3 + id.phi5 / id.phi0^3*u
 
-function analytic_B1(u, x, y, id::BlackBranePert)
+function analytic_B1(i, j, k, u, x, y,  id::BlackBranePert, whichsystem)
     # add the perturbation on B1
     pert_amp = id.B1_amp
     xmax     = id.xmax
@@ -447,7 +447,7 @@ function analytic_B1(u, x, y, id::BlackBranePert)
         sin( -2 * π * ny * (ymax-y)/(ymax-ymin) )
 end
 
-function analytic_B2(u, x, y, id::BlackBranePert)
+function analytic_B2(i, j, k, u, x, y, id::BlackBranePert, whichsystem)
     # add the perturbation on B2
     pert_amp = id.B2_amp
     xmax     = id.xmax
@@ -462,7 +462,7 @@ function analytic_B2(u, x, y, id::BlackBranePert)
         sin( -2 * π * ny * (ymax-y)/(ymax-ymin) )
 end
 
-function analytic_G(u, x, y, id::BlackBranePert)
+function analytic_G(i, j, k, u, x, y,  id::BlackBranePert, whichsystem)
     # add the perturbation on G
     pert_amp = id.G_amp
     xmax     = id.xmax

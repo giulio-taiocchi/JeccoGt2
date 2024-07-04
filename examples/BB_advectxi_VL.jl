@@ -34,7 +34,7 @@ id = BlackBrane_xi1(
 evoleq = AffineNull(
     #phi0           = 0.0,
     #potential      = ZeroPotential(),
-    gaugecondition = Advect_xi(xi_vx = 0.1),
+    gaugecondition = Advect_xi(xi_vx = 1.0),
 )
 
 diag = DiagAH(
@@ -50,8 +50,8 @@ io = InOut(
 
 integration = Integration(
     dt              = 0.002,
-    tmax            = 20.0,
-    ODE_method      = AdS5_3_1.AB3(),
+    tmax            = 10.0,
+    ODE_method      = AdS5_3_1.AM3(),
     filter_poststep = true,
 )
 

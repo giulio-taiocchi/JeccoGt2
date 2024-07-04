@@ -41,7 +41,7 @@ io = InOut(
 integration = Integration(
 
     dt              = 0.001,
-    tmax            = 50,
+    tmax            = 20,
     ODE_method      = AdS5_3_1.VCABM3(),
     filter_poststep = true,
 )
