@@ -85,6 +85,7 @@ Base.@kwdef struct BoostedBBnumerical{T} <: ID_ConstantAH
     #energy_dens :: T   = 5.0
     AH_pos      :: T   = 1.0
     ahf         :: AHF = AHF()
+    IDdir	:: AbstractString = "/home/giulio/University/PhD/JeccoNewTest/Jecco_G/examples/"
 end
 
 Base.@kwdef struct BBnumerical{T} <: InitialData
@@ -739,7 +740,7 @@ function analytic_B(i, j, k, u, x, y, id::BoostedBBnumerical, whichsystem)
 	system_index = string(whichsystem+1)
 	dset=initialB[system_index]
 	B=read(dset)
-	# here the indecex have to be inverted since julia and mathematica input and output mechanism is the opposite
+	# here the indexes have to be inverted since julia and mathematica input and output mechanism is the opposite
 	# should be B[i,j,k]
 	Bvalue = B[k,j,i]
 	
@@ -764,7 +765,9 @@ function init_data!(ff::Boundary, sys::System, id::BoostedBBnumerical)
     fill!(a3, 0)
     fill!(fx1, 0)
     fill!(fy1, 0)
-    a3data = h5open("/home/giulio/University/PhD/JeccoNewTest/Jecco_G/examples/Initiala3_BBB.h5")
+    a3dir = id.IDdir
+    a3directory = join(a3dir,"Initiala3_BBB.h5")
+    a3data = h5open(a3directory)
     fxdata = h5open("/home/giulio/University/PhD/JeccoNewTest/Jecco_G/examples/Initialfx_BBB.h5")
     fydata = h5open("/home/giulio/University/PhD/JeccoNewTest/Jecco_G/examples/Initialfy_BBB.h5")
     a3read = read(a3data["a3"])

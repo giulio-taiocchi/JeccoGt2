@@ -1,4 +1,3 @@
-
 using Jecco.AdS4_3_1
 
 grid = SpecCartGrid3D(
@@ -9,21 +8,21 @@ grid = SpecCartGrid3D(
     y_max            =  5.0,
     y_nodes          =  128,
     u_outer_min      =  0.1,
-    u_outer_max      =  1.1,
-    u_outer_domains  =  6,
-    u_outer_nodes    =  12,
+    u_outer_max      =  1.2,
+    u_outer_domains  =  3,
+    u_outer_nodes    =  28,
     u_inner_nodes    =  12,
-    fd_order         =  4,
-    sigma_diss       =  0.2,
+    fd_order         =  2,
+    sigma_diss       =  0.0,
 )
 
 id = BlackBranePert(
-    B_amp  = 0.1,
+    #B_amp  = 0.1,
     energy_dens  = 2.0,
     #B_ny = 1.0,
     #a3_ampx = 0.1,
     #a3_kx  = 2,
-    #a3_ampy = 0.05,
+    a3_ampy = 0.05,
     #a3_ky  = 10,
     xmax = grid.x_max,
     xmin = grid.x_min,
@@ -44,9 +43,9 @@ io = InOut(
 )
 
 integration = Integration(
-    dt              = 0.0005,
-    tmax            = 20.0,
-    ODE_method      = AdS4_3_1.AB3(),
+    #dt              = 0.001,
+    tmax            = 10.0,
+    ODE_method      = AdS4_3_1.VCABM3(),
     filter_poststep = true,
 )
 
