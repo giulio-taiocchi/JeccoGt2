@@ -86,7 +86,7 @@ Base.@kwdef struct BoostedBBseminumerical{T} <: InitialData
     phase_fx	:: T = 0.0
 end
 
-Base.@kwdef struct BoostedBBnumerical{T} <: InitialData
+Base.@kwdef struct BoostedBBnumerical{T} <: ID_ConstantAH
     #energy_dens :: T   = 5.0
     AH_pos      :: T   = 1.0
     ahf         :: AHF = AHF()
@@ -96,6 +96,7 @@ Base.@kwdef struct BoostedBBnumerical{T} <: InitialData
     B		:: T = 0.0
     phase_a	:: T = 0.0
     phase_fx	:: T = 0.0
+    IDdir	:: AbstractString = "/home/giulio/University/PhD/JeccoNewTest/Jecco_G/examples/"
 end
 
 function (id::InitialData)(bulkconstrains, bulkevols, bulkderivs, boundary::Boundary,
@@ -716,7 +717,9 @@ end
 # Numerical boosted Black Brane
 function analytic_B(i, j, k, u, x, y, id::BoostedBBnumerical, whichsystem)
 	uu = u
-	initialB=h5open("/home/giulio/University/PhD/JeccoNewTest/Jecco_G/examples/InitialB_BBB.h5")
+	dir = id.IDdir
+	Bdirectory = dir*"InitialB_BBB.h5"
+	initialB=h5open(Bdirectory)
 	system_index = string(whichsystem+1)
 	dset=initialB[system_index]
 	B=read(dset)
@@ -745,9 +748,13 @@ function init_data!(ff::Boundary, sys::System, id::BoostedBBnumerical)
     fill!(a3, 0)
     fill!(fx1, 0)
     fill!(fy1, 0)
-    a3data = h5open("/home/giulio/University/PhD/JeccoNewTest/Jecco_G/examples/Initiala3_BBB.h5")
-    fxdata = h5open("/home/giulio/University/PhD/JeccoNewTest/Jecco_G/examples/Initialfx_BBB.h5")
-    fydata = h5open("/home/giulio/University/PhD/JeccoNewTest/Jecco_G/examples/Initialfy_BBB.h5")
+    dir = id.IDdir
+    a3directory = dir*"Initiala3_BBB.h5"
+    fx1directory = dir*"Initialfx_BBB.h5"
+    fy1directory = dir*"Initialfy_BBB.h5"
+    a3data = h5open(a3directory)
+    fxdata = h5open(fy1directory)
+    fydata = h5open(fy1directory)
     a3read = read(a3data["a3"])
     fxread = read(fxdata["fx"])
     fyread = read(fydata["fy"])

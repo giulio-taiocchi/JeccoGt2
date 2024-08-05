@@ -1,4 +1,4 @@
-using Jecco.AdS4_3_1_s
+using Jecco.AdS4_3_1
 
 grid = SpecCartGrid3D(
     x_min            = -100000.0,
@@ -17,34 +17,32 @@ grid = SpecCartGrid3D(
 )
 
 
-
-id = AdS4_3_1_s.BoostedBBnumerical(
-    AH_pos = 1.0,
-    IDdir = "/home/giulio/University/PhD/Initial_data/sourced/",
+id = AdS4_3_1.BoostedBBnumerical(
+    AH_pos = 0.8765655934561168,
+    IDdir = "/home/giulio/University/PhD/JeccoNewTest/Jecco_G/examples/",
 )
 
-
 evoleq = AffineNull(
-    source = GaussianSource(time = 0.0, sigmax=0.8,sigmay=0.8, x0=0.0, y0=0.0,Amp=2.6,t0=-2, L=200000.0),
-    #source = NoSource(),
-    gaugecondition = ConstantAH(u_AH = 1.0),
+    gaugecondition = ConstantAH(u_AH = 1.00),
+    
 )
 
 io = InOut(
-    #out_boundary_every  = 10,
+    #out_boundary_every  = 3,
+    #out_bulk_every      = 1,
     out_bulkconstrained_every = 200,
-    #out_bulk_every      = 10,
     #out_gauge_every     = 1,
     remove_existing     = true,
     checkpoint_every_walltime_hours = 0.1,
     #recover                     = :yes,
-    #recover_dir                 = "/home/giulio/University/PhD/JeccoGt2/examples/BB_AH_01_4p1_sA0d25XY300L500"
+    #recover_dir                 = "/home/giulio/University/PhD/JeccoGt2/examples/FullBBB_3p1"
 )
 
 integration = Integration(
+
     #dt              = 0.001,
-    tmax            = 50.0,
-    #ODE_method      = AdS4_3_1.AB3(),
+    tmax            = 20,
+    ODE_method      = AdS4_3_1.AB3(),
     filter_poststep = true,
 )
 
