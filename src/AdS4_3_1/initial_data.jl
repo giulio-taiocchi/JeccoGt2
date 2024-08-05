@@ -767,7 +767,7 @@ function init_data!(ff::Boundary, sys::System, id::BoostedBBnumerical)
     fill!(fy1, 0)
     a3dir = id.IDdir
     println("directory name : $a3dir")
-    a3directory = join(a3dir,"Initiala3_BBB.h5")
+    a3directory = a3dir*"Initiala3_BBB.h5"
     println("directory name : $a3directory")
     a3data = h5open(a3directory)
     fxdata = h5open("/home/giulio/University/PhD/JeccoNewTest/Jecco_G/examples/Initialfx_BBB.h5")
