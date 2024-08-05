@@ -772,7 +772,7 @@ function init_data!(ff::Boundary, sys::System, id::BoostedBBnumerical)
     fx1directory = dir*"Initialfx_BBB.h5"
     fy1directory = dir*"Initialfy_BBB.h5"
     a3data = h5open(a3directory)
-    fxdata = h5open(fy1directory)
+    fxdata = h5open(fx1directory)
     fydata = h5open(fy1directory)
     a3read = read(a3data["a3"])
     fxread = read(fxdata["fx"])
