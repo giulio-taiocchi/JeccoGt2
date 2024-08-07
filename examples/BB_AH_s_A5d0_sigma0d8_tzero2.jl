@@ -19,13 +19,13 @@ grid = SpecCartGrid3D(
 
 
 id = AdS4_3_1_s.BoostedBBnumerical(
-    AH_pos = 1.0,
+    AH_pos = 0.9975136584870653,
     IDdir = "/home/giulio/University/PhD/Initial_data/sourced/",
 )
 
 
 evoleq = AffineNull(
-    source = GaussianSource(time = 0.0, sigmax=0.8,sigmay=0.8, x0=0.0, y0=0.0,Amp=2.0,t0=-2.0, L=200000.0),
+    source = GaussianSource(time = 0.0, sigmax=0.8,sigmay=0.8, x0=0.0, y0=0.0,Amp=5.0,t0=-2.0, L=200000.0),
     #source = NoSource(),
     gaugecondition = ConstantAH(u_AH = 1.0),
 )
