@@ -297,7 +297,7 @@ function solve_Fxy!(bulk::Bulk, bc::BC, gauge::Gauge, deriv::BulkDeriv, aux_acc,
            
             aux.b_vec2[Nu]   = bc.Fx_u[i,j]
             
-            aux.b_vec2[2*Nu] = 0#bc.Fy_u[i,j]
+            aux.b_vec2[2*Nu] = bc.Fy_u[i,j]
            
             
             aux.A_mat2[Nu,:]   .= 0.0

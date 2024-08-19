@@ -20,12 +20,12 @@ grid = SpecCartGrid3D(
 
 id = AdS4_3_1_s.BoostedBBnumerical(
     AH_pos = 0.9975136584870653,
-    IDdir = "/home/giulio/University/PhD/Initial_data/sourced/",
+    IDdir = "/home/people/22203626/Initial_data_sourced/",
 )
 
 
 evoleq = AffineNull(
-    source = GaussianSource(time = 0.0, sigmax=0.8,sigmay=0.8, x0=0.0, y0=0.0,Amp=0.5,t0=-3.0, L=200000.0),
+    source = GaussianSource(time = 0.0, sigmax=0.3 ,sigmay=0.3, x0=0.0, y0=0.0 ,Amp=0.06 ,t0=3.0, L=200000.0),
     #source = NoSource(),
     gaugecondition = ConstantAH(u_AH = 1.0),
 )
@@ -37,8 +37,8 @@ io = InOut(
     #out_gauge_every     = 1,
     remove_existing     = true,
     checkpoint_every_walltime_hours = 0.1,
-    recover                     = :yes,
-    recover_dir                 = "/home/giulio/University/PhD/JeccoGt2/examples/BB_AH_01_4p1_sA0d25XY300L500"
+    #recover                     = :yes,
+    #recover_dir                 = /BB_AH_s_A1d0_sigma1d0_tzero3_cp1"
 )
 
 integration = Integration(

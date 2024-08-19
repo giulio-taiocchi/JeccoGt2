@@ -36,7 +36,7 @@ evoleq = AffineNull(
 
 io = InOut(
     #out_boundary_every  = 200,
-    out_bulkconstrained_every = 2,
+    out_bulkconstrained_every = 200,
     #out_bulk_every      = 1000,
     #out_gauge_every     = 5,
     remove_existing     = true,
