@@ -45,8 +45,10 @@ macro cross_outer(fname::String)
     fpp   = Symbol(fname, "pp")
     fp_x  = Symbol(fname, "p_x")
     fp_y  = Symbol(fname, "p_y")
+    #return esc( :($fc = $f_xy  - (Fx + xi_x) * ($fp_y) -
+    #             (Fy + xi_y)  * ( $fp_x - (Fx + xi_x)  * ($fpp) ) ) )
     return esc( :($fc = $f_xy  - (Fx + xi_x) * ($fp_y) -
-                 (Fy + xi_y)  * ( $fp_x - (Fx + xi_x)  * ($fpp) ) ) )
+                 (Fy + xi_y)  * ( $fp_x + (Fx + xi_x)  * ($fpp) ) ) )
 end
 
 
