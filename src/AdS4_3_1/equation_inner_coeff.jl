@@ -38,7 +38,8 @@ macro star_inner(fname::String)
     f_yy  = Symbol(fname, "_yy")
     fpp   = Symbol(fname, "pp")
     fp_y  = Symbol(fname, "p_y")
-    return esc( :($fs = $f_yy + (Fy * u + xi_y) * ( -2*($fp_y) + (Fy * u + xi_y)* ($fpp) )) )
+    #return esc( :($fs = $f_yy + (Fy * u + xi_y) * ( -2*($fp_y) + (Fy * u + xi_y)* ($fpp) )) )
+    return esc( :($fs = $f_yy + (Fy * u + xi_y) * ( -2*($fp_y) - (Fy * u + xi_y)* ($fpp) )) )
 end
 
 macro cross_inner(fname::String)
