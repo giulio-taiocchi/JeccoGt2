@@ -1149,8 +1149,13 @@ function BdGd_eq_coeff!(AA::Matrix, BB::Matrix, CC::Matrix, SS::Vector, vars::Tu
     @star_inner("G")
     @star_inner("S")
 
+    
+    @tilde_inner("Sp")
     @tilde_inner("Fxp")
     @tilde_inner("Fyp")
+    @tilde_inner("Bp")
+    @tilde_inner("Sp")
+    @tilde_inner("Gp")
 
     @hat_inner("Fxp")
     @hat_inner("Fyp")
@@ -1278,8 +1283,12 @@ function A_eq_coeff!(ABCS::Vector, vars::Tuple, ::Inner)
     @star_inner("G")
     @star_inner("S")
 
+    @tilde_inner("Sp")
     @tilde_inner("Fxp")
     @tilde_inner("Fyp")
+    @tilde_inner("Bp")
+    @tilde_inner("Sp")
+    @tilde_inner("Gp")
 
     @hat_inner("Fxp")
     @hat_inner("Fyp")
