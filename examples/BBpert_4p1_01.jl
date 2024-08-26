@@ -19,7 +19,7 @@ grid = SpecCartGrid3D(
 
 id = BlackBranePert(
     #B_amp  = 0.005,
-    fx1_ampx = 0.005,
+    fx1_ampx = 0.5,
     xmax = grid.x_max,
     xmin = grid.x_min,
     ymax = grid.y_max,
@@ -31,9 +31,9 @@ evoleq = AffineNull(
 )
 
 io = InOut(
-    out_boundary_every  = 10,
-    out_bulk_every      = 200,
-    out_gauge_every     = 10,
+    out_boundary_every  = 1,
+    out_bulk_every      = 1,
+    out_gauge_every     = 1,
 )
 
 integration = Integration(

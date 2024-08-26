@@ -201,32 +201,40 @@ function AH_eq_res(vars::Tuple, ::Outer)
     @hat_outer("Fy")
     @hat_outer("Sd")
 
-    x0 = Fy + xi_y
-    x1 = sigma0_y + x0
-    x2 = cosh(G)
-    x3 = exp(B2)
-    x4 = x2*x3
-    x5 = 3*Sp
-    x6 = Fx + xi_x
-    x7 = sigma0_x + x6
-    x8 = 2*sigma0_y
-    x9 = Sp*x1
-    x10 = 2*Fx
-    x11 = sigma0_x + xi_x
-    x12 = Sp*x11
-    x13 = exp(B1)
-    x14 = sinh(G)
-    x15 = x13*x14
-    x16 = B2p*x1
-    x17 = Gp*x1
-    x18 = B2p*x7 + B2t
-    x19 = Fx*Gp + Gp*x11 + Gt
-    x20 = x13*x2
-    x21 = exp(B1 + B2)
-    x22 = 2*sigma0_xy + 2*xi_xy
-    x23 = 2*sigma0_x
-    x24 = 2*x6
+    x0 = cosh(G)
+x1 = S * x0
+x2 = Bh * x1
+x3 = sigma0_y ^ 2
+x4 = Sp * x0
+x5 = Fyp * x1
+x6 = sinh(G)
+x7 = S * x6
+x8 = Gh * x7
+x9 = Fy + xi_y
+x10 = Bp * x1
+x11 = x9 ^ 2
+x12 = Gp * x7
+x13 = 2 * sigma0_y * x9
+x14 = Bt * x1
+x15 = Fxp * x1
+x16 = Gt * x7
+x17 = sigma0_x ^ 2
+x18 = Fx + xi_x
+x19 = x18 ^ 2
+x20 = 2 * sigma0_x
+x21 = x18 * x20
+x22 = Fxp * x7
+x23 = Fyp * x7
+x24 = Gh * x1
+x25 = Gt * x1
+x26 = Sp * x6
+x27 = sigma0_y * x20
+x28 = Gp * x1
+x29 = x26 * x9
+x30 = 2 * x18
+x31 = sigma0_y * x30
+x32 = x28 * x9
 
-    (S*(x13*(6*S*Sd + x14*x3*(Fyp*x23 + Fyp*x24 + 2*Fyt + x22) - x2*x21*(Fxp*x23 + Fxp*x24 + 2*Fxt + 2*sigma0_xx + 2*xi_xx)) + x14*x21*(2*Fxh + 2*Fxp*x1 + x22) - x4*(2*Fyh + 2*Fyp*x0 + Fyp*x8 + 2*sigma0_yy + 2*xi_yy)) + x1^2*x4*x5 + x2*x5*x7^2*exp(2*B1 + B2) - x21*(x10 + x23 + 2*xi_x)*(S*(x13*(x14*x19 + x18*x2 + x2*(B1p*x7 + B1t)) + x14*(-B2h - x16) + x2*(-Gh - x17)) - x14*(Sh + x9) + x20*(Fx*Sp + St + x12)) + x3*(2*Fy + x8 + 2*xi_y)*(S*(-x14*(Gh + x17) + x15*x18 + x19*x20 + x2*(B1h + B1p*x1) - x2*(B2h + x16)) + x15*(-Sp*x10 + St - 2*x12) + x2*(-Sh - x9)))*exp(-B1)/2
+sigma0_y * x2 - sigma0_y * x5 - sigma0_y * x8 - sigma0_yy * x1 - x1 * (Fyh + xi_yy) + x10 * x11 + x10 * x13 + x10 * x3 - x11 * x12 + x11 * x4 - x12 * x13 - x12 * x3 + x13 * x4 + x2 * x9 + x3 * x4 - x5 * x9 - x8 * x9 + (2 * Sp * sigma0_x * x0 * x18 + Sp * x0 * x17 + Sp * x0 * x19 - sigma0_x * x14 - sigma0_x * x15 - sigma0_x * x16 - sigma0_xx * x1 - x1 * (Fxt + xi_xx) - x10 * x17 - x10 * x19 - x10 * x21 - x12 * x17 - x12 * x19 - x12 * x21 - x14 * x18 - x15 * x18 - x16 * x18) * exp(2 * B) + (2 * S ^ 2 * Sd + sigma0_x * x23 + sigma0_x * x24 + 2 * sigma0_xy * x7 + sigma0_y * x22 + sigma0_y * x25 + x18 * x23 + x18 * x24 - x20 * x29 + x20 * x32 + x22 * x9 + x25 * x9 - x26 * x27 - x26 * x31 + x27 * x28 + x28 * x31 - x29 * x30 + x30 * x32 + x7 * (Fxh + xi_xy) + x7 * (Fyt + xi_xy)) * exp(B)
 
 end
