@@ -10,7 +10,7 @@ grid = SpecCartGrid3D(
     y_nodes          =  64,
     u_outer_min      =  0.1,
     u_outer_max      =  1.5,
-    u_outer_domains  =  2,
+    u_outer_domains  =  3,
     u_outer_nodes    =  24,
     u_inner_nodes    =  12,
     fd_order         =  4,
@@ -19,7 +19,7 @@ grid = SpecCartGrid3D(
 
 
 id = AdS4_3_1.QNM_1D(
-    energy_dens  = 1.0,
+    energy_dens  = 0.5,
     AH_pos = 1.32,
 )
 

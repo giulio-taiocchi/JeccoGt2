@@ -19,7 +19,7 @@ grid = SpecCartGrid3D(
 
 id = BlackBranePert(
     #B_amp  = 0.005,
-    fx1_ampx = 0.5,
+    fx1_ampx = 0.005,
     xmax = grid.x_max,
     xmin = grid.x_min,
     ymax = grid.y_max,
