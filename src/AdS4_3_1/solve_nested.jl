@@ -903,7 +903,7 @@ function set_innerBCs!(bc::BC, bulk::BulkEvolved, boundary::Boundary,
 	    
             
             bc.Fy[i,j]   = fy1
-            rrebc.Fy_u[i,j] = - 2 * fy1 * xi + 3/2 * (b13_y+ g3_x)
+            bc.Fy_u[i,j] = - 2 * fy1 * xi + 3/2 * (b13_y+ g3_x)
             #bc.Fy_u[i,j] = - fy1 * xi + 3/4 * (b13_y+ g3_x)
            
             
