@@ -749,7 +749,21 @@ function analytic_B(i, j, k, u, x, y, id::BoostedBBnumerical, whichsystem)
 	
 	Bvalue
 end
-analytic_G(i, j, k, u, x, y, id::BoostedBBnumerical,whichsystem)  = 0
+
+function analytic_G(i, j, k, u, x, y, id::BoostedBBnumerical,whichsystem) 
+	uu = u
+	dir = id.IDdir
+	Gdirectory = dir*"InitialG_BBB.h5"
+	initialG=h5open(Gdirectory)
+	system_index = string(whichsystem+1)
+	dset=initialG[system_index]
+	G=read(dset)
+	# here the indexes have to be inverted since julia and mathematica input and output mechanism is the opposite
+	# should be B[i,j,k]
+	Gvalue = G[k,j,i]
+		
+	Gvalue
+end
 
 
 
