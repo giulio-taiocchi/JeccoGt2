@@ -37,7 +37,7 @@ macro star_outer(fname::String)
     fpp   = Symbol(fname, "pp")
     fp_y  = Symbol(fname, "p_y")
     #return esc( :($fs = $f_yy + (Fy + xi_y)  * ( -2*($fp_y) + (Fy + xi_y) * ($fpp) )) )
-    return esc( :($fs = $f_yy + (Fy + xi_y)  * ( -2*($fp_y) - (Fy + xi_y) * ($fpp) )) )
+    return esc( :($fs = $f_yy + (Fy + xi_y)  * ( -2*($fp_y) + (Fy + xi_y) * ($fpp) )) )
 end
 macro cross_outer(fname::String)
     fc    = Symbol(fname, "c")
