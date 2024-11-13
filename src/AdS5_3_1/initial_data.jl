@@ -398,7 +398,7 @@ end
 
 analytic_B1(i, j, k, u, x, y,  id::BlackBrane, whichsystem)  = 0
 analytic_B2(i, j, k, u, x, y,  id::BlackBrane, whichsystem)  = 0
-analytic_G((i, j, k, u, x, y,  id::BlackBrane, whichsystem)   = 0
+analytic_G(i, j, k, u, x, y,  id::BlackBrane, whichsystem)   = 0
 analytic_phi(i, j, k, u, x, y,  id::BlackBrane, whichsystem) = 0
 
 function init_data!(ff::Boundary, sys::System, id::BlackBrane)
