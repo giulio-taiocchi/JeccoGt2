@@ -396,10 +396,10 @@ end
 
 # BlackBrane initial data
 
-analytic_B1(u, x, y, id::BlackBrane)  = 0
-analytic_B2(u, x, y, id::BlackBrane)  = 0
-analytic_G(u, x, y, id::BlackBrane)   = 0
-analytic_phi(u, x, y, id::BlackBrane) = 0
+analytic_B1(i, j, k, u, x, y,  id::BlackBrane, whichsystem)  = 0
+analytic_B2(i, j, k, u, x, y,  id::BlackBrane, whichsystem)  = 0
+analytic_G((i, j, k, u, x, y,  id::BlackBrane, whichsystem)   = 0
+analytic_phi(i, j, k, u, x, y,  id::BlackBrane, whichsystem) = 0
 
 function init_data!(ff::Boundary, sys::System, id::BlackBrane)
     a40 = -id.energy_dens/0.75
