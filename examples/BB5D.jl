@@ -12,7 +12,7 @@ grid = SpecCartGrid3D(
     u_outer_max      =  1.03,
     u_outer_domains  =  3,
     u_outer_nodes    =  32,
-    u_inner_nodes    =  36,
+    u_inner_nodes    =  12,
     fd_order         =  4,
     sigma_diss       =  0.2,
 )
@@ -35,7 +35,7 @@ io = InOut(
 )
 
 integration = Integration(
-    dt              = 0.002,
+    #dt              = 0.002,
     tmax            = 30.0,
     ODE_method      = AdS5_3_1.AB3(),
     filter_poststep = true,

@@ -620,10 +620,10 @@ end
 
 
 #QNM in 1D initial data
-analytic_B1(u, x, y, id::QNM_1D)  = 3/2*0.1*u^8
-analytic_B2(u, x, y, id::QNM_1D)  = 1/2*0.1*u^8
-analytic_G(u, x, y, id::QNM_1D)   = 0
-analytic_phi(u, x, y, id::QNM_1D) = id.phi2/id.phi0^3
+analytic_B1(i, j, k, u, x, y,  id::QNM_1D, whichsystem)  = 3/2*0.1*u^8
+analytic_B2(i, j, k, u, x, y,  id::QNM_1D, whichsystem)  = 1/2*0.1*u^8
+analytic_G(i, j, k, u, x, y,  id::QNM_1D, whichsystem)   = 0
+analytic_phi(i, j, k, u, x, y,  id::QNM_1D, whichsystem) = id.phi2/id.phi0^3
 
 function init_data!(ff::Boundary, sys::System, id::QNM_1D)
     a4  = geta4(ff)
@@ -882,7 +882,7 @@ function analytic_phi(i, j, k, u, x, y, id::BlackBraneNumericalphi, whichsystem)
 	# here the indecex have to be inverted since julia and mathematica input and output mechanism is the opposite
 	# should be B[i,j,k]
 	phivalue = phi[k,j,i]
-	println("phi in u=$uu index: $i is $phivalue")
+	#println("phi in u=$uu index: $i is $phivalue")
 	phivalue
 end
 
@@ -935,7 +935,7 @@ function analytic_G(i, j, k, u, x, y, id::BoostedBBnumerical,whichsystem)
 	indexi = i
 	if j==1 
 		if k==1
-			println("index i $indexi, u value:$uu")
+			#println("index i $indexi, u value:$uu")
 		end
 	end
 	initialG=h5open("/home/giulio/University/PhD/JeccoNewTest/Jecco_G/examples/InitialG_BBB.h5")
