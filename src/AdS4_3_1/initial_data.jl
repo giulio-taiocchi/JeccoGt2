@@ -548,8 +548,10 @@ function init_data!(ff::Gauge, sys::System, id::QNM_1DG)
 
     a30 = (-epsilon) / 2
 
-    xi0 = 0
-
+    #xi0 = 0
+    
+    xi0 = (-a30)^(1/3) - 1/AH_pos
+    
     xi  = getxi(ff)
 
     fill!(xi, xi0)
