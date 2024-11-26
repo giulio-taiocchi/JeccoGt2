@@ -550,7 +550,7 @@ function init_data!(ff::Gauge, sys::System, id::QNM_1DG)
 
     #xi0 = 0
     
-    xi0 = (-a30)^(1/3) - 1/AH_pos
+    xi0 = (-a30)^(0.3333333333333333333333333333333333333333) - 1/AH_pos
     
     xi  = getxi(ff)
 

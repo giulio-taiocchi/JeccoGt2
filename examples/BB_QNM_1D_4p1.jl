@@ -19,7 +19,7 @@ grid = SpecCartGrid3D(
 
 
 id = AdS4_3_1.QNM_1DG(
-    energy_dens  =1.502629602,
+    energy_dens  =1.157407407,
      #AH_pos = 1.0,
 )
 
