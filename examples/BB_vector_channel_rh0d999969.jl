@@ -18,7 +18,7 @@ grid = SpecCartGrid3D(
 
 
 id = AdS5_3_1.BoostedBBnumerical(
-    AH_pos = 0.996937,
+    AH_pos = 0.999969,
     #IDdir = "/home/giulio/University/PhD/JeccoNewTest/Jecco_G/examples/",
 )
 
@@ -33,7 +33,7 @@ io = InOut(
     out_bulkconstrained_every = 100,
     #out_gauge_every     = 1,
     remove_existing     = true,
-    checkpoint_every_walltime_hours = 0.1,
+    #checkpoint_every_walltime_hours = 0.1,
     #recover                     = :yes,
     #recover_dir                 = "/home/giulio/University/PhD/JeccoGt2/examples/FullBBB_3p1"
 )
@@ -41,7 +41,7 @@ io = InOut(
 integration = Integration(
 
     dt              = 0.003,
-    tmax            = 500,
+    tmax            = 100,
     ODE_method      = AdS5_3_1.AB3(),
     filter_poststep = true,
 )

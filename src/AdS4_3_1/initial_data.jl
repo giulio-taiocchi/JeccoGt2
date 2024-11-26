@@ -54,13 +54,13 @@ Base.@kwdef struct BlackBranePert{T} <: ID_ConstantAH
 end
 
 
-Base.@kwdef struct QNM_1D{T} <: InitialData
+Base.@kwdef struct QNM_1D{T} <: ID_ConstantAH
     energy_dens :: T   = 1.0
     AH_pos      :: T   = 1.0
     ahf         :: AHF = AHF()
 end
 
-Base.@kwdef struct QNM_1DG{T} <: InitialData
+Base.@kwdef struct QNM_1DG{T} <: ID_ConstantAH
     energy_dens :: T   = 1.0
     AH_pos      :: T   = 1.0
     ahf         :: AHF = AHF()

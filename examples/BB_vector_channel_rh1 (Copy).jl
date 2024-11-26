@@ -29,11 +29,11 @@ evoleq = AffineNull(
 
 io = InOut(
     #out_boundary_every  = 3,
-    out_bulk_every      = 100,
-    out_bulkconstrained_every = 100,
+    out_bulk_every      = 50,
+    out_bulkconstrained_every = 50,
     #out_gauge_every     = 1,
     remove_existing     = true,
-    checkpoint_every_walltime_hours = 0.1,
+    #checkpoint_every_walltime_hours = 0.1,
     #recover                     = :yes,
     #recover_dir                 = "/home/giulio/University/PhD/JeccoGt2/examples/FullBBB_3p1"
 )
@@ -41,7 +41,7 @@ io = InOut(
 integration = Integration(
 
     dt              = 0.003,
-    tmax            = 500,
+    tmax            = 50,
     ODE_method      = AdS5_3_1.AB3(),
     filter_poststep = true,
 )
