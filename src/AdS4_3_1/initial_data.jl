@@ -135,6 +135,8 @@ function (id::ID_ConstantAH)(bulkconstrains, bulkevols, bulkderivs, boundary::Bo
     _, Nx, Ny = size(systems[end])
     AH_pos    = id.AH_pos
     xi        = getxi(gauge)
+    constant_AH = evoleq.u_AH
+    println("constant AH is $constant_AH")
     
     
     #printing u, added for numerical initial data
