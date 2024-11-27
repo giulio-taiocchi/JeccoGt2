@@ -81,7 +81,7 @@ end
 
 #does this should be InitialData ot ID_ConstantAh type
 
-Base.@kwdef struct BoostedBBnumerical{T} <: ID_ConstantAH
+Base.@kwdef struct BoostedBBnumerical{T} <: InitialData
     #energy_dens :: T   = 5.0
     AH_pos      :: T   = 1.0
     ahf         :: AHF = AHF()
@@ -135,8 +135,7 @@ function (id::ID_ConstantAH)(bulkconstrains, bulkevols, bulkderivs, boundary::Bo
     _, Nx, Ny = size(systems[end])
     AH_pos    = id.AH_pos
     xi        = getxi(gauge)
-    constant_AH = evoleq.u_AH
-    println("constant AH is $constant_AH")
+    
     
     
     #printing u, added for numerical initial data
@@ -175,9 +174,8 @@ function (id::ID_ConstantAH)(bulkconstrains, bulkevols, bulkderivs, boundary::Bo
     # assuming that the AH has been found, we now update xi and the bulk variables
     MaxAH=maximum(sigma)
     MaxOldxi= maximum(xi)
-    println("The horizon found is r=$MaxAH")
-    println("AH_pos is $AH_pos")
-    println("old xi is $MaxOldxi")
+    println("The max horizon found is r=$MaxAH")
+    println("old max xi is $MaxOldxi")
     for j in 1:Ny
         for i in 1:Nx
             xi[1,i,j] += -1 / AH_pos + sigma[1,i,j]
