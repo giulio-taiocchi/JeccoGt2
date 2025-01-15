@@ -66,7 +66,26 @@ Base.@kwdef struct QNM_1DG{T} <: InitialData
     ahf         :: AHF = AHF()
 end
 
-Base.@kwdef struct BoostedBBSeminumerical{T} <: ID_ConstantAH
+Base.@kwdef struct vector_channel_QNM{T} <: InitialData
+    energy_dens :: T   = 2.0
+    AH_pos      :: T   = 1.0
+    G_amp         :: T   = 0.0
+    G_nx          :: Int = 1
+    G_ny          :: Int = 1
+    fx1_ampx    :: T   = 0.0
+    fx1_ampy    :: T   = 0.0
+    fx1_kx      :: Int = 1
+    fx1_ky      :: Int = 1
+    fy1_ampx    :: T   = 0.0
+    fy1_ampy    :: T   = 0.0
+    fy1_kx      :: Int = 1
+    fy1_ky      :: Int = 1
+    ahf         :: AHF = AHF()
+end
+
+
+
+Base.@kwdef struct BoostedBBSeminumerical{T} <: InitialData
     #energy_dens :: T   = 5.0
     AH_pos      :: T   = 1.0
     ahf         :: AHF = AHF()
@@ -186,7 +205,8 @@ function (id::ID_ConstantAH)(bulkconstrains, bulkevols, bulkderivs, boundary::Bo
 
     # solve nested system for the constrained variables
     nested(bulkevols, boundary, gauge, evoleq)
-
+    # TO DO printl(xi, and other)!!	
+    # should AH_pos used up there be AH_pos fro the gauge_conditino structure!?
     # AH should now be at u = AH_pos
 
     nothing
@@ -524,7 +544,7 @@ end
 
 #QNM in 1D initial data for the tensor sector
 analytic_B(i, j, k,u, x, y, id::QNM_1DG, whichsystem)  = 0
-analytic_G(i, j, k,u, x, y, id::QNM_1DG, whichsystem)  =  3/2*0.1 * u^6
+analytic_G(i, j, k,u, x, y, id::QNM_1DG, whichsystem)  = 3/2*0.1 * u^6
 
 function init_data!(ff::Boundary, sys::System, id::QNM_1DG)
     a3  = geta3(ff)
@@ -543,6 +563,52 @@ function init_data!(ff::Boundary, sys::System, id::QNM_1DG)
 end
 
 function init_data!(ff::Gauge, sys::System, id::QNM_1DG)
+    epsilon = id.energy_dens
+    AH_pos  = id.AH_pos
+
+    a30 = (-epsilon) / 2
+
+    #xi0 = 0
+    
+    xi0 = 0
+    
+    xi  = getxi(ff)
+
+    fill!(xi, xi0)
+
+    ff
+end
+
+#QNM in 1D initial data for the vector sector
+analytic_B(i, j, k,u, x, y, id::vector_channel_QNM, whichsystem)  = 0
+function analytic_G(i, j, k,u, x, y, id::vector_channel_QNM, whichsystem)
+	# add the perturbation on G
+	    pert_amp = id.G_amp
+	    # number of maxima in each direction
+	    nx       = id.G_nx
+	    ny       = id.G_ny
+
+	    pert_amp * sin( 2 * π * nx * (xmax-x)/(xmax-xmin) ) *
+		sin( -2 * π * ny * (ymax-y)/(ymax-ymin) )
+end
+
+function init_data!(ff::Boundary, sys::System, id::vector_channel_QNM)
+    a3  = geta3(ff)
+    fx1 = getfx1(ff)
+    fy1 = getfy1(ff)
+
+    epsilon = id.energy_dens
+
+    a30 = (-epsilon) / 2
+
+    fill!(a3, a30)
+    fill!(fx1, 0)
+    fill!(fy1, 0)
+
+    ff
+end
+
+function init_data!(ff::Gauge, sys::System, id::vector_channel_QNM)
     epsilon = id.energy_dens
     AH_pos  = id.AH_pos
 
@@ -811,10 +877,20 @@ function init_data!(ff::Gauge, sys::System, id::BoostedBBnumerical)
     yy = sys.ycoord
     AH_pos  = id.AH_pos
     
+    
     xi  = getxi(ff)
     fill!(xi, 0)
-    
-    
+    dir = id.IDdir
+    xidirectory = dir*"Initialxi_BBB.h5"
+    xidata = h5open(xidirectory)
+    xiread = read(a3data["xi"])
+    for j in 1:Ny
+        for i in 1:Nx      
+                x = xx[i]
+                y = yy[j]         
+                xi[1,i,j] = xiread[j,i]                
+        end
+    end
     #for j in 1:Ny
     #    for i in 1:Nx      
     #            x = xx[i]
