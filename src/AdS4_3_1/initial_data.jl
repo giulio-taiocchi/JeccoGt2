@@ -883,7 +883,7 @@ function init_data!(ff::Gauge, sys::System, id::BoostedBBnumerical)
     dir = id.IDdir
     xidirectory = dir*"Initialxi_BBB.h5"
     xidata = h5open(xidirectory)
-    xiread = read(a3data["xi"])
+    xiread = read(xidata["xi"])
     for j in 1:Ny
         for i in 1:Nx      
                 x = xx[i]
