@@ -28,9 +28,9 @@ evoleq = AffineNull(
 )
 
 io = InOut(
-    #out_boundary_every  = 3,
-    out_bulk_every      = 1,
-    out_bulkconstrained_every = 1,
+    out_boundary_every  = 1,
+    #out_bulk_every      = 1,
+    #out_bulkconstrained_every = 1,
     out_gauge_every     = 1,
     remove_existing     = true,
     #checkpoint_every_walltime_hours = 0.1,

@@ -195,9 +195,10 @@ function (id::ID_ConstantAH)(bulkconstrains, bulkevols, bulkderivs, boundary::Bo
     MaxOldxi= maximum(xi)
     println("The max horizon found is r=$MaxAH")
     println("old max xi is $MaxOldxi")
+    AH_fixed_pos=evoleq.gaugecondition.u_AH
     for j in 1:Ny
         for i in 1:Nx
-            xi[1,i,j] += -1 / AH_pos + sigma[1,i,j]
+            xi[1,i,j] += -1 / AH_fixed_pos + sigma[1,i,j]
         end
     end
 
