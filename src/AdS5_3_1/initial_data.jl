@@ -1016,6 +1016,7 @@ function init_data!(ff::Boundary, sys::System, id::BoostedBBnumerical)
     #a4data = h5open("/home/giulio/University/PhD/JeccoNewTest/Jecco_G/examples/Initiala3_BBB.h5")
     #fx2data = h5open("/home/giulio/University/PhD/JeccoNewTest/Jecco_G/examples/Initialfx_BBB.h5")
     #fy2data = h5open("/home/giulio/University/PhD/JeccoNewTest/Jecco_G/examples/Initialfy_BBB.h5")
+    dir = id.IDdir
     a4directory = dir*"Initiala3_BBB.h5"
     fx2directory = dir*"Initialfx_BBB.h5"
     fy2directory = dir*"Initialfy_BBB.h5"
