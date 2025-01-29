@@ -39,6 +39,7 @@ Base.@kwdef struct BoostedBBnumerical{T} <: ID_ConstantAH
     AH_pos      :: T   = 1.0
     phi0        :: T   = 0.0
     ahf         :: AHF = AHF()
+    IDdir	:: AbstractString = "/home/giulio/University/PhD/JeccoNewTest/Jecco_G/examples/"
 end
 
 Base.@kwdef struct BlackBranePert{T} <: ID_ConstantAH
@@ -916,36 +917,84 @@ end
 
 # Numerical boosted Black Brane
 analytic_phi(i, j, k, u, x, y, id::BoostedBBnumerical, whichsystem) = 0
-analytic_B1(i, j, k, u, x, y, id::BoostedBBnumerical, whichsystem)  = 0
+#analytic_B1(i, j, k, u, x, y, id::BoostedBBnumerical, whichsystem)  = 0
 #analytic_B2(i, j, k, u, x, y, id::BoostedBBnumerical, whichsystem)  = 0
+
+function analytic_B(i, j, k, u, x, y, id::BoostedBBnumerical, whichsystem)
+	uu = u
+	dir = id.IDdir
+	Bdirectory = dir*"InitialB_BBB.h5"
+	initialB=h5open(Bdirectory)
+	system_index = string(whichsystem+1)
+	dset=initialB[system_index]
+	B=read(dset)
+	# here the indexes have to be inverted since julia and mathematica input and output mechanism is the opposite
+	# should be B[i,j,k]
+	Bvalue = B[k,j,i]
+	
+	
+	Bvalue
+end
 
 function analytic_B2(i, j, k, u, x, y, id::BoostedBBnumerical, whichsystem)
 	uu = u
-	initialB2=h5open("/home/giulio/University/PhD/JeccoNewTest/Jecco_G/examples/InitialB2_BBB.h5")
+	dir = id.IDdir
+	B2directory = dir*"InitialB2_BBB.h5"
+	initialB2=h5open(B2directory)
 	system_index = string(whichsystem+1)
 	dset=initialB2[system_index]
 	B2=read(dset)
-	# here the indecex have to be inverted since julia and mathematica input and output mechanism is the opposite
+	# here the indexes have to be inverted since julia and mathematica input and output mechanism is the opposite
 	# should be B[i,j,k]
-	Bvalue2 = B2[k,j,i]	
-	Bvalue2
+	B2value = B2[k,j,i]
+	
+	
+	Bvalue
 end
 
-function analytic_G(i, j, k, u, x, y, id::BoostedBBnumerical,whichsystem)  
+#function analytic_B2(i, j, k, u, x, y, id::BoostedBBnumerical, whichsystem)
+#	uu = u
+#	dir = id.IDdir
+#	initialB2=h5open("/home/giulio/University/PhD/JeccoNewTest/Jecco_G/examples/InitialB2_BBB.h5")
+#	system_index = string(whichsystem+1)
+#	dset=initialB2[system_index]
+#	B2=read(dset)
+	# here the indecex have to be inverted since julia and mathematica input and output mechanism is the opposite
+	# should be B[i,j,k]
+#	Bvalue2 = B2[k,j,i]	
+#	Bvalue2
+#end
+
+#function analytic_G(i, j, k, u, x, y, id::BoostedBBnumerical,whichsystem)  
+	#uu = u
+	#indexi = i
+	#if j==1 
+	#	if k==1
+	#		#println("index i $indexi, u value:$uu")
+	#	end
+	#end
+	#initialG=h5open("/home/giulio/University/PhD/JeccoNewTest/Jecco_G/examples/InitialG_BBB.h5")
+	#system_index = string(whichsystem+1)
+	#dset=initialG[system_index]
+	#G=read(dset)
+	# here the indecex have to be inverted since julia and mathematica input and output mechanism is the opposite
+	# should be G[i,j,k]
+	#Gvalue = G[k,j,i]
+	#Gvalue
+#end
+
+function analytic_G(i, j, k, u, x, y, id::BoostedBBnumerical,whichsystem) 
 	uu = u
-	indexi = i
-	if j==1 
-		if k==1
-			#println("index i $indexi, u value:$uu")
-		end
-	end
-	initialG=h5open("/home/giulio/University/PhD/JeccoNewTest/Jecco_G/examples/InitialG_BBB.h5")
+	dir = id.IDdir
+	Gdirectory = dir*"InitialG_BBB.h5"
+	initialG=h5open(Gdirectory)
 	system_index = string(whichsystem+1)
 	dset=initialG[system_index]
 	G=read(dset)
-	# here the indecex have to be inverted since julia and mathematica input and output mechanism is the opposite
-	# should be G[i,j,k]
+	# here the indexes have to be inverted since julia and mathematica input and output mechanism is the opposite
+	# should be B[i,j,k]
 	Gvalue = G[k,j,i]
+		
 	Gvalue
 end
 
@@ -964,9 +1013,15 @@ function init_data!(ff::Boundary, sys::System, id::BoostedBBnumerical)
     fill!(fx2, 0)
     fill!(fy2, 0)
     
-    a4data = h5open("/home/giulio/University/PhD/JeccoNewTest/Jecco_G/examples/Initiala3_BBB.h5")
-    fx2data = h5open("/home/giulio/University/PhD/JeccoNewTest/Jecco_G/examples/Initialfx_BBB.h5")
-    fy2data = h5open("/home/giulio/University/PhD/JeccoNewTest/Jecco_G/examples/Initialfy_BBB.h5")
+    #a4data = h5open("/home/giulio/University/PhD/JeccoNewTest/Jecco_G/examples/Initiala3_BBB.h5")
+    #fx2data = h5open("/home/giulio/University/PhD/JeccoNewTest/Jecco_G/examples/Initialfx_BBB.h5")
+    #fy2data = h5open("/home/giulio/University/PhD/JeccoNewTest/Jecco_G/examples/Initialfy_BBB.h5")
+    a4directory = dir*"Initiala3_BBB.h5"
+    fx2directory = dir*"Initialfx_BBB.h5"
+    fy2directory = dir*"Initialfy_BBB.h5"
+    a4data = h5open(a4directory)
+    f2data = h5open(fx2directory)
+    fy2data = h5open(fy2directory)
     a4read = read(a4data["a3"])
     fx2read = read(fx2data["fx"])
     fy2read = read(fy2data["fy"])
@@ -990,7 +1045,17 @@ function init_data!(ff::Gauge, sys::System, id::BoostedBBnumerical)
     
     xi  = getxi(ff)
     fill!(xi, 0)
-    
+    dir = id.IDdir
+    xidirectory = dir*"Initialxi_BBB.h5"
+    xidata = h5open(xidirectory)
+    xiread = read(xidata["xi"])
+    for j in 1:Ny
+        for i in 1:Nx      
+                x = xx[i]
+                y = yy[j]         
+                xi[1,i,j] = xiread[j,i]                
+        end
+    end
     
     #for j in 1:Ny
     #    for i in 1:Nx      
