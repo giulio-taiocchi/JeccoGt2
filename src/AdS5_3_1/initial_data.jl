@@ -920,7 +920,7 @@ analytic_phi(i, j, k, u, x, y, id::BoostedBBnumerical, whichsystem) = 0
 #analytic_B1(i, j, k, u, x, y, id::BoostedBBnumerical, whichsystem)  = 0
 #analytic_B2(i, j, k, u, x, y, id::BoostedBBnumerical, whichsystem)  = 0
 
-function analytic_B(i, j, k, u, x, y, id::BoostedBBnumerical, whichsystem)
+function analytic_B1(i, j, k, u, x, y, id::BoostedBBnumerical, whichsystem)
 	uu = u
 	dir = id.IDdir
 	Bdirectory = dir*"InitialB_BBB.h5"
