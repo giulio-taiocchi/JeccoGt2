@@ -949,7 +949,7 @@ function analytic_B2(i, j, k, u, x, y, id::BoostedBBnumerical, whichsystem)
 	B2value = B2[k,j,i]
 	
 	
-	Bvalue
+	B2value
 end
 
 #function analytic_B2(i, j, k, u, x, y, id::BoostedBBnumerical, whichsystem)
