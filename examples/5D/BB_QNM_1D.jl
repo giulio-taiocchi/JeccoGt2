@@ -38,6 +38,7 @@ evoleq = AffineNull(
 io = InOut(
     out_boundary_every  = 10,
     out_gauge_every     = 10,
+    checkpoint_every_walltime_hours = 0.1,
 )
 
 integration = Integration(
