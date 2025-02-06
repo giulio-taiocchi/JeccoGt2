@@ -474,6 +474,7 @@ if u==0.0
 	SS[1] = -2*S0^2*(Bp_x) + 2*S0^2*(Gp_y) + 2*Bpp*S0*(S0_tx) + 4*Spp*(S0_tx) - 2*Gpp*S0*(S0_ty) - 4*Bp*S0*(S0_x) + 4*Sp*(S0_x) - 2*Bpp*(S0_t)*(S0_x) - (4*Spp*(S0_t)*(S0_x))/S0 + 4*Gp*S0*(S0_y) + 2*Gpp*(S0_t)*(S0_y) - 4*S0*(Sp_x) + 2*Bpp*S0^2*(xi_x) + 4*S0*Spp*(xi_x) - 2*Gpp*S0^2*(xi_y)
 else
 	SS[1] = -B_y * x10 * x174 - B_y * x11 * x277 + B_y * x280 - Bp_x * x288 + Bp_y * x274 + G_x * x316 + G_y * x221 * x279 - G_y * x263 + Gp_y * x257 + S0_tx * x262 + S0_tx * x302 - S0_ty * x304 + S0_x * x272 * x299 + 8 * S_x * x2 * x276 + S_x * x262 * x3 + S_x * x275 * x299 * x57 - Sp_x * x272 + x172 * x282 * x316 + x172 * x315 * x322 - x18 * x313 - x210 * x300 * x303 + x22 * x295 + x221 * x295 - x226 * x300 * x33 + x260 * x304 * x306 + x262 * x266 + x262 * x270 + x263 * x287 * x289 + x264 * x265 + x265 * x301 * x35 * x9 + x266 * x302 - x268 * x282 - x268 * xi_x - x270 * x275 - x276 * x33 * x66 * xi_y + x282 * x290 + x282 * x312 - x286 * x306 - x286 * xi_y + x290 * xi_x + x292 * x294 + x294 * x311 - x298 * x306 - x298 * xi_y + x302 * x320 + x302 * x323 - x303 * x305 * x57 - x304 * x321 + x307 * x309 + x309 * x310 + x309 * x318 + x312 * xi_x + x313
+end
 AA[2,1] = 0
 AA[2,2] = x12
 BB[2,1] = x325 * x34
@@ -484,7 +485,7 @@ if u==0.0
 	SS[2] = 2*S0^2*(Bp_y) + 2*S0^2*(Gp_x) - 2*Gpp*S0*(S0_tx) - 2*Bpp*S0*(S0_ty) + 4*Spp*(S0_ty) + 4*Gp*S0*(S0_x) + 2*Gpp*(S0_t)*(S0_x) + 4*Bp*S0*(S0_y) + 4*Sp*(S0_y) + 2*Bpp*(S0_t)*(S0_y) - (4*Spp*(S0_t)*(S0_y))/S0 - 4*S0*(Sp_y) - 2*Gpp*S0^2*(xi_x) - 2*Bpp*S0^2*(xi_y) + 4*S0*Spp*(xi_y)
 else
 SS[2] = B_x * x20 * x348 - B_y * x284 * x346 + B_y * x299 * x353 - Bp_x * x348 + Bp_y * x308 + G_x * x18 * x2 * x22 * x353 - 6 * G_x * x26 + G_y * x358 + Gp_x * x314 + S0_tx * x365 + S0_ty * x342 - S0_ty * x352 + S0_y * x342 * xi + S_x * x222 * x362 + S_y * u * x339 + 8 * S_y * x256 - Sp_y * x345 - x10 * x317 * (x219 + x283 * x349) + x18 * x361 + x18 * x367 - 4 * x22 * x350 * x5 - x233 * x299 * x305 + x264 * x340 - x269 * x306 * x344 + x282 * x359 - x285 * x322 - x289 * x354 + x292 * x355 + x306 * x339 * x351 + x306 * x347 - x306 * x356 + x306 * x366 + x307 * x357 + x310 * x357 + x311 * x355 + x318 * x357 + x320 * x365 - x321 * x352 + x323 * x365 - x340 * x344 + x341 * x343 - x343 * x345 + x347 * xi_y - x35 * x351 * xi_y + x350 * (-B * x349 + 4 * Bp) - x356 * xi_y + x359 * xi_x - x361 + x363 * x68 + 2 * x363 + x364 * x66 * xi_x + x366 * xi_y - x367
-
+end
 #println("Matrix C11 = $C11 and the source is $S0")
     nothing
 end
