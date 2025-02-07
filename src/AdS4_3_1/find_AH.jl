@@ -361,7 +361,7 @@ function find_AH!(sigma::Array, bulkconstrain::BulkConstrained,
                 u2  = uAH * uAH
                 u3  = uAH * uAH * uAH
                 u4  = uAH * uAH * uAH * uAH
-                println("Current AH: $uAH")
+                #println("Current AH: $uAH")
                 B_uAH[1,i,j]       = interp(view(bulk.B,  :,i,j))(uAH)
                 G_uAH[1,i,j]        = interp(view(bulk.G,   :,i,j))(uAH)
                 S_uAH[1,i,j]        = interp(view(bulk.S,   :,i,j))(uAH)
