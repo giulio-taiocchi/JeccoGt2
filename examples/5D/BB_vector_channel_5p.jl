@@ -19,7 +19,7 @@ grid = SpecCartGrid3D(
 
 id = AdS5_3_1.BoostedBBnumerical(
     AH_pos = 0.987259,
-    IDdir = "/home/giulio/University/PhD/JeccoNewTest/Jecco_G/examples/",
+    IDdir = "/home/giulio/University/PhD/JeccoNewTest/Jecco_G/examples/AIME",
 )
 
 evoleq = AffineNull(

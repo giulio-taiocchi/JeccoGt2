@@ -187,6 +187,7 @@ function (id::ID_ConstantAH)(bulkconstrains, bulkevols, bulkderivs, boundary::Bo
     # find the Apparent Horizon
     sigma = similar(gauge.xi)
     fill!(sigma, 1/AH_pos)  # initial guess
+    sigma = fill_guess!(gauge, systems[end], id)
     find_AH!(sigma, bulkconstrains[end], bulkevols[end], bulkderivs[end], gauge,
              horizoncache, systems[end], id.ahf)
 
@@ -902,5 +903,24 @@ function init_data!(ff::Gauge, sys::System, id::BoostedBBnumerical)
     ff
 end
 
-
+function fill_guess!(ff::Gauge, sys::System, id::BoostedBBnumerical)
+	_, Nx, Ny = size(sys)
+    xx = sys.xcoord
+    yy = sys.ycoord
+    
+    guess = similar(ff.xi)
+    fill!(guess, 0) 
+    dir = id.IDdir
+    guessdirectory = dir*"Initialguess_BBB.h5"
+    guessdata = h5open(guessdirectory)
+    guessread = read(guessdata["guess"])
+    for j in 1:Ny
+        for i in 1:Nx      
+                x = xx[i]
+                y = yy[j]         
+                guess[1,i,j] = guessread[j,i]                
+        end
+    end
+    return guess
+end
 

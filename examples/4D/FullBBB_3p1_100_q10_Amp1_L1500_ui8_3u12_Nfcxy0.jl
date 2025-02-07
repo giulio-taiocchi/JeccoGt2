@@ -7,7 +7,7 @@ grid = SpecCartGrid3D(
     y_min            = -750.0,
     y_max            =  750.0,
     y_nodes          =  100,
-    u_outer_min      =  0.7,
+    u_outer_min      =  0.1,
     u_outer_max      =  1.03,
     u_outer_domains  =  3,
     u_outer_nodes    =  12,
@@ -18,7 +18,7 @@ grid = SpecCartGrid3D(
 
 
 id = AdS4_3_1.BoostedBBnumerical(
-    AH_pos = 1.1993143703569433,
+    AH_pos = 0.8338097372270935,
     IDdir = "/home/giulio/University/PhD/JeccoNewTest/Jecco_G/examples/",
 )
 
