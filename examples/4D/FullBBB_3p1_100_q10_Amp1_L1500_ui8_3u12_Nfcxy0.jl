@@ -18,7 +18,7 @@ grid = SpecCartGrid3D(
 
 
 id = AdS4_3_1.BoostedBBnumerical(
-    AH_pos = 0.8338097372270935,
+    #AH_pos = 0.8338097372270935,
     IDdir = "/home/giulio/University/PhD/JeccoNewTest/Jecco_G/examples/",
 )
 

@@ -186,7 +186,7 @@ function (id::ID_ConstantAH)(bulkconstrains, bulkevols, bulkderivs, boundary::Bo
 
     # find the Apparent Horizon
     sigma = similar(gauge.xi)
-    fill!(sigma, 1/AH_pos)  # initial guess
+    #fill!(sigma, 1/AH_pos)  # initial guess
     sigma = fill_guess!(gauge, systems[end], id)
     find_AH!(sigma, bulkconstrains[end], bulkevols[end], bulkderivs[end], gauge,
              horizoncache, systems[end], id.ahf)
