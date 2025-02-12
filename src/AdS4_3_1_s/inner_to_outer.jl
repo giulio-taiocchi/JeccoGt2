@@ -3,7 +3,7 @@
     S0/u + S_in*u^2 + S0*xi + (S0_t)
 
 @inline Fx_inner_to_outer(F_in, u, S0, S0_x, S0_t, S0_tx) = F_in*u + (S0*(S0_tx) - (S0_t)*(S0_x))/S0^2
-@inline Fy_inner_to_outer(F_in, u, S0, S0_x, S0_t, S0_ty) = F_in*u + (S0*(S0_ty) - (S0_t)*(S0_y))/S0^2
+@inline Fy_inner_to_outer(F_in, u, S0, S0_y, S0_t, S0_ty) = F_in*u + (S0*(S0_ty) - (S0_t)*(S0_y))/S0^2
 
 
 @inline A_inner_to_outer(A_in, u, xi, S0, S0_t, S0_tt, S0_x, S0_xx, S0_y, S0_yy) =
