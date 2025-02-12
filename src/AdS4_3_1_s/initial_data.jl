@@ -96,7 +96,7 @@ Base.@kwdef struct BoostedBBnumerical{T} <: ID_ConstantAH
     B		:: T = 0.0
     phase_a	:: T = 0.0
     phase_fx	:: T = 0.0
-    IDdir	:: AbstractString = "/home/giulio/University/PhD/JeccoNewTest/Jecco_G/examples/"
+    IDdir	:: AbstractString = "/home/giulio/University/PhD/JeccoNewTest/Jecco_G/examples/Sourced"
 end
 
 function (id::InitialData)(bulkconstrains, bulkevols, bulkderivs, boundary::Boundary,

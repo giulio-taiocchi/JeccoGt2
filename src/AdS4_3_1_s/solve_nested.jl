@@ -945,6 +945,7 @@ function set_innerBCs!(bc::BC, bulk::BulkEvolved, boundary::Boundary,
     
     # Call the source structure
     source = evoleq.source
+    test = source.time
     
     
     Dx  = sys.Dx
