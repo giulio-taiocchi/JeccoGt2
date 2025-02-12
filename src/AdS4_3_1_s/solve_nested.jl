@@ -942,12 +942,19 @@ function set_innerBCs!(bc::BC, bulk::BulkEvolved, boundary::Boundary,
                        gauge::Gauge, deriv::BulkDeriv, sys::System{Inner},
                        evoleq::AffineNull)
     _, Nx, Ny = size(sys)
-
+    
+    # Call the source structure
+    source = evoleq.source
+    
+    
     Dx  = sys.Dx
     Dy  = sys.Dy
 
     @fastmath @inbounds @threads for j in 1:Ny
+    	y = sys.ycoord[j]
         @inbounds @simd for i in 1:Nx
+            x = sys.xcoord[i]
+            
             xi      = gauge.xi[1,i,j]
             xi3     = xi*xi*xi
 
@@ -970,29 +977,38 @@ function set_innerBCs!(bc::BC, bulk::BulkEvolved, boundary::Boundary,
 
             b13_y   = Dy(bulk.B,1,i,j)
             g3_y    = Dy(bulk.G,1,i,j)
-
+	    
+	    
+	    S0 = Sz(test, x, y, source)
+            S0_x = Sz_x(test, x, y, source)
+            S0_y = Sz_y(test, x, y, source)
+            S0_t = Sz_t(test, x, y, source)
+	    
             bc.S[i,j]   =0
             bc.S_u[i,j] = 0
 
             bc.Fx[i,j]   = fx1
             #bc.Fx_u[i,j] = - 2 * fx1 * xi +3 / 2 * (-b13_x  + g3_y)
-	    bc.Fx_u[i,j] = - fx1 * xi +3 / 4 * (-b13_x  + g3_y)
+	    bc.Fx_u[i,j] = -1/2*(4*fx1*S0*xi + 3*S0*(b13_x) - 3*S0*(g3_y) + 4*fx1*(S0_t) + 6*b13*(S0_x) - 6*g3*(S0_y))/S0
+	     #- fx1 * xi +3 / 4 * (-b13_x  + g3_y)
 	    
             
             bc.Fy[i,j]   = fy1
             #bc.Fy_u[i,j] = - 2 * fy1 * xi + 3/2 * (b13_y+ g3_x)
-            bc.Fy_u[i,j] = - fy1 * xi + 3/4 * (b13_y+ g3_x)
+            bc.Fy_u[i,j] = (-4*fy1*S0*xi + 3*S0*(b13_y) + 3*S0*(g3_x) - 4*fy1*(S0_t) + 6*g3*(S0_x) + 6*b13*(S0_y))/(2*S0)
+            # - fy1 * xi + 3/4 * (b13_y+ g3_x)
            
             
             
 
-            bc.Sd[i,j] = a3 /2
+            bc.Sd[i,j] = S0 * a3 /2
 
             bc.Bd[i,j] = -3* b13/2
             bc.Gd[i,j]  = -3 * g3/2
 
             bc.A[i,j]   = a3
-            bc.A_u[i,j] = - 2 *xi * a3-(fx1_x+fy1_y)
+            bc.A_u[i,j] = -((2*a3*S0^2*xi + (fx1_x) + (fy1_y) + 2*a3*S0*(S0_t))/S0^2)
+            # - 2 *xi * a3-(fx1_x+fy1_y)
         end
     end
 
