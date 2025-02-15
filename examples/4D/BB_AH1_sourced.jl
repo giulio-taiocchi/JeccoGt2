@@ -4,15 +4,15 @@ using Jecco.AdS4_3_1_s
 grid = SpecCartGrid3D(
     x_min            = -100000.0,
     x_max            =  100000.0,
-    x_nodes          =  150,
+    x_nodes          =  32,
     y_min            = -100000.0,
     y_max            =  100000.0,
-    y_nodes          =  150,
-    u_outer_min      =  0.3,
+    y_nodes          =  32,
+    u_outer_min      =  0.7,
     u_outer_max      =  1.1,
     u_outer_domains  =  1,
     u_outer_nodes    =  12,
-    u_inner_nodes    =  12,
+    u_inner_nodes    =  20,
     fd_order         =  4,
     sigma_diss       =  0.2,
 )
@@ -29,8 +29,10 @@ evoleq = AffineNull(
 )
 
 io = InOut(
-    out_boundary_every  = 100,
-    #out_bulk_every      = 10,
+    #out_boundary_every  = 100,
+    out_bulk_every      = 1,
+    out_bulkconstrained_every = 1,
+    out_gauge_every     = 1,
     remove_existing     = true,
     #out_gauge_every     = 1,
 )
