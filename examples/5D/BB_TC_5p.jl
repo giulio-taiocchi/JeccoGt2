@@ -3,23 +3,23 @@ using Jecco.AdS5_3_1
 grid = SpecCartGrid3D(
     x_min            = -5.0,
     x_max            =  5.0,
-    x_nodes          =  100,
+    x_nodes          =  32,
     y_min            = -5.0,
     y_max            =  5.0,
-    y_nodes          =  100,
-    u_outer_min      =  0.1,
-    u_outer_max      =  1.1,
-    u_outer_domains  =  4,
-    u_outer_nodes    =  24,
-    u_inner_nodes    =  12,
+    y_nodes          =  32,
+    u_outer_min      =  0.75,
+    u_outer_max      =  1.05,
+    u_outer_domains  =  1,
+    u_outer_nodes    =  12,
+    u_inner_nodes    =  24,
     fd_order         =  4,
     sigma_diss       =  0.2,
 )
 
 
 id = AdS5_3_1.BoostedBBnumerical(
-    AH_pos = 0.987259,
-    IDdir = "/home/giulio/University/PhD/JeccoNewTest/Jecco_G/examples/AIME",
+    AH_pos = 0.9,
+    IDdir = "/home/giulio/University/PhD/JeccoNewTest/Jecco_G/examples/AIMETC_5p",
 )
 
 evoleq = AffineNull(
@@ -28,10 +28,10 @@ evoleq = AffineNull(
 )
 
 io = InOut(
-    out_boundary_every  = 10,
-    #out_bulk_every      = 100,
-    #out_bulkconstrained_every = 100,
-    out_gauge_every     = 100,
+    #out_boundary_every  = 500,
+    out_bulk_every      = 100,
+    out_bulkconstrained_every = 100,
+    #out_gauge_every     = 100,
     remove_existing     = true,
     checkpoint_every_walltime_hours = 1.0,
     #recover                     = :yes,
