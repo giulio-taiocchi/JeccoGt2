@@ -152,6 +152,7 @@ CC[2,1] = x48
 CC[2,2] = x17 * x27 - x22 + x26
 SS[2] = -B_x * x0 * x39 + B_x * x38 - B_y * x2 * x6 + Bp_y * x41 - G_x * x30 * x43 - G_y * x37 + G_y * x44 + Gp * x40 + Gp_x * x43 + S_y * x32 + S_y * x49 * x6 - Sp_y * x49 - x11 * x40 - x20 * x42 + x48 * xi_x + 2 * xi_y * (x27 * x45 - x46 + x47)
     
+    
     nothing
 end
 
@@ -208,14 +209,9 @@ function Sd_eq_coeff!(ABCS::Vector, vars::Tuple, ::Outer)
 
     
    
-    sinh2G  = sinh(*(2, G))
-    cosh2G  = cosh(*(2, G))
-    coshGsq = cosh(G)^2
-    coshG   = cosh(G)
-    sinhG   = sinh(G)
 
 
-  x0 = exp(B)
+x0 = exp(B)
 x1 = 8 * x0
 x2 = S ^ 2
 x3 = cosh(G)
@@ -255,7 +251,7 @@ x36 = 2 * Fx + 2 * xi_x
 ABCS[1] = 0
 ABCS[2] = -S ^ 3 * u ^ 2 * x1
 ABCS[3] = Sp * x1 * x2
-ABCS[4] = -12 * S ^ 4 * x0 + S * x0 * (x3 * (-Gh * x16 - Gt * x8) + x5 * (-8 * Sc + 4 * Sp * x17 + 8 * Spt * x11 - 8 * x15 * x18 - x19 * (8 * Fy + 8 * xi_y))) + S * (Gh * x5 * x8 - x3 * (Bh * x8 + Sph * x12 - 4 * Ss + x10 * x9 - x12 * (Sph + x15) + x13 * x14)) - Sh ^ 2 * x4 + Sh * St * x1 * x5 + x2 * (x3 * (2 * Bh ^ 2 + Bp * x26 + Bpp * x28 - 2 * Bs + Fyp ^ 2 + Fyp * x27 - 2 * Fyph + 2 * Gh ^ 2 + x11 * x29 - x11 * (Bpp * x20 + x29)) + x5 * (-Gp * x26 - Gph * x20 - Gpp * x28 + 2 * Gs + x24 * (Gph + x22) - x6 * (Fyp + x27))) + x3 * x7 * (-2 * Gc + Gh * (-Bt - x21) + Gp * x17 + Gpt * x20 + Gt * (Bh + Fyp) - x22 * x23 - x24 * x25) + x5 * x7 * (-Fxp * Fyp + Fxph + Fypt - Gt * x6) + (S * (Gt * x16 * x5 + x3 * (Bt * x16 + 4 * Sb - Spt * x31 - x10 * x30 - x14 * x32 + x19 * x31)) - St ^ 2 * x4 + x2 * (x3 * (2 * Bb - Bp * x33 - Bpp * x34 - Bpt * x23 + 2 * Bt ^ 2 + Fxp ^ 2 - Fxp * x35 - 2 * Fxpt + 2 * Gt ^ 2 + x36 * (Bpp * x18 + Bpt)) + x5 * (2 * Gb - Gp * x33 - Gpp * x34 - Gpt * x23 + 2 * Gt * (x21 + x35) + x25 * x36))) * exp(2 * B)
+ABCS[4] = -12 * S ^ 4 * x0 + S * x0 * (x3 * (-Gh * x16 - Gt * x8) + x5 * (-8 * Sc + 8 * Spt * x11 + x10 * x17 + 8 * x15 * x18 - x19 * (8 * Fy + 8 * xi_y))) + S * (Gh * x5 * x8 - x3 * (Bh * x8 + Sph * x12 - 4 * Ss + x10 * x9 - x12 * (Sph + x15) + x13 * x14)) - Sh ^ 2 * x4 + Sh * St * x1 * x5 + x2 * (x3 * (2 * Bh ^ 2 + Bp * x26 + Bpp * x28 - 2 * Bs + Fyp ^ 2 + Fyp * x27 - 2 * Fyph + 2 * Gh ^ 2 + x11 * x29 - x11 * (Bpp * x20 + x29)) + x5 * (-Gp * x26 - Gph * x20 - Gpp * x28 + 2 * Gs + x24 * (Gph + x22) - x6 * (Fyp + x27))) + x3 * x7 * (-2 * Gc + Gh * (-Bt - x21) + Gp * x17 + Gpt * x20 + Gt * (Bh + Fyp) + x22 * x23 - x24 * x25) + x5 * x7 * (-Fxp * Fyp + Fxph + Fypt - Gt * x6) + (S * (Gt * x16 * x5 + x3 * (Bt * x16 + 4 * Sb - Spt * x31 - x10 * x30 - x14 * x32 + x19 * x31)) - St ^ 2 * x4 + x2 * (x3 * (2 * Bb - Bp * x33 - Bpp * x34 - Bpt * x23 + 2 * Bt ^ 2 + Fxp ^ 2 - Fxp * x35 - 2 * Fxpt + 2 * Gt ^ 2 + x36 * (Bpp * x18 + Bpt)) + x5 * (2 * Gb - Gp * x33 - Gpp * x34 - Gpt * x23 + 2 * Gt * (x21 + x35) + x25 * x36))) * exp(2 * B)
 
     nothing
 end
@@ -419,7 +415,6 @@ function A_eq_coeff!(ABCS::Vector, vars::Tuple, ::Outer)
     coshG   = cosh(G)
     sinhG   = sinh(G)
 
-
 x0 = exp(B)
 x1 = S ^ 4
 x2 = 2 * x1
@@ -542,7 +537,7 @@ function xi_t_eq_coeff(vars::Tuple, ::Outer)
     @cross_outer("G")
     
 
- x0 = exp(2 * B)
+x0 = exp(2 * B)
 x1 = cosh(G)
 x2 = S * x1
 x3 = x0 * x2

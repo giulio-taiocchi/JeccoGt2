@@ -38,7 +38,6 @@ function AH_eq_coeff(vars::Tuple, ::Outer)
     @hat_outer("Fxp")
     @hat_outer("Fyp")
 
-
 x0 = exp(2 * B)
 x1 = cosh(G)
 x2 = S * x1
@@ -159,7 +158,6 @@ by = sigma0_y * x30 - x14 * x21 + x14 * x28 + x14 * x30 + x24 - x25 - x26 + x29 
 cc = -Fyp ^ 2 * x2 + Fyp * x24 - Fyph * x2 - Gh * x7 - Gpp * x56 * x6 + sigma0_y * x36 + sigma0_y * x37 + sigma0_y * x38 - sigma0_y * x41 - sigma0_y * x42 - sigma0_y * x44 + sigma0_y * x45 - sigma0_y * x52 - sigma0_y * x53 - sigma0_yy * x27 - sigma0_yy * x43 + x0 * (2 * Bp * Sp * sigma0_x * x1 * x22 + Bp * Sp * x1 * x70 + Bp * Sp * x1 * x76 - Fxp ^ 2 * x2 + Fxp * Sp * sigma0_x * x1 + Fxp * Sp * x1 * x22 - Fxp * x16 - Fxp * x18 - Fxpt * x2 - Gpp * x22 * x79 + 2 * Spp * sigma0_x * x1 * x22 + Spp * x1 * x70 + Spp * x1 * x76 - 6 * sigma0_x * x22 * x58 - sigma0_x * x62 - sigma0_x * x63 - sigma0_x * x64 - sigma0_x * x65 - sigma0_x * x66 - sigma0_x * x68 - sigma0_x * x69 - sigma0_x * x75 - sigma0_xx * x27 - sigma0_xx * x30 - sigma0_xx * x43 - x19 * x71 - x19 * x74 - x22 * x62 - x22 * x63 - x22 * x64 - x22 * x65 - x22 * x66 - x22 * x68 - x22 * x69 - x22 * x72 * x80 - 4 * x22 * x73 - x22 * x75 - x23 * x71 - x23 * x74 - x27 * x67 - x30 * x67 - x43 * x67 - x48 * x70 - x48 * x76 - x48 * x78 - x55 * x70 - x55 * x76 - x61 * x70 - x61 * x76 - x61 * x78 - x70 * x77 - x70 * x81 - x72 * x73 - x76 * x77 - x76 * x81) + x14 * x36 + x14 * x37 + x14 * x38 - x14 * x41 - x14 * x42 - x14 * x44 + x14 * x45 - x14 * x52 - x14 * x53 - x27 * x46 + x29 * x59 + x3 * (Bp * Sd * x82 + Bp * sigma0_xy * x6 + 2 * Fxp * x7 + Fxph * x5 + Fyp * x33 + Fypt * x5 + Gh * x17 + 4 * S * Sd * Sp + Sdp * x82 + sigma0_x * x104 + sigma0_x * x84 + sigma0_x * x85 + sigma0_x * x86 - sigma0_x * x92 + sigma0_x * x96 + sigma0_x * x97 + sigma0_x * x99 + sigma0_xy * x10 + sigma0_xy * x13 + sigma0_y * x100 + sigma0_y * x103 + sigma0_y * x109 + sigma0_y * x111 + sigma0_y * x83 + sigma0_y * x87 + sigma0_y * x88 - sigma0_y * x91 + sigma0_y * x95 + sigma0_y * x98 + x100 * x14 + x101 * x89 + x101 * x90 - x102 * x11 - x102 * x15 + x103 * x14 + x104 * x22 + x105 * x107 + x105 * x94 - x106 * x19 - x106 * x23 - x107 * x93 - x108 * x11 - x108 * x15 + x109 * x14 + x110 * x19 + x110 * x23 + x111 * x14 + x12 * x89 + x12 * x90 + x14 * x83 + x14 * x87 + x14 * x88 - x14 * x91 + x14 * x95 + x14 * x98 + x22 * x84 + x22 * x85 + x22 * x86 - x22 * x92 + x22 * x96 + x22 * x97 + x22 * x99 + x34 * x49 + x34 * x59 + x35 * x49 + x35 * x59 + x89 * x9 + x9 * x90 - x93 * x94) + x31 * x59 + x39 * x40 + x39 * x47 + x39 * x48 - x39 * x55 + x39 * x58 - x39 * x61 + x40 * x54 + x40 * x57 - x43 * x46 + x47 * x54 + x48 * x54 + x48 * x57 + x49 * x50 + x50 * x59 - x54 * x55 + x54 * x58 - x54 * x61 - x57 * x61
 
 
-
     return axx, ayy, axy, bx, by, cc
 end
 
@@ -188,7 +186,7 @@ function AH_eq_res(vars::Tuple, ::Outer)
     @hat_outer("Fy")
     @hat_outer("Sd")
 
- x0 = cosh(G)
+x0 = cosh(G)
 x1 = S * x0
 x2 = Bh * x1
 x3 = sigma0_y ^ 2
@@ -222,5 +220,4 @@ x30 = 2 * x18
 x31 = sigma0_y * x30
 x32 = x28 * x9
 res = sigma0_y * x2 - sigma0_y * x5 - sigma0_y * x8 - sigma0_yy * x1 - x1 * (Fyh + xi_yy) + x10 * x11 + x10 * x13 + x10 * x3 - x11 * x12 + x11 * x4 - x12 * x13 - x12 * x3 + x13 * x4 + x2 * x9 + x3 * x4 - x5 * x9 - x8 * x9 + (2 * Sp * sigma0_x * x0 * x18 + Sp * x0 * x17 + Sp * x0 * x19 - sigma0_x * x14 - sigma0_x * x15 - sigma0_x * x16 - sigma0_xx * x1 - x1 * (Fxt + xi_xx) - x10 * x17 - x10 * x19 - x10 * x21 - x12 * x17 - x12 * x19 - x12 * x21 - x14 * x18 - x15 * x18 - x16 * x18) * exp(2 * B) + (2 * S ^ 2 * Sd + sigma0_x * x23 + sigma0_x * x24 + 2 * sigma0_xy * x7 + sigma0_y * x22 + sigma0_y * x25 + x18 * x23 + x18 * x24 - x20 * x29 + x20 * x32 + x22 * x9 + x25 * x9 - x26 * x27 - x26 * x31 + x27 * x28 + x28 * x31 - x29 * x30 + x30 * x32 + x7 * (Fxh + xi_xy) + x7 * (Fyt + xi_xy)) * exp(B)
-
 end
