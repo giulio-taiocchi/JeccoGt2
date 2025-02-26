@@ -990,13 +990,13 @@ function set_innerBCs!(bc::BC, bulk::BulkEvolved, boundary::Boundary,
 
             bc.Fx[i,j]   = fx1
             #bc.Fx_u[i,j] = - 2 * fx1 * xi +3 / 2 * (-b13_x  + g3_y)
-	    bc.Fx_u[i,j] = -1/2*(4*fx1*S0*xi + 3*S0*(b13_x) - 3*S0*(g3_y) + 4*fx1*(S0_t) + 6*b13*(S0_x) - 6*g3*(S0_y))/S0
+	    bc.Fx_u[i,j] = - 2 * fx1 * xi +3 / 2 * (-b13_x  + g3_y)#-1/2*(4*fx1*S0*xi + 3*S0*(b13_x) - 3*S0*(g3_y) + 4*fx1*(S0_t) + 6*b13*(S0_x) - 6*g3*(S0_y))/S0
 	     #- fx1 * xi +3 / 4 * (-b13_x  + g3_y)
 	    
             
             bc.Fy[i,j]   = fy1
             #bc.Fy_u[i,j] = - 2 * fy1 * xi + 3/2 * (b13_y+ g3_x)
-            bc.Fy_u[i,j] = (-4*fy1*S0*xi + 3*S0*(b13_y) + 3*S0*(g3_x) - 4*fy1*(S0_t) + 6*g3*(S0_x) + 6*b13*(S0_y))/(2*S0)
+            bc.Fy_u[i,j] = - 2 * fy1 * xi + 3/2 * (b13_y+ g3_x)#(-4*fy1*S0*xi + 3*S0*(b13_y) + 3*S0*(g3_x) - 4*fy1*(S0_t) + 6*g3*(S0_x) + 6*b13*(S0_y))/(2*S0)
             # - fy1 * xi + 3/4 * (b13_y+ g3_x)
            
             
@@ -1008,7 +1008,7 @@ function set_innerBCs!(bc::BC, bulk::BulkEvolved, boundary::Boundary,
             bc.Gd[i,j]  = -3 * g3/2
 
             bc.A[i,j]   = a3
-            bc.A_u[i,j] = -((2*a3*S0^2*xi + (fx1_x) + (fy1_y) + 2*a3*S0*(S0_t))/S0^2)
+            bc.A_u[i,j] = - 2 *xi * a3-(fx1_x+fy1_y)#-((2*a3*S0^2*xi + (fx1_x) + (fy1_y) + 2*a3*S0*(S0_t))/S0^2)
             # - 2 *xi * a3-(fx1_x+fy1_y)
         end
     end
