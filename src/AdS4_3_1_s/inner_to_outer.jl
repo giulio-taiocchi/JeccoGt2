@@ -7,7 +7,7 @@
 @inline Fy_inner_to_outer(F_in, u, S0, S0_y, S0_t, S0_ty) =  F_in*u + (S0*S0_ty - S0_t*S0_y)/(S0*S0) 
 
 
-@inline A_inner_to_outer(A_in, u, xi, S0, S0_t, S0_tt, S0_x, S0_xx, S0_y, S0_yy) = 1/(u*u)+ (2*xi)/u + u*A_in + (S0 * S0*S0_t * S0_t - 2*S0*S0*S0*S0_tt + S0_x*S0_x + S0_y*S0_y- S0*(S0_xx + S0_yy) + S0*S0*S0*S0*(xi*xi - 2*xi_t))/(S0*S0*S0*S0)
+@inline A_inner_to_outer(A_in, u, xi, S0, S0_t, S0_tt, S0_x, S0_xx, S0_y, S0_yy) = 1/(u*u)+ (2*xi)/u + u*A_in + (S0 * S0*S0_t * S0_t - 2*S0*S0*S0*S0_tt + S0_x*S0_x + S0_y*S0_y- S0*(S0_xx + S0_yy) + S0*S0*S0*S0*(xi*xi))/(S0*S0*S0*S0)
 	
 
 
