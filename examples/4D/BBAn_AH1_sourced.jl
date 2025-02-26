@@ -12,7 +12,7 @@ grid = SpecCartGrid3D(
     u_outer_max      =  1.1,
     u_outer_domains  =  3,
     u_outer_nodes    =  12,
-    u_inner_nodes    =  12,
+    u_inner_nodes    =  24,
     fd_order         =  4,
     sigma_diss       =  0.2,
 )
