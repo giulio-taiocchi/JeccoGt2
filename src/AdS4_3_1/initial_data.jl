@@ -528,7 +528,26 @@ function init_data!(ff::Gauge, sys::System, id::BlackBranePert)
 end
 
 
-
+function fill_guess!(ff::Gauge, sys::System, id::BlackBranePert)
+	_, Nx, Ny = size(sys)
+    xx = sys.xcoord
+    yy = sys.ycoord
+    
+    guess = similar(ff.xi)
+    fill!(guess, 0) 
+    guess_value = id.AH_pos
+    #guessdirectory = dir*"Initialguess_BBB.h5"
+    #guessdata = h5open(guessdirectory)
+    #guessread = read(guessdata["guess"])
+    for j in 1:Ny
+        for i in 1:Nx      
+                x = xx[i]
+                y = yy[j]         
+                guess[1,i,j] = guess_value#guessread[j,i]                
+        end
+    end
+    return guess
+end
 
 #QNM in 1D initial data
 analytic_B(i, j, k,u, x, y, id::QNM_1D, whichsystem)  =  3/2*0.1 * u^6
