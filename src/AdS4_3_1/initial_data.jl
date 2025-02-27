@@ -396,7 +396,7 @@ function init_data!(ff::Gauge, sys::System, id::BlackBrane)
     ff
 end
 
-function fill_guess!(ff::Gauge, sys::System, id::BoostedBBnumerical)
+function fill_guess!(ff::Gauge, sys::System, id::BlackBrane)
 	_, Nx, Ny = size(sys)
     xx = sys.xcoord
     yy = sys.ycoord
