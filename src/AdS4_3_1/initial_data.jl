@@ -403,7 +403,7 @@ function fill_guess!(ff::Gauge, sys::System, id::BlackBrane)
     
     guess = similar(ff.xi)
     fill!(guess, 0) 
-    guess = id.AH_pos
+    guess_value = id.AH_pos
     #guessdirectory = dir*"Initialguess_BBB.h5"
     #guessdata = h5open(guessdirectory)
     #guessread = read(guessdata["guess"])
@@ -411,7 +411,7 @@ function fill_guess!(ff::Gauge, sys::System, id::BlackBrane)
         for i in 1:Nx      
                 x = xx[i]
                 y = yy[j]         
-                guess[1,i,j] = guess#guessread[j,i]                
+                guess[1,i,j] = guess_value#guessread[j,i]                
         end
     end
     return guess
