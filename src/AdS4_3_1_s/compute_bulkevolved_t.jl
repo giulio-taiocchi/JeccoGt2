@@ -80,14 +80,14 @@ function compute_bulkevolved_t!(bulkevol_t::BulkEvolved,
                 B_u   = Du(bulkevol.B, a,i,j)
                 G_u    = Du(bulkevol.G,  a,i,j)
 
-		B_t[a,i,j] = ((3* B + u * B_u) *
-                               (-2 * u * u * xi_t + A * u3 +
-                                (xi * u + 1) * (xi * u + 1))+ 2 * Bd)/(2 * u) #(2*Bd + ((3*B + u*(B_u))*(S0^2*u^2*(S0_t)^2 - 2*S0^3*u^2*(S0_tt) + u^2*((S0_x)^2 + (S0_y)^2) - S0*u^2*((S0_xx) + (S0_yy)) + S0^4*(A*u^3 + (1 + u*xi)^2 - 2*u^2*(xi_t))))/S0^4)/(2*u)
+		B_t[a,i,j] = (2*Bd + ((3*B + u*(B_u))*(S0^2*u^2*(S0_t)^2 - 2*S0^3*u^2*(S0_tt) + u^2*((S0_x)^2 + (S0_y)^2) - S0*u^2*((S0_xx) + (S0_yy)) + S0^4*(A*u^3 + (1 + u*xi)^2 - 2*u^2*(xi_t))))/S0^4)/(2*u)#((3* B + u * B_u) *
+                               #(-2 * u * u * xi_t + A * u3 +
+                                #(xi * u + 1) * (xi * u + 1))+ 2 * Bd)/(2 * u) #
                                 
 
-		G_t[a,i,j] =((3 * G + u * G_u) *
-                               (-2 * u * u * xi_t + A * u3 +
-                                (xi * u + 1) * (xi * u + 1)) + 2 * Gd)/(2 * u)     #(2*Gd + ((3*G + u*(G_u))*(S0^2*u^2*(S0_t)^2 - 2*S0^3*u^2*(S0_tt) + u^2*((S0_x)^2 + (S0_y)^2) - S0*u^2*((S0_xx) + (S0_yy)) + S0^4*(A*u^3 + (1 + u*xi)^2 - 2*u^2*(xi_t))))/S0^4)/(2*u)                        
+		G_t[a,i,j] = (2*Gd + ((3*G + u*(G_u))*(S0^2*u^2*(S0_t)^2 - 2*S0^3*u^2*(S0_tt) + u^2*((S0_x)^2 + (S0_y)^2) - S0*u^2*((S0_xx) + (S0_yy)) + S0^4*(A*u^3 + (1 + u*xi)^2 - 2*u^2*(xi_t))))/S0^4)/(2*u)    #((3 * G + u * G_u) *
+                               #(-2 * u * u * xi_t + A * u3 +
+                                #(xi * u + 1) * (xi * u + 1)) + 2 * Gd)/(2 * u)     #                    
             end
         end
     end
