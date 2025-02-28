@@ -42,9 +42,11 @@ Base.@kwdef mutable struct GaussianSource{T} <: Source
 end
 
 #Sz(t, x, y, GS ::GaussianSource) = 1 + (GS.GS.GS.Amp*exp(-1/2*(x - GS.GS.GS.x0)^2/GS.GS.GS.sigmax^2 - (y - GS.GS.GS.y0)^2/(2*GS.GS.GS.sigmay^2))*(1 + tanh(t - GS.GS.GS.t0)))/(2*pi*GS.GS.GS.sigmax*GS.GS.GS.sigmay)
-Sz(t, x, y, GS ::GaussianSource) = (1 + (GS.Amp*MathConstants.e^(-1/2*((2*pi*x)/GS.L - GS.x0)^2/GS.sigmax^2 - ((2*pi*y)/GS.L - GS.y0)^2/(2*GS.sigmay^2))*(1 + tanh(t - GS.t0)))/(4*pi*GS.sigmax*GS.sigmay))^(-2)
+Sz(t, x, y, GS ::GaussianSource) = (1 + (GS.Amp*tanh((t - GS.t0)/GS.tau))/(4*MathConstants.e^(((-2*pi*x + GS.L*GS.x0)^2/GS.sigmax^2 + (-2*pi*y + GS.L*GS.y0)^2/GS.sigmay^2)/(2*GS.L**2))*pi^2*GS.sigmax^2*GS.sigmay^2))^2
+#(1 + (GS.Amp*MathConstants.e^(-1/2*((2*pi*x)/GS.L - GS.x0)^2/GS.sigmax^2 - ((2*pi*y)/GS.L - GS.y0)^2/(2*GS.sigmay^2))*(1 + tanh(t - GS.t0)))/(4*pi*GS.sigmax*GS.sigmay))^(-2)
 
-Sz_x(t, x, y, GS ::GaussianSource) = (GS.Amp*MathConstants.e^(-1/2*((2*pi*x)/GS.L - GS.x0)^2/GS.sigmax^2 - ((2*pi*y)/GS.L - GS.y0)^2/(2*GS.sigmay^2))*((2*pi*x)/GS.L - GS.x0)*(1 + tanh(t - GS.t0)))/(GS.L*GS.sigmax^3*GS.sigmay*(1 + (GS.Amp*MathConstants.e^(-1/2*((2*pi*x)/GS.L - GS.x0)^2/GS.sigmax^2 - ((2*pi*y)/GS.L - GS.y0)^2/(2*GS.sigmay^2))*(1 + tanh(t - GS.t0)))/(4*pi*GS.sigmax*GS.sigmay))^3)
+Sz_x(t, x, y, GS ::GaussianSource) = -0.25*(GS.Amp*(2*pi*x - GS.L*GS.x0)*tanh((t - GS.t0)/GS.tau)*(4*MathConstants.e^(((-2*pi*x + GS.L*GS.x0)^2/GS.sigmax^2 + (-2*pi*y + GS.L*GS.y0)^2/GS.sigmay^2)/(2*GS.L**2))*pi^2*GS.sigmax^2*GS.sigmay^2 + GS.Amp*tanh((t - GS.t0)/GS.tau)))/(MathConstants.e^(((-2*pi*x + GS.L*GS.x0)^2/GS.sigmax^2 + (-2*pi*y + GS.L*GS.y0)^2/GS.sigmay^2)/GS.L^2)*pi^3*GS.L^2*GS.sigmax^6*GS.sigmay^4)
+#(GS.Amp*MathConstants.e^(-1/2*((2*pi*x)/GS.L - GS.x0)^2/GS.sigmax^2 - ((2*pi*y)/GS.L - GS.y0)^2/(2*GS.sigmay^2))*((2*pi*x)/GS.L - GS.x0)*(1 + tanh(t - GS.t0)))/(GS.L*GS.sigmax^3*GS.sigmay*(1 + (GS.Amp*MathConstants.e^(-1/2*((2*pi*x)/GS.L - GS.x0)^2/GS.sigmax^2 - ((2*pi*y)/GS.L - GS.y0)^2/(2*GS.sigmay^2))*(1 + tanh(t - GS.t0)))/(4*pi*GS.sigmax*GS.sigmay))^3)
 
 Sz_y(t, x, y, GS ::GaussianSource) = (GS.Amp*MathConstants.e^(-1/2*((2*pi*x)/GS.L - GS.x0)^2/GS.sigmax^2 - ((2*pi*y)/GS.L - GS.y0)^2/(2*GS.sigmay^2))*((2*pi*y)/GS.L - GS.y0)*(1 + tanh(t - GS.t0)))/(GS.L*GS.sigmax*GS.sigmay^3*(1 + (GS.Amp*MathConstants.e^(-1/2*((2*pi*x)/GS.L - GS.x0)^2/GS.sigmax^2 - ((2*pi*y)/GS.L - GS.y0)^2/(2*GS.sigmay^2))*(1 + tanh(t - GS.t0)))/(4*pi*GS.sigmax*GS.sigmay))^3)
 ###############
