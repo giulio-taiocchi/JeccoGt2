@@ -165,7 +165,8 @@ function (id::ID_ConstantAH)(bulkconstrains, bulkevols, bulkderivs, boundary::Bo
 
     # find the Apparent Horizon
     sigma = similar(gauge.xi)
-    fill!(sigma, 1/AH_pos)  # initial guess
+    #fill!(sigma, 1/AH_pos)  # initial guess
+    sigma = fill_guess!(gauge, systems[end], id)
     find_AH!(sigma, bulkconstrains[end], bulkevols[end], bulkderivs[end], gauge,
              horizoncache, systems[end], id.ahf)
 
@@ -731,7 +732,22 @@ function analytic_B(i, j, k, u, x, y, id::BoostedBBnumerical, whichsystem)
 	
 	Bvalue
 end
-analytic_G(i, j, k, u, x, y, id::BoostedBBnumerical,whichsystem)  = 0
+
+function analytic_G(i, j, k, u, x, y, id::BoostedBBnumerical,whichsystem) 
+	uu = u
+	dir = id.IDdir
+	Gdirectory = dir*"InitialG_BBB.h5"
+	initialG=h5open(Gdirectory)
+	system_index = string(whichsystem+1)
+	dset=initialG[system_index]
+	G=read(dset)
+	# here the indexes have to be inverted since julia and mathematica input and output mechanism is the opposite
+	# should be B[i,j,k]
+	Gvalue = G[k,j,i]
+		
+	Gvalue
+end
+
 
 
 
@@ -771,16 +787,27 @@ function init_data!(ff::Boundary, sys::System, id::BoostedBBnumerical)
     ff
 end
 
+
 function init_data!(ff::Gauge, sys::System, id::BoostedBBnumerical)
     _, Nx, Ny = size(sys)
     xx = sys.xcoord
     yy = sys.ycoord
     AH_pos  = id.AH_pos
     
+    
     xi  = getxi(ff)
     fill!(xi, 0)
-    
-    
+    dir = id.IDdir
+    xidirectory = dir*"Initialxi_BBB.h5"
+    xidata = h5open(xidirectory)
+    xiread = read(xidata["xi"])
+    for j in 1:Ny
+        for i in 1:Nx      
+                x = xx[i]
+                y = yy[j]         
+                xi[1,i,j] = xiread[j,i]                
+        end
+    end
     #for j in 1:Ny
     #    for i in 1:Nx      
     #            x = xx[i]
@@ -789,5 +816,26 @@ function init_data!(ff::Gauge, sys::System, id::BoostedBBnumerical)
     #    end
     #end
     ff
+end
+
+function fill_guess!(ff::Gauge, sys::System, id::BoostedBBnumerical)
+	_, Nx, Ny = size(sys)
+    xx = sys.xcoord
+    yy = sys.ycoord
+    
+    guess = similar(ff.xi)
+    fill!(guess, 0) 
+    dir = id.IDdir
+    guessdirectory = dir*"Initialguess_BBB.h5"
+    guessdata = h5open(guessdirectory)
+    guessread = read(guessdata["guess"])
+    for j in 1:Ny
+        for i in 1:Nx      
+                x = xx[i]
+                y = yy[j]         
+                guess[1,i,j] = guessread[j,i]                
+        end
+    end
+    return guess
 end
 
