@@ -8,6 +8,7 @@ using OrdinaryDiffEq
 using Interpolations
 using Random, Distributions
 using Printf
+using HypergeometricFunctions
 
 
 import Base.Threads.@threads
