@@ -52,6 +52,7 @@ Sz_yy(t, x, y, GS ::SpatialConstantSource) = 0
 Sz_yyy(t, x, y, GS ::SpatialConstantSource) = 0
 Sz_yyyy(t, x, y, GS ::SpatialConstantSource) = 0
 Sz_t(t, x, y, GS ::SpatialConstantSource) = -0.5*(GS.Amp*sech((t - GS.t0)/GS.tau)^2)/(GS.tau*(1 + GS.Amp*(1 + tanh((t - GS.t0)/GS.tau)))^1.5)
+Sz_tt(t, x, y, GS ::SpatialConstantSource) = (GS.Amp*sech((t - GS.t0)/GS.tau)^2*(3*GS.Amp*sech((t - GS.t0)/GS.tau)^2 + 4*tanh((t - GS.t0)/GS.tau)*(1 + GS.Amp*(1 + tanh((t - GS.t0)/GS.tau)))))/(4*GS.tau^2*(1 + GS.Amp*(1 + tanh((t - GS.t0)/GS.tau)))^2.5)
 Sz_tx(t, x, y, GS ::SpatialConstantSource) = 0
 Sz_ty(t, x, y, GS ::SpatialConstantSource) = 0
 Sz_txx(t, x, y, GS ::SpatialConstantSource) = 0
