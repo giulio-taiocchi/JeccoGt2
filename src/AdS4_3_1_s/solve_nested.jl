@@ -145,7 +145,7 @@ function solve_S!(bulk::Bulk, bc::BC, gauge::Gauge, deriv::BulkDeriv, aux_acc,
     # Dyy = sys.Dyy
     source = evoleq.source
     test = source.time
-    println("time of source in solve_S is $test")
+    #println("time of source in solve_S is $test")
 
     @fastmath @inbounds @threads for j in 1:Ny
     	y = sys.ycoord[j]
