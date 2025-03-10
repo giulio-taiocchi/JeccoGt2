@@ -36,26 +36,26 @@ Base.@kwdef mutable struct Quench{T} <: Source
 	
 end
 
-Sz(t, x, y, GS ::Q) = 1/sqrt(1 + GS.Amp/MathConstants.e^((t - GS.t0)^2/sigmat^2))
-Sz_x(t, x, y, GS ::Q) = 0
-Sz_xx(t, x, y, GS ::Q) =0
-Sz_xxx(t, x, y, GS ::Q) = 0
-Sz_xxxx(t, x, y, GS ::Q) = 0
-Sz_y(t, x, y, GS ::Q) = 0
-Sz_xy(t, x, y, GS ::Q) = 0
-Sz_xxy(t, x, y, GS ::Q) = 0
-Sz_xyy(t, x, y, GS ::Q) = 0
-Sz_xxyy(t, x, y, GS ::Q) = 0
-Sz_yy(t, x, y, GS ::Q) = 0
-Sz_yyy(t, x, y, GS ::Q) = 0
-Sz_yyyy(t, x, y, GS ::Q) = 0
-Sz_t(t, x, y, GS ::Q) = (GS.Amp*(t - GS.t0))/(MathConstants.e^((t - GS.t0)^2/sigmat^2)*sigmat^2*(1 + GS.Amp/MathConstants.e^((t - GS.t0)^2/sigmat^2))^1.5)
-Sz_tt(t, x, y, GS ::Q) = (GS.Amp*(MathConstants.e^((t - GS.t0)^2/sigmat^2)*(sigmat^2 - 2*t^2 + 4*t*GS.t0 - 2*GS.t0^2) + GS.Amp*(sigmat^2 + t^2 - 2*t*GS.t0 + GS.t0^2)))/(sigmat^4*(MathConstants.e^((t - GS.t0)^2/sigmat^2) + GS.Amp)^2*sqrt(1 + GS.Amp/MathConstants.e^((t - GS.t0)^2/sigmat^2)))
-Sz_tx(t, x, y, GS ::Q) = 0
-Sz_ty(t, x, y, GS ::Q) = 0
-Sz_txx(t, x, y, GS ::Q) = 0
-Sz_tyy(t, x, y, GS ::Q) = 0
-Sz_txy(t, x, y, GS ::Q) = 0
+Sz(t, x, y, GS ::Quench) = 1/sqrt(1 + GS.Amp/MathConstants.e^((t - GS.t0)^2/sigmat^2))
+Sz_x(t, x, y, GS ::Quench) = 0
+Sz_xx(t, x, y, GS ::Quench) =0
+Sz_xxx(t, x, y, GS ::Quench) = 0
+Sz_xxxx(t, x, y, GS ::Quench) = 0
+Sz_y(t, x, y, GS ::Quench) = 0
+Sz_xy(t, x, y, GS ::Quench) = 0
+Sz_xxy(t, x, y, GS ::Quench) = 0
+Sz_xyy(t, x, y, GS ::Quench) = 0
+Sz_xxyy(t, x, y, GS ::Quench) = 0
+Sz_yy(t, x, y, GS ::Quench) = 0
+Sz_yyy(t, x, y, GS ::Quench) = 0
+Sz_yyyy(t, x, y, GS ::Quench) = 0
+Sz_t(t, x, y, GS ::Quench) = (GS.Amp*(t - GS.t0))/(MathConstants.e^((t - GS.t0)^2/sigmat^2)*sigmat^2*(1 + GS.Amp/MathConstants.e^((t - GS.t0)^2/sigmat^2))^1.5)
+Sz_tt(t, x, y, GS ::Quench) = (GS.Amp*(MathConstants.e^((t - GS.t0)^2/sigmat^2)*(sigmat^2 - 2*t^2 + 4*t*GS.t0 - 2*GS.t0^2) + GS.Amp*(sigmat^2 + t^2 - 2*t*GS.t0 + GS.t0^2)))/(sigmat^4*(MathConstants.e^((t - GS.t0)^2/sigmat^2) + GS.Amp)^2*sqrt(1 + GS.Amp/MathConstants.e^((t - GS.t0)^2/sigmat^2)))
+Sz_tx(t, x, y, GS ::Quench) = 0
+Sz_ty(t, x, y, GS ::Quench) = 0
+Sz_txx(t, x, y, GS ::Quench) = 0
+Sz_tyy(t, x, y, GS ::Quench) = 0
+Sz_txy(t, x, y, GS ::Quench) = 0
 
 
 #Test constant source
