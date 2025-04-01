@@ -1,7 +1,7 @@
 
 function compute_residual_AH!(res::Array, sigma::Array,
                               gauge::Gauge, cache::HorizonCache,
-                              sys::System{Outer})
+                              sys::System{Outer}, evoleq::EvolutionEquations)
     _, Nx, Ny = size(sys)
 
     Dx  = sys.Dx
@@ -124,7 +124,7 @@ function compute_residual_AH!(res::Array, sigma::Array,
 end
 
 function compute_coeffs_AH!(sigma::Array, gauge::Gauge, cache::HorizonCache,
-                            sys::System{Outer})
+                            sys::System{Outer}, evoleq::EvolutionEquations)
     _, Nx, Ny = size(sys)
 
     Dx  = sys.Dx
@@ -387,7 +387,7 @@ function find_AH!(sigma::Array, bulkconstrain::BulkConstrained,
             end
         end
 
-        compute_residual_AH!(res, sigma, gauge, cache, sys)
+        compute_residual_AH!(res, sigma, gauge, cache, sys, evoleq)
         max_res = maximum(abs.(res))
         println("    $it \t $max_res")
 
@@ -397,7 +397,7 @@ function find_AH!(sigma::Array, bulkconstrain::BulkConstrained,
 
         # compute axx, ayy, axy, bx, by and cc coefficients of the linearized
         # equation (stored in the cache struct)
-        compute_coeffs_AH!(sigma, gauge, cache, sys)
+        compute_coeffs_AH!(sigma, gauge, cache, sys, evoleq)
         copyto!(cache.b_vec, res)
 
         if it >= ahf.itmax
