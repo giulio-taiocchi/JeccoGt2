@@ -242,10 +242,9 @@ Base.@kwdef mutable struct MovingGaussianSource{T} <: Source
 	Amp :: T = 0.01
 	x0 :: T = 0.0
 	y0 :: T = 0.0
-	Lsigmax :: T = 0.5
-	Lsigmay :: T = 0.5
+	sigmax :: T = 0.5
+	sigmay :: T = 0.5
 	t0 :: T = 10.0
-	L :: T = 200000.0
 	tau :: T = 1.0
 	v :: T = 0.1
 	
