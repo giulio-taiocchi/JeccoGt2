@@ -119,7 +119,7 @@ function (id::InitialData)(bulkconstrains, bulkevols, bulkderivs, boundary::Boun
     sigma = similar(gauge.xi)
     fill!(sigma, 1/AH_pos)  # initial guess
     find_AH!(sigma, bulkconstrains[end], bulkevols[end], bulkderivs[end], gauge,
-             horizoncache, systems[end], id.ahf)
+             horizoncache, systems[end], id.ahf,evoleq)
     MaxAH=maximum(sigma)
     println("The horizon found is at rax=$MaxAH")
     println("AH_pos is $AH_pos")
@@ -168,7 +168,7 @@ function (id::ID_ConstantAH)(bulkconstrains, bulkevols, bulkderivs, boundary::Bo
     #fill!(sigma, 1/AH_pos)  # initial guess
     sigma = fill_guess!(gauge, systems[end], id)
     find_AH!(sigma, bulkconstrains[end], bulkevols[end], bulkderivs[end], gauge,
-             horizoncache, systems[end], id.ahf)
+             horizoncache, systems[end], id.ahf, evoleq)
 
     # assuming that the AH has been found, we now update xi and the bulk variables
     MaxAH=maximum(sigma)

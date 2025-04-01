@@ -278,7 +278,7 @@ reached.
 =#
 function find_AH!(sigma::Array, bulkconstrain::BulkConstrained,
                   bulkevol::BulkEvolved, deriv::BulkDeriv, gauge::Gauge,
-                  cache::HorizonCache, sys::System{Outer}, ahf::AHF)
+                  cache::HorizonCache, sys::System{Outer}, ahf::AHF, evoleq::EvolutionEquations)
     _, Nx, Ny = size(sys)
     bulk = Bulk(bulkevol, bulkconstrain)
 
