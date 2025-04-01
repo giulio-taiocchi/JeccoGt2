@@ -67,8 +67,8 @@ function compute_boundary_t!(boundary_t::Boundary, bulk::BulkEvolved,
             g3_y    = Dy(bulk.G, 1,i,j)/L
             
 	    a3      = boundary.a3[1,i,j]
-            a3_x    = Dx(boundary.a3, 1,i,j/L)
-            a3_y    = Dy(boundary.a3, 1,i,j/L)
+            a3_x    = Dx(boundary.a3, 1,i,j)/L
+            a3_y    = Dy(boundary.a3, 1,i,j)/L
 
 	    
 	    fx1     = boundary.fx1[1,i,j]

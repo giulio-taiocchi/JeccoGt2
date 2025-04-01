@@ -39,13 +39,13 @@ function setup_rhs(tmp::EvolVars, bulkconstrains::BulkPartition{Nsys},
                 bulkevol       = bulkevols[aa]
                 bulkevol_cache = bulkevols_cache[aa]
 
-                apply_dissipation!(bulkevol, bulkevol_cache, sys)
+                apply_dissipation!(bulkevol, bulkevol_cache, sys, evoleq)
 
                 # exponential filter
                 sys.filters(bulkevols[aa])
             end
-            apply_dissipation!(boundary, boundary_cache, systems[1])
-            apply_dissipation!(gauge, gauge_cache,  systems[Nsys])
+            apply_dissipation!(boundary, boundary_cache, systems[1], evoleq)
+            apply_dissipation!(gauge, gauge_cache,  systems[Nsys], evoleq)
         end
 
 
