@@ -86,8 +86,8 @@ function System(gridtype::GT, ucoord::GaussLobattoCoord,
                 filter_gamma::T, sigma_diss::T) where {GT<:GridType,T<:Real}
     Du  = ChebDeriv{1}(1, ucoord.min, ucoord.max, ucoord.nodes)
     Duu = ChebDeriv{1}(2, ucoord.min, ucoord.max, ucoord.nodes)
-    L = 1.0
-    Dx  = CenteredDiff{2}(1, ord, Jecco.delta(xcoord), xcoord.nodes)/L
+    
+    Dx  = CenteredDiff{2}(1, ord, Jecco.delta(xcoord), xcoord.nodes)
     Dxx = CenteredDiff{2}(2, ord, Jecco.delta(xcoord), xcoord.nodes)
 
     Dy  = CenteredDiff{3}(1, ord, Jecco.delta(ycoord), ycoord.nodes)

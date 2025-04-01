@@ -15,6 +15,7 @@ function compute_xi_t!(gauge_t::Gauge, bulkconstrain::BulkConstrained,
 
     Dx  = sys.Dx
     Dy  = sys.Dy
+    L = evoleq.L
 
     xiGF = getxi(gauge)
     xi_t = getxi(gauge_t)
@@ -24,8 +25,8 @@ function compute_xi_t!(gauge_t::Gauge, bulkconstrain::BulkConstrained,
 
     @fastmath @inbounds Threads.@threads for j in 1:Ny
         @inbounds for i in 1:Nx
-            xi_x  = Dx(xiGF, 1,i,j)
-            xi_y  = Dy(xiGF, 1,i,j)
+            xi_x  = Dx(xiGF, 1,i,j)/L
+            xi_y  = Dy(xiGF, 1,i,j)/L
 
             xi_t[1,i,j] = -vx * xi_x - vy * xi_y
         end
@@ -67,7 +68,7 @@ function compute_xi_t!(gauge_t::Gauge, bulkconstrain::BulkConstrained,
     Dxx = sys.Dxx
     Dy  = sys.Dy
     Dyy = sys.Dyy
-
+    L = evoleq.L
     # calling the time from the evoleq structure, needed for a time dependent source.
     source = evoleq.source
     test = source.time
@@ -178,11 +179,11 @@ function compute_xi_t!(gauge_t::Gauge, bulkconstrain::BulkConstrained,
             idx   = ind2D[i,j]
 
             xi    = gauge.xi[1,i,j]
-            xi_x  = Dx(gauge.xi, 1,i,j)
-            xi_y  = Dy(gauge.xi, 1,i,j)
-            xi_xx = Dxx(gauge.xi, 1,i,j)
-            xi_yy = Dyy(gauge.xi, 1,i,j)
-            xi_xy = Dx(Dy, gauge.xi, 1,i,j)
+            xi_x  = Dx(gauge.xi, 1,i,j)/L
+            xi_y  = Dy(gauge.xi, 1,i,j)/L
+            xi_xx = Dxx(gauge.xi, 1,i,j)/L/L
+            xi_yy = Dyy(gauge.xi, 1,i,j)/L/L
+            xi_xy = Dx(Dy, gauge.xi, 1,i,j)/L/L
 
             B    = B_uAH[1,i,j]
             G     = G_uAH[1,i,j]
@@ -215,67 +216,67 @@ function compute_xi_t!(gauge_t::Gauge, bulkconstrain::BulkConstrained,
 
             # x and y derivatives
 
-            B_x    = Dx(B_uAH,   1,i,j)
-            G_x     = Dx(G_uAH,    1,i,j)
-            S_x     = Dx(S_uAH,    1,i,j)
-            Fx_x    = Dx(Fx_uAH,   1,i,j)
-            Fy_x    = Dx(Fy_uAH,   1,i,j)
-            Sd_x    = Dx(Sd_uAH,   1,i,j)
-            Bd_x   = Dx(Bd_uAH,  1,i,j)
-            Gd_x    = Dx(Gd_uAH,   1,i,j)
-            A_x     = Dx(A_uAH,    1,i,j)
+            B_x    = Dx(B_uAH,   1,i,j)/L
+            G_x     = Dx(G_uAH,    1,i,j)/L
+            S_x     = Dx(S_uAH,    1,i,j)/L
+            Fx_x    = Dx(Fx_uAH,   1,i,j)/L
+            Fy_x    = Dx(Fy_uAH,   1,i,j)/L
+            Sd_x    = Dx(Sd_uAH,   1,i,j)/L
+            Bd_x   = Dx(Bd_uAH,  1,i,j)/L
+            Gd_x    = Dx(Gd_uAH,   1,i,j)/L
+            A_x     = Dx(A_uAH,    1,i,j)/L
 
-            B_y    = Dy(B_uAH,   1,i,j)
-            G_y     = Dy(G_uAH,    1,i,j)
-            S_y     = Dy(S_uAH,    1,i,j)
-            Fx_y    = Dy(Fx_uAH,   1,i,j)
-            Fy_y    = Dy(Fy_uAH,   1,i,j)
-            Sd_y    = Dy(Sd_uAH,   1,i,j)
-            Bd_y   = Dy(Bd_uAH,  1,i,j)
-            Gd_y    = Dy(Gd_uAH,   1,i,j)
-            A_y     = Dy(A_uAH,    1,i,j)
+            B_y    = Dy(B_uAH,   1,i,j)/L
+            G_y     = Dy(G_uAH,    1,i,j)/L
+            S_y     = Dy(S_uAH,    1,i,j)/L
+            Fx_y    = Dy(Fx_uAH,   1,i,j)/L
+            Fy_y    = Dy(Fy_uAH,   1,i,j)/L
+            Sd_y    = Dy(Sd_uAH,   1,i,j)/L
+            Bd_y   = Dy(Bd_uAH,  1,i,j)/L
+            Gd_y    = Dy(Gd_uAH,   1,i,j)/L
+            A_y     = Dy(A_uAH,    1,i,j)/L
 
-            Bp_x   = -u2 * Dx(Du_B_uAH, 1,i,j)
-            Gp_x    = -u2 * Dx(Du_G_uAH,  1,i,j)
-            Sp_x    = -u2 * Dx(Du_S_uAH,  1,i,j)
-            Fxp_x   = -u2 * Dx(Du_Fx_uAH, 1,i,j)
-            Fyp_x   = -u2 * Dx(Du_Fy_uAH, 1,i,j)
-            Ap_x    = -u2 * Dx(Du_A_uAH,  1,i,j)
+            Bp_x   = -u2 * Dx(Du_B_uAH, 1,i,j)/L
+            Gp_x    = -u2 * Dx(Du_G_uAH,  1,i,j)/L
+            Sp_x    = -u2 * Dx(Du_S_uAH,  1,i,j)/L
+            Fxp_x   = -u2 * Dx(Du_Fx_uAH, 1,i,j)/L
+            Fyp_x   = -u2 * Dx(Du_Fy_uAH, 1,i,j)/L
+            Ap_x    = -u2 * Dx(Du_A_uAH,  1,i,j)/L
 
-            Bp_y   = -u2 * Dy(Du_B_uAH, 1,i,j)
-            Gp_y    = -u2 * Dy(Du_G_uAH,  1,i,j)
-            Sp_y    = -u2 * Dy(Du_S_uAH,  1,i,j)
-            Fxp_y   = -u2 * Dy(Du_Fx_uAH, 1,i,j)
-            Fyp_y   = -u2 * Dy(Du_Fy_uAH, 1,i,j)
-            Ap_y    = -u2 * Dy(Du_A_uAH,  1,i,j)
+            Bp_y   = -u2 * Dy(Du_B_uAH, 1,i,j)/L
+            Gp_y    = -u2 * Dy(Du_G_uAH,  1,i,j)/L
+            Sp_y    = -u2 * Dy(Du_S_uAH,  1,i,j)/L
+            Fxp_y   = -u2 * Dy(Du_Fx_uAH, 1,i,j)/L
+            Fyp_y   = -u2 * Dy(Du_Fy_uAH, 1,i,j)/L
+            Ap_y    = -u2 * Dy(Du_A_uAH,  1,i,j)/L
 
-            Fy_xx   = Dxx(Fy_uAH,  1,i,j)
-            Fx_xx   = Dxx(Fx_uAH,  1,i,j)
-            A_xx    = Dxx(A_uAH,   1,i,j)
-            B_xx    = Dxx(B_uAH,   1,i,j)
-            G_xx    = Dxx(G_uAH,   1,i,j)
-            S_xx    = Dxx(S_uAH,   1,i,j)
+            Fy_xx   = Dxx(Fy_uAH,  1,i,j)/L/L
+            Fx_xx   = Dxx(Fx_uAH,  1,i,j)/L/L
+            A_xx    = Dxx(A_uAH,   1,i,j)/L/L
+            B_xx    = Dxx(B_uAH,   1,i,j)/L/L
+            G_xx    = Dxx(G_uAH,   1,i,j)/L/L
+            S_xx    = Dxx(S_uAH,   1,i,j)/L/L
 
-            Fx_yy   = Dyy(Fx_uAH,  1,i,j)
-            Fy_yy   = Dyy(Fy_uAH,  1,i,j)
-            A_yy    = Dyy(A_uAH,   1,i,j)
-            B_yy    = Dyy(B_uAH,   1,i,j)
-            G_yy    = Dyy(G_uAH,   1,i,j)
-            S_yy    = Dyy(S_uAH,   1,i,j)
+            Fx_yy   = Dyy(Fx_uAH,  1,i,j)/L/L
+            Fy_yy   = Dyy(Fy_uAH,  1,i,j)/L/L
+            A_yy    = Dyy(A_uAH,   1,i,j)/L/L
+            B_yy    = Dyy(B_uAH,   1,i,j)/L/L
+            G_yy    = Dyy(G_uAH,   1,i,j)/L/L
+            S_yy    = Dyy(S_uAH,   1,i,j)/L/L
 
-            Fx_xy   = Dx(Dy, Fx_uAH, 1,i,j)
-            Fy_xy   = Dx(Dy, Fy_uAH, 1,i,j)
-            A_xy    = Dx(Dy, A_uAH,  1,i,j)
-            B_xy    = Dx(Dy, B_uAH,  1,i,j)
-            G_xy    = Dx(Dy, G_uAH,  1,i,j)
-            S_xy    = Dx(Dy, S_uAH,  1,i,j)
+            Fx_xy   = Dx(Dy, Fx_uAH, 1,i,j)/L/L
+            Fy_xy   = Dx(Dy, Fy_uAH, 1,i,j)/L/L
+            A_xy    = Dx(Dy, A_uAH,  1,i,j)/L/L
+            B_xy    = Dx(Dy, B_uAH,  1,i,j)/L/L
+            G_xy    = Dx(Dy, G_uAH,  1,i,j)/L/L
+            S_xy    = Dx(Dy, S_uAH,  1,i,j)/L/L
             
             S0 = Sz(test, x, y, source)
-            S0_x = Sz_x(test, x, y, source)
-            S0_y = Sz_y(test, x, y, source)
+            S0_x = Sz_x(test, x, y, source)/L
+            S0_y = Sz_y(test, x, y, source)/L
             S0_t = Sz_t(test, x, y, source)
-            S0_tx = Sz_tx(test, x, y, source)
-            S0_ty = Sz_ty(test, x, y, source)
+            S0_tx = Sz_tx(test, x, y, source)/L
+            S0_ty = Sz_ty(test, x, y, source)/L
 
             vars =  (
                 S0, S0_x, S0_y, S0_t, S0_tx, S0_ty, kappa, xi, xi_x, xi_y, xi_xx, xi_yy, xi_xy,

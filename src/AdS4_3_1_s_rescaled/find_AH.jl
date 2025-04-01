@@ -8,6 +8,7 @@ function compute_residual_AH!(res::Array, sigma::Array,
     Dxx = sys.Dxx
     Dy  = sys.Dy
     Dyy = sys.Dyy
+    L = evoleq.L
 
     # we assume here that the bulk functions and their u-derivatives have
     # already been interpolated to the uAH surface (u = 1/sigma)
@@ -41,18 +42,18 @@ function compute_residual_AH!(res::Array, sigma::Array,
             u4  = uAH * uAH * uAH * uAH
 
             xi    = gauge.xi[1,i,j]
-            xi_x  = Dx(gauge.xi, 1,i,j)
-            xi_y  = Dy(gauge.xi, 1,i,j)
-            xi_xx = Dxx(gauge.xi, 1,i,j)
-            xi_yy = Dyy(gauge.xi, 1,i,j)
-            xi_xy = Dx(Dy, gauge.xi, 1,i,j)
+            xi_x  = Dx(gauge.xi, 1,i,j)/L
+            xi_y  = Dy(gauge.xi, 1,i,j)/L
+            xi_xx = Dxx(gauge.xi, 1,i,j)/L/L
+            xi_yy = Dyy(gauge.xi, 1,i,j)/L/L
+            xi_xy = Dx(Dy, gauge.xi, 1,i,j)/L/L
 
             sigma0    = sigma[1,i,j]
-            sigma0_x  = Dx(sigma, 1,i,j)
-            sigma0_y  = Dy(sigma, 1,i,j)
-            sigma0_xx = Dxx(sigma, 1,i,j)
-            sigma0_yy = Dyy(sigma, 1,i,j)
-            sigma0_xy = Dx(Dy, sigma, 1,i,j)
+            sigma0_x  = Dx(sigma, 1,i,j)/L
+            sigma0_y  = Dy(sigma, 1,i,j)/L
+            sigma0_xx = Dxx(sigma, 1,i,j)/L/L
+            sigma0_yy = Dyy(sigma, 1,i,j)/L/L
+            sigma0_xy = Dx(Dy, sigma, 1,i,j)/L/L
 
             B    = B_uAH[1,i,j]
             G     = G_uAH[1,i,j]
@@ -78,31 +79,31 @@ function compute_residual_AH!(res::Array, sigma::Array,
 
             # x and y derivatives
 
-            B_x    = Dx(B_uAH,   1,i,j) - Bp * sigma0_x
-            G_x     = Dx(G_uAH,    1,i,j) -  Gp * sigma0_x
-            S_x     = Dx(S_uAH,    1,i,j) -  Sp * sigma0_x
-            Fx_x    = Dx(Fx_uAH,   1,i,j) - Fxp * sigma0_x
-            Fy_x    = Dx(Fy_uAH,   1,i,j) - Fyp * sigma0_x
-            Sd_x    = Dx(Sd_uAH,   1,i,j) - Sdp * sigma0_x
+            B_x    = (Dx(B_uAH,   1,i,j) - Bp * sigma0_x)/L
+            G_x     = (Dx(G_uAH,    1,i,j) -  Gp * sigma0_x)/L
+            S_x     = (Dx(S_uAH,    1,i,j) -  Sp * sigma0_x)/L
+            Fx_x    = (Dx(Fx_uAH,   1,i,j) - Fxp * sigma0_x)/L
+            Fy_x    = (Dx(Fy_uAH,   1,i,j) - Fyp * sigma0_x)/L
+            Sd_x    = (Dx(Sd_uAH,   1,i,j) - Sdp * sigma0_x)/L
 
-            B_y    = Dy(B_uAH,   1,i,j) - Bp * sigma0_y
-            G_y     = Dy(G_uAH,    1,i,j) -  Gp * sigma0_y
-            S_y     = Dy(S_uAH,    1,i,j) -  Sp * sigma0_y
-            Fx_y    = Dy(Fx_uAH,   1,i,j) - Fxp * sigma0_y
-            Fy_y    = Dy(Fy_uAH,   1,i,j) - Fyp * sigma0_y
-            Sd_y    = Dy(Sd_uAH,   1,i,j) - Sdp * sigma0_y
+            B_y    = (Dy(B_uAH,   1,i,j) - Bp * sigma0_y)/L
+            G_y     = (Dy(G_uAH,    1,i,j) -  Gp * sigma0_y)/L
+            S_y     = (Dy(S_uAH,    1,i,j) -  Sp * sigma0_y)/L
+            Fx_y    = (Dy(Fx_uAH,   1,i,j) - Fxp * sigma0_y)/L
+            Fy_y    = (Dy(Fy_uAH,   1,i,j) - Fyp * sigma0_y)/L
+            Sd_y    = (Dy(Sd_uAH,   1,i,j) - Sdp * sigma0_y)/L
 
-            Bp_x   = -u2 * Dx(Du_B_uAH, 1,i,j) - Bpp * sigma0_x + 2 * u3 * sigma0_x * Du_B_uAH[1,i,j]
-            Gp_x    = -u2 * Dx(Du_G_uAH,  1,i,j) -  Gpp * sigma0_x + 2 * u3 * sigma0_x *  Du_G_uAH[1,i,j]
-            Sp_x    = -u2 * Dx(Du_S_uAH,  1,i,j) -  Spp * sigma0_x + 2 * u3 * sigma0_x *  Du_S_uAH[1,i,j]
-            Fxp_x   = -u2 * Dx(Du_Fx_uAH, 1,i,j) - Fxpp * sigma0_x + 2 * u3 * sigma0_x * Du_Fx_uAH[1,i,j]
-            Fyp_x   = -u2 * Dx(Du_Fy_uAH, 1,i,j) - Fypp * sigma0_x + 2 * u3 * sigma0_x * Du_Fy_uAH[1,i,j]
+            Bp_x   = (-u2 * Dx(Du_B_uAH, 1,i,j) - Bpp * sigma0_x + 2 * u3 * sigma0_x * Du_B_uAH[1,i,j])/L
+            Gp_x    = (-u2 * Dx(Du_G_uAH,  1,i,j) -  Gpp * sigma0_x + 2 * u3 * sigma0_x *  Du_G_uAH[1,i,j])/L
+            Sp_x    = (-u2 * Dx(Du_S_uAH,  1,i,j) -  Spp * sigma0_x + 2 * u3 * sigma0_x *  Du_S_uAH[1,i,j])/L
+            Fxp_x   = (-u2 * Dx(Du_Fx_uAH, 1,i,j) - Fxpp * sigma0_x + 2 * u3 * sigma0_x * Du_Fx_uAH[1,i,j])/L
+            Fyp_x   = (-u2 * Dx(Du_Fy_uAH, 1,i,j) - Fypp * sigma0_x + 2 * u3 * sigma0_x * Du_Fy_uAH[1,i,j])/L
 
-            Bp_y   = -u2 * Dy(Du_B_uAH, 1,i,j) - Bpp * sigma0_y + 2 * u3 * sigma0_y * Du_B_uAH[1,i,j]
-            Gp_y    = -u2 * Dy(Du_G_uAH,  1,i,j) -  Gpp * sigma0_y + 2 * u3 * sigma0_y *  Du_G_uAH[1,i,j]
-            Sp_y    = -u2 * Dy(Du_S_uAH,  1,i,j) -  Spp * sigma0_y + 2 * u3 * sigma0_y *  Du_S_uAH[1,i,j]
-            Fxp_y   = -u2 * Dy(Du_Fx_uAH, 1,i,j) - Fxpp * sigma0_y + 2 * u3 * sigma0_y * Du_Fx_uAH[1,i,j]
-            Fyp_y   = -u2 * Dy(Du_Fy_uAH, 1,i,j) - Fypp * sigma0_y + 2 * u3 * sigma0_y * Du_Fy_uAH[1,i,j]
+            Bp_y   = (-u2 * Dy(Du_B_uAH, 1,i,j) - Bpp * sigma0_y + 2 * u3 * sigma0_y * Du_B_uAH[1,i,j])/L
+            Gp_y    = (-u2 * Dy(Du_G_uAH,  1,i,j) -  Gpp * sigma0_y + 2 * u3 * sigma0_y *  Du_G_uAH[1,i,j])/L
+            Sp_y    = (-u2 * Dy(Du_S_uAH,  1,i,j) -  Spp * sigma0_y + 2 * u3 * sigma0_y *  Du_S_uAH[1,i,j])/L
+            Fxp_y   = (-u2 * Dy(Du_Fx_uAH, 1,i,j) - Fxpp * sigma0_y + 2 * u3 * sigma0_y * Du_Fx_uAH[1,i,j])/L
+            Fyp_y   = (-u2 * Dy(Du_Fy_uAH, 1,i,j) - Fypp * sigma0_y + 2 * u3 * sigma0_y * Du_Fy_uAH[1,i,j])/L
 
 
             vars = (
@@ -130,6 +131,7 @@ function compute_coeffs_AH!(sigma::Array, gauge::Gauge, cache::HorizonCache,
     Dxx = sys.Dxx
     Dy  = sys.Dy
     Dyy = sys.Dyy
+    L = evoleq.L
 
     B_uAH      = cache.bulkhorizon.B_uAH
     G_uAH       = cache.bulkhorizon.G_uAH
@@ -172,18 +174,18 @@ function compute_coeffs_AH!(sigma::Array, gauge::Gauge, cache::HorizonCache,
             u4    = uAH * uAH * uAH * uAH
 
             xi    = gauge.xi[1,i,j]
-            xi_x  = Dx(gauge.xi, 1,i,j)
-            xi_y  = Dy(gauge.xi, 1,i,j)
-            xi_xx = Dxx(gauge.xi, 1,i,j)
-            xi_yy = Dyy(gauge.xi, 1,i,j)
-            xi_xy = Dx(Dy, gauge.xi, 1,i,j)
+            xi_x  = Dx(gauge.xi, 1,i,j)/L
+            xi_y  = Dy(gauge.xi, 1,i,j)/L
+            xi_xx = Dxx(gauge.xi, 1,i,j)/L/L
+            xi_yy = Dyy(gauge.xi, 1,i,j)/L/L
+            xi_xy = Dx(Dy, gauge.xi, 1,i,j)/L/L
 
             sigma0    = sigma[1,i,j]
-            sigma0_x  = Dx(sigma, 1,i,j)
-            sigma0_y  = Dy(sigma, 1,i,j)
-            sigma0_xx = Dxx(sigma, 1,i,j)
-            sigma0_yy = Dyy(sigma, 1,i,j)
-            sigma0_xy = Dx(Dy, sigma, 1,i,j)
+            sigma0_x  = Dx(sigma, 1,i,j)/L
+            sigma0_y  = Dy(sigma, 1,i,j)/L
+            sigma0_xx = Dxx(sigma, 1,i,j)/L/L
+            sigma0_yy = Dyy(sigma, 1,i,j)/L/L
+            sigma0_xy = Dx(Dy, sigma, 1,i,j)/L/L
 
             B    = B_uAH[1,i,j]
             G     = G_uAH[1,i,j]
@@ -209,31 +211,31 @@ function compute_coeffs_AH!(sigma::Array, gauge::Gauge, cache::HorizonCache,
 
             # x and y derivatives
 
-            B_x    = Dx(B_uAH,   1,i,j) - Bp * sigma0_x
-            G_x     = Dx(G_uAH,    1,i,j) -  Gp * sigma0_x
-            S_x     = Dx(S_uAH,    1,i,j) -  Sp * sigma0_x
-            Fx_x    = Dx(Fx_uAH,   1,i,j) - Fxp * sigma0_x
-            Fy_x    = Dx(Fy_uAH,   1,i,j) - Fyp * sigma0_x
-            Sd_x    = Dx(Sd_uAH,   1,i,j) - Sdp * sigma0_x
+            B_x    = (Dx(B_uAH,   1,i,j) - Bp * sigma0_x)/L
+            G_x     = (Dx(G_uAH,    1,i,j) -  Gp * sigma0_x)/L
+            S_x     = (Dx(S_uAH,    1,i,j) -  Sp * sigma0_x)/L
+            Fx_x    = (Dx(Fx_uAH,   1,i,j) - Fxp * sigma0_x)/L
+            Fy_x    = (Dx(Fy_uAH,   1,i,j) - Fyp * sigma0_x)/L
+            Sd_x    = (Dx(Sd_uAH,   1,i,j) - Sdp * sigma0_x)/L
 
-            B_y    = Dy(B_uAH,   1,i,j) - Bp * sigma0_y
-            G_y     = Dy(G_uAH,    1,i,j) -  Gp * sigma0_y
-            S_y     = Dy(S_uAH,    1,i,j) -  Sp * sigma0_y
-            Fx_y    = Dy(Fx_uAH,   1,i,j) - Fxp * sigma0_y
-            Fy_y    = Dy(Fy_uAH,   1,i,j) - Fyp * sigma0_y
-            Sd_y    = Dy(Sd_uAH,   1,i,j) - Sdp * sigma0_y
+            B_y    = (Dy(B_uAH,   1,i,j) - Bp * sigma0_y)/L
+            G_y     = (Dy(G_uAH,    1,i,j) -  Gp * sigma0_y)/L
+            S_y     = (Dy(S_uAH,    1,i,j) -  Sp * sigma0_y)/L
+            Fx_y    = (Dy(Fx_uAH,   1,i,j) - Fxp * sigma0_y)/L
+            Fy_y    = (Dy(Fy_uAH,   1,i,j) - Fyp * sigma0_y)/L
+            Sd_y    = (Dy(Sd_uAH,   1,i,j) - Sdp * sigma0_y)/L
 
-            Bp_x   = -u2 * Dx(Du_B_uAH, 1,i,j) - Bpp * sigma0_x + 2 * u3 * sigma0_x * Du_B_uAH[1,i,j]
-            Gp_x    = -u2 * Dx(Du_G_uAH,  1,i,j) -  Gpp * sigma0_x + 2 * u3 * sigma0_x *  Du_G_uAH[1,i,j]
-            Sp_x    = -u2 * Dx(Du_S_uAH,  1,i,j) -  Spp * sigma0_x + 2 * u3 * sigma0_x *  Du_S_uAH[1,i,j]
-            Fxp_x   = -u2 * Dx(Du_Fx_uAH, 1,i,j) - Fxpp * sigma0_x + 2 * u3 * sigma0_x * Du_Fx_uAH[1,i,j]
-            Fyp_x   = -u2 * Dx(Du_Fy_uAH, 1,i,j) - Fypp * sigma0_x + 2 * u3 * sigma0_x * Du_Fy_uAH[1,i,j]
+            Bp_x   = (-u2 * Dx(Du_B_uAH, 1,i,j) - Bpp * sigma0_x + 2 * u3 * sigma0_x * Du_B_uAH[1,i,j])/L
+            Gp_x    = (-u2 * Dx(Du_G_uAH,  1,i,j) -  Gpp * sigma0_x + 2 * u3 * sigma0_x *  Du_G_uAH[1,i,j])/L
+            Sp_x    = (-u2 * Dx(Du_S_uAH,  1,i,j) -  Spp * sigma0_x + 2 * u3 * sigma0_x *  Du_S_uAH[1,i,j])/L
+            Fxp_x   = (-u2 * Dx(Du_Fx_uAH, 1,i,j) - Fxpp * sigma0_x + 2 * u3 * sigma0_x * Du_Fx_uAH[1,i,j])/L
+            Fyp_x   = (-u2 * Dx(Du_Fy_uAH, 1,i,j) - Fypp * sigma0_x + 2 * u3 * sigma0_x * Du_Fy_uAH[1,i,j])/L
 
-            Bp_y   = -u2 * Dy(Du_B_uAH, 1,i,j) - Bpp * sigma0_y + 2 * u3 * sigma0_y * Du_B_uAH[1,i,j]
-            Gp_y    = -u2 * Dy(Du_G_uAH,  1,i,j) -  Gpp * sigma0_y + 2 * u3 * sigma0_y *  Du_G_uAH[1,i,j]
-            Sp_y    = -u2 * Dy(Du_S_uAH,  1,i,j) -  Spp * sigma0_y + 2 * u3 * sigma0_y *  Du_S_uAH[1,i,j]
-            Fxp_y   = -u2 * Dy(Du_Fx_uAH, 1,i,j) - Fxpp * sigma0_y + 2 * u3 * sigma0_y * Du_Fx_uAH[1,i,j]
-            Fyp_y   = -u2 * Dy(Du_Fy_uAH, 1,i,j) - Fypp * sigma0_y + 2 * u3 * sigma0_y * Du_Fy_uAH[1,i,j]
+            Bp_y   = (-u2 * Dy(Du_B_uAH, 1,i,j) - Bpp * sigma0_y + 2 * u3 * sigma0_y * Du_B_uAH[1,i,j])/L
+            Gp_y    = (-u2 * Dy(Du_G_uAH,  1,i,j) -  Gpp * sigma0_y + 2 * u3 * sigma0_y *  Du_G_uAH[1,i,j])/L
+            Sp_y    = (-u2 * Dy(Du_S_uAH,  1,i,j) -  Spp * sigma0_y + 2 * u3 * sigma0_y *  Du_S_uAH[1,i,j])/L
+            Fxp_y   = (-u2 * Dy(Du_Fx_uAH, 1,i,j) - Fxpp * sigma0_y + 2 * u3 * sigma0_y * Du_Fx_uAH[1,i,j])/L
+            Fyp_y   = (-u2 * Dy(Du_Fy_uAH, 1,i,j) - Fypp * sigma0_y + 2 * u3 * sigma0_y * Du_Fy_uAH[1,i,j])/L
 
             vars = (
                 sigma0, sigma0_x, sigma0_y, sigma0_xx, sigma0_yy, sigma0_xy,
@@ -286,6 +288,7 @@ function find_AH!(sigma::Array, bulkconstrain::BulkConstrained,
     Dxx = sys.Dxx
     Dy  = sys.Dy
     Dyy = sys.Dyy
+    L = evoleq.L
 
     interp = sys.uinterp
 
@@ -420,7 +423,7 @@ function find_AH!(sigma::Array, bulkconstrain::BulkConstrained,
         mul!(_Dy_2D,  byId,  Dy_2D)
 
         # build actual operator to be inverted
-        A_mat = _Dxx_2D + _Dyy_2D + _Dxy_2D + _Dx_2D + _Dy_2D + ccId
+        A_mat = _Dxx_2D/L/L + _Dyy_2D/L/L + _Dxy_2D /L/L+ _Dx_2D/L + _Dy_2D /L+ ccId
 
         # solve system
         A_fact = lu(A_mat)

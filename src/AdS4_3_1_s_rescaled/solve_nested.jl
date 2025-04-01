@@ -145,6 +145,7 @@ function solve_S!(bulk::Bulk, bc::BC, gauge::Gauge, deriv::BulkDeriv, aux_acc,
     # Dyy = sys.Dyy
     source = evoleq.source
     test = source.time
+    L = evoleq.L
     #println("time of source in solve_S is $test")
 
     @fastmath @inbounds @threads for j in 1:Ny
@@ -223,6 +224,7 @@ function solve_Fxy!(bulk::Bulk, bc::BC, gauge::Gauge, deriv::BulkDeriv, aux_acc,
     
     source = evoleq.source
     test = source.time
+    L = evoleq.L
 
     
 
@@ -233,16 +235,16 @@ function solve_Fxy!(bulk::Bulk, bc::BC, gauge::Gauge, deriv::BulkDeriv, aux_acc,
             aux = aux_acc[id]
 
             xi    = gauge.xi[1,i,j]
-            xi_x  = Dx(gauge.xi, 1,i,j)
-            xi_y  = Dy(gauge.xi, 1,i,j)
+            xi_x  = Dx(gauge.xi, 1,i,j)/L
+            xi_y  = Dy(gauge.xi, 1,i,j)/L
             
             x = sys.xcoord[i]
             S0 = Sz(test, x, y, source)
-            S0_x = Sz_x(test, x, y, source)
-            S0_y = Sz_y(test, x, y, source)
+            S0_x = Sz_x(test, x, y, source)/L
+            S0_y = Sz_y(test, x, y, source)/L
             S0_t = Sz_t(test, x, y, source)
-            S0_tx = Sz_tx(test, x, y, source)
-            S0_ty = Sz_ty(test, x, y, source)
+            S0_tx = Sz_tx(test, x, y, source)/L
+            S0_ty = Sz_ty(test, x, y, source)/L
 
             @inbounds @simd for a in 1:Nu
                 u     = sys.ucoord[a]
@@ -252,28 +254,28 @@ function solve_Fxy!(bulk::Bulk, bc::BC, gauge::Gauge, deriv::BulkDeriv, aux_acc,
 
                 B    = bulk.B[a,i,j]
                 Bp   = -u2 * Du_B[a,i,j]
-                B_x  = Dx(bulk.B, a,i,j)
-                B_y  = Dy(bulk.B, a,i,j)
+                B_x  = Dx(bulk.B, a,i,j)/L
+                B_y  = Dy(bulk.B, a,i,j)/L
                 Bpp  = 2*u3 * Du_B[a,i,j] + u4 * Duu_B[a,i,j]
-                Bp_x = -u2 * Dx(Du_B, a,i,j)
-                Bp_y = -u2 * Dy(Du_B, a,i,j)
+                Bp_x = -u2 * Dx(Du_B, a,i,j)/L
+                Bp_y = -u2 * Dy(Du_B, a,i,j)/L
 
 
                 G     = bulk.G[a,i,j]
                 Gp    = -u2 * Du_G[a,i,j]
-                G_x   = Dx(bulk.G, a,i,j)
-                G_y   = Dy(bulk.G, a,i,j)
+                G_x   = Dx(bulk.G, a,i,j)/L
+                G_y   = Dy(bulk.G, a,i,j)/L
                 Gpp   = 2*u3 * Du_G[a,i,j] + u4 * Duu_G[a,i,j]
-                Gp_x  = -u2 * Dx(Du_G, a,i,j)
-                Gp_y  = -u2 * Dy(Du_G, a,i,j)
+                Gp_x  = -u2 * Dx(Du_G, a,i,j)/L
+                Gp_y  = -u2 * Dy(Du_G, a,i,j)/L
 
                 S     = bulk.S[a,i,j]
                 Sp    = -u2 * Du_S[a,i,j]
-                S_x   = Dx(bulk.S, a,i,j)
-                S_y   = Dy(bulk.S, a,i,j)
+                S_x   = Dx(bulk.S, a,i,j)/L
+                S_y   = Dy(bulk.S, a,i,j)/L
                 Spp   = 2*u3 * Du_S[a,i,j] + u4 * Duu_S[a,i,j]
-                Sp_x  = -u2 * Dx(Du_S, a,i,j)
-                Sp_y  = -u2 * Dy(Du_S, a,i,j)
+                Sp_x  = -u2 * Dx(Du_S, a,i,j)/L
+                Sp_y  = -u2 * Dy(Du_S, a,i,j)/L
                 
                 
 
@@ -365,6 +367,7 @@ function solve_Sd!(bulk::Bulk, bc::BC, gauge::Gauge, deriv::BulkDeriv, aux_acc,
     
     source = evoleq.source
     test = source.time
+    L = evoleq.L
 
     #potential = evoleq.potential
 
@@ -375,25 +378,25 @@ function solve_Sd!(bulk::Bulk, bc::BC, gauge::Gauge, deriv::BulkDeriv, aux_acc,
             aux  = aux_acc[id]
 
             xi    = gauge.xi[1,i,j]
-            xi_x  = Dx(gauge.xi, 1,i,j)
-            xi_y  = Dy(gauge.xi, 1,i,j)
-            xi_xx = Dxx(gauge.xi, 1,i,j)
-            xi_yy = Dyy(gauge.xi, 1,i,j)
-            xi_xy = Dx(Dy, gauge.xi, 1,i,j)
+            xi_x  = Dx(gauge.xi, 1,i,j)/L
+            xi_y  = Dy(gauge.xi, 1,i,j)/L
+            xi_xx = Dxx(gauge.xi, 1,i,j)/L/L
+            xi_yy = Dyy(gauge.xi, 1,i,j)/L/L
+            xi_xy = Dx(Dy, gauge.xi, 1,i,j)/L/L
             
             x = sys.xcoord[i]
 	    S0 = Sz(test, x, y, source)
-            S0_x = Sz_x(test, x, y, source)
-            S0_y = Sz_y(test, x, y, source)
+            S0_x = Sz_x(test, x, y, source)/L
+            S0_y = Sz_y(test, x, y, source)/L
             S0_t = Sz_t(test, x, y, source)
-            S0_xx = Sz_xx(test, x, y, source)
-            S0_yy = Sz_yy(test, x, y, source)
-            S0_xy = Sz_xy(test, x, y, source)
-            S0_tx = Sz_tx(test, x, y, source)
-            S0_txx = Sz_txx(test, x, y, source)
-            S0_ty = Sz_ty(test, x, y, source)
-            S0_tyy = Sz_tyy(test, x, y, source)
-            S0_txy = Sz_txy(test, x, y, source)
+            S0_xx = Sz_xx(test, x, y, source)/L/L
+            S0_yy = Sz_yy(test, x, y, source)/L/L
+            S0_xy = Sz_xy(test, x, y, source)/L/L
+            S0_tx = Sz_tx(test, x, y, source)/L
+            S0_txx = Sz_txx(test, x, y, source)/L/L
+            S0_ty = Sz_ty(test, x, y, source)/L
+            S0_tyy = Sz_tyy(test, x, y, source)/L/L
+            S0_txy = Sz_txy(test, x, y, source)/L/L
             
             @inbounds @simd for a in 1:Nu
                 u     = sys.ucoord[a]
@@ -423,40 +426,40 @@ function solve_Sd!(bulk::Bulk, bc::BC, gauge::Gauge, deriv::BulkDeriv, aux_acc,
 
                 # x and y derivatives
 
-                B_x       = Dx(bulk.B, a,i,j)
-                G_x        = Dx(bulk.G,  a,i,j)
-                S_x        = Dx(bulk.S,  a,i,j)
-                Fx_x       = Dx(bulk.Fx, a,i,j)
-                Fy_x       = Dx(bulk.Fy, a,i,j)
+                B_x       = Dx(bulk.B, a,i,j)/L
+                G_x        = Dx(bulk.G,  a,i,j)/L
+                S_x        = Dx(bulk.S,  a,i,j)/L
+                Fx_x       = Dx(bulk.Fx, a,i,j)/L
+                Fy_x       = Dx(bulk.Fy, a,i,j)/L
 
-                B_y       = Dy(bulk.B, a,i,j)
-                G_y        = Dy(bulk.G,  a,i,j)
-                S_y        = Dy(bulk.S,  a,i,j)
-                Fx_y       = Dy(bulk.Fx, a,i,j)
-                Fy_y       = Dy(bulk.Fy, a,i,j)
+                B_y       = Dy(bulk.B, a,i,j)/L
+                G_y        = Dy(bulk.G,  a,i,j)/L
+                S_y        = Dy(bulk.S,  a,i,j)/L
+                Fx_y       = Dy(bulk.Fx, a,i,j)/L
+                Fy_y       = Dy(bulk.Fy, a,i,j)/L
 
-                Bp_x      = -u2 * Dx(Du_B, a,i,j)
-                Gp_x       = -u2 * Dx(Du_G,  a,i,j)
-                Sp_x       = -u2 * Dx(Du_S,  a,i,j)
-                Fxp_x      = -u2 * Dx(Du_Fx,  a,i,j)
-                Fyp_x      = -u2 * Dx(Du_Fy,  a,i,j)
+                Bp_x      = -u2 * Dx(Du_B, a,i,j)/L
+                Gp_x       = -u2 * Dx(Du_G,  a,i,j)/L
+                Sp_x       = -u2 * Dx(Du_S,  a,i,j)/L
+                Fxp_x      = -u2 * Dx(Du_Fx,  a,i,j)/L
+                Fyp_x      = -u2 * Dx(Du_Fy,  a,i,j)/L
 
-                Bp_y      = -u2 * Dy(Du_B, a,i,j)
-                Gp_y       = -u2 * Dy(Du_G,  a,i,j)
-                Sp_y       = -u2 * Dy(Du_S,  a,i,j)
-                Fxp_y      = -u2 * Dy(Du_Fx, a,i,j)
-                Fyp_y      = -u2 * Dy(Du_Fy, a,i,j)
+                Bp_y      = -u2 * Dy(Du_B, a,i,j)/L
+                Gp_y       = -u2 * Dy(Du_G,  a,i,j)/L
+                Sp_y       = -u2 * Dy(Du_S,  a,i,j)/L
+                Fxp_y      = -u2 * Dy(Du_Fx, a,i,j)/L
+                Fyp_y      = -u2 * Dy(Du_Fy, a,i,j)/L
 
-                B_xx      = Dxx(bulk.B, a,i,j)
-                G_xx       = Dxx(bulk.G,  a,i,j)
-                S_xx       = Dxx(bulk.S,  a,i,j)
+                B_xx      = Dxx(bulk.B, a,i,j)/L/L
+                G_xx       = Dxx(bulk.G,  a,i,j)/L/L
+                S_xx       = Dxx(bulk.S,  a,i,j)/L/L
 
-                B_yy      = Dyy(bulk.B, a,i,j)
-                G_yy       = Dyy(bulk.G,  a,i,j)
-                S_yy       = Dyy(bulk.S,  a,i,j)
+                B_yy      = Dyy(bulk.B, a,i,j)/L/L
+                G_yy       = Dyy(bulk.G,  a,i,j)/L/L
+                S_yy       = Dyy(bulk.S,  a,i,j)/L/L
 
-                G_xy       = Dx(Dy, bulk.G,  a,i,j)
-                S_xy       = Dx(Dy, bulk.S,  a,i,j)
+                G_xy       = Dx(Dy, bulk.G,  a,i,j)/L/L
+                S_xy       = Dx(Dy, bulk.S,  a,i,j)/L/L
                 
 
                 vars = (
@@ -525,6 +528,7 @@ function solve_BdGd!(bulk::Bulk, bc::BC, gauge::Gauge, deriv::BulkDeriv, aux_acc
 
     source = evoleq.source
     test = source.time
+    L = evoleq.L
 
     @fastmath @inbounds @threads for j in 1:Ny
     y = sys.ycoord[j]
@@ -533,25 +537,25 @@ function solve_BdGd!(bulk::Bulk, bc::BC, gauge::Gauge, deriv::BulkDeriv, aux_acc
             aux = aux_acc[id]
 
             xi    = gauge.xi[1,i,j]
-            xi_x  = Dx(gauge.xi, 1,i,j)
-            xi_y  = Dy(gauge.xi, 1,i,j)
-            xi_xx = Dxx(gauge.xi, 1,i,j)
-            xi_yy = Dyy(gauge.xi, 1,i,j)
-            xi_xy = Dx(Dy, gauge.xi, 1,i,j)
+            xi_x  = Dx(gauge.xi, 1,i,j)/L
+            xi_y  = Dy(gauge.xi, 1,i,j)/L
+            xi_xx = Dxx(gauge.xi, 1,i,j)/L/L
+            xi_yy = Dyy(gauge.xi, 1,i,j)/L/L
+            xi_xy = Dx(Dy, gauge.xi, 1,i,j)/L/L
             
             x = sys.xcoord[i]
 	    S0 = Sz(test, x, y, source)
-            S0_x = Sz_x(test, x, y, source)
-            S0_y = Sz_y(test, x, y, source)
+            S0_x = Sz_x(test, x, y, source)/L
+            S0_y = Sz_y(test, x, y, source)/L
             S0_t = Sz_t(test, x, y, source)
-            S0_xx = Sz_xx(test, x, y, source)
-            S0_yy = Sz_yy(test, x, y, source)
-            S0_xy = Sz_xy(test, x, y, source)
-            S0_tx = Sz_tx(test, x, y, source)
-            S0_txx = Sz_txx(test, x, y, source)
-            S0_ty = Sz_ty(test, x, y, source)
-            S0_tyy = Sz_tyy(test, x, y, source)
-            S0_txy = Sz_txy(test, x, y, source)
+            S0_xx = Sz_xx(test, x, y, source)/L/L
+            S0_yy = Sz_yy(test, x, y, source)/L/L
+            S0_xy = Sz_xy(test, x, y, source)/L/L
+            S0_tx = Sz_tx(test, x, y, source)/L
+            S0_txx = Sz_txx(test, x, y, source)/L/L
+            S0_ty = Sz_ty(test, x, y, source)/L
+            S0_tyy = Sz_tyy(test, x, y, source)/L/L
+            S0_txy = Sz_txy(test, x, y, source)/L/L
             @inbounds @simd for a in 1:Nu
                 u     = sys.ucoord[a]
                 u2    = u * u
@@ -581,41 +585,41 @@ function solve_BdGd!(bulk::Bulk, bc::BC, gauge::Gauge, deriv::BulkDeriv, aux_acc
 
                 # x and y derivatives
 
-                B_x       = Dx(bulk.B, a,i,j)
-                G_x        = Dx(bulk.G,  a,i,j)
-                S_x        = Dx(bulk.S,  a,i,j)
-                Fx_x       = Dx(bulk.Fx, a,i,j)
-                Fy_x       = Dx(bulk.Fy, a,i,j)
+                B_x       = Dx(bulk.B, a,i,j)/L
+                G_x        = Dx(bulk.G,  a,i,j)/L
+                S_x        = Dx(bulk.S,  a,i,j)/L
+                Fx_x       = Dx(bulk.Fx, a,i,j)/L
+                Fy_x       = Dx(bulk.Fy, a,i,j)/L
 
-                B_y       = Dy(bulk.B, a,i,j)
-                G_y        = Dy(bulk.G,  a,i,j)
-                S_y        = Dy(bulk.S,  a,i,j)
-                Fx_y       = Dy(bulk.Fx, a,i,j)
-                Fy_y       = Dy(bulk.Fy, a,i,j)
+                B_y       = Dy(bulk.B, a,i,j)/L
+                G_y        = Dy(bulk.G,  a,i,j)/L
+                S_y        = Dy(bulk.S,  a,i,j)/L
+                Fx_y       = Dy(bulk.Fx, a,i,j)/L
+                Fy_y       = Dy(bulk.Fy, a,i,j)/L
 
-                Bp_x      = -u2 * Dx(Du_B, a,i,j)
-                Gp_x       = -u2 * Dx(Du_G,  a,i,j)
-                Sp_x       = -u2 * Dx(Du_S,  a,i,j)
-                Fxp_x      = -u2 * Dx(Du_Fx,  a,i,j)
-                Fyp_x      = -u2 * Dx(Du_Fy,  a,i,j)
+                Bp_x      = -u2 * Dx(Du_B, a,i,j)/L
+                Gp_x       = -u2 * Dx(Du_G,  a,i,j)/L
+                Sp_x       = -u2 * Dx(Du_S,  a,i,j)/L
+                Fxp_x      = -u2 * Dx(Du_Fx,  a,i,j)/L
+                Fyp_x      = -u2 * Dx(Du_Fy,  a,i,j)/L
 
-                Bp_y      = -u2 * Dy(Du_B, a,i,j)
-                Gp_y       = -u2 * Dy(Du_G,  a,i,j)
-                Sp_y       = -u2 * Dy(Du_S,  a,i,j)
-                Fxp_y      = -u2 * Dy(Du_Fx, a,i,j)
-                Fyp_y      = -u2 * Dy(Du_Fy, a,i,j)
+                Bp_y      = -u2 * Dy(Du_B, a,i,j)/L
+                Gp_y       = -u2 * Dy(Du_G,  a,i,j)/L
+                Sp_y       = -u2 * Dy(Du_S,  a,i,j)/L
+                Fxp_y      = -u2 * Dy(Du_Fx, a,i,j)/L
+                Fyp_y      = -u2 * Dy(Du_Fy, a,i,j)/L
 
-                B_xx      = Dxx(bulk.B, a,i,j)
-                G_xx       = Dxx(bulk.G,  a,i,j)
-                S_xx       = Dxx(bulk.S,  a,i,j)
+                B_xx      = Dxx(bulk.B, a,i,j)/L/L
+                G_xx       = Dxx(bulk.G,  a,i,j)/L/L
+                S_xx       = Dxx(bulk.S,  a,i,j)/L/L
 
-                B_yy      = Dyy(bulk.B, a,i,j)
-                G_yy       = Dyy(bulk.G,  a,i,j)
-                S_yy       = Dyy(bulk.S,  a,i,j)
+                B_yy      = Dyy(bulk.B, a,i,j)/L/L
+                G_yy       = Dyy(bulk.G,  a,i,j)/L/L
+                S_yy       = Dyy(bulk.S,  a,i,j)/L/L
 
 
-                G_xy       = Dx(Dy, bulk.G,  a,i,j)
-                S_xy       = Dx(Dy, bulk.S,  a,i,j)
+                G_xy       = Dx(Dy, bulk.G,  a,i,j)/L/L
+                S_xy       = Dx(Dy, bulk.S,  a,i,j)/L/L
                 
 
                 vars = (
@@ -696,6 +700,7 @@ function solve_A!(bulk::Bulk, bc::BC, gauge::Gauge, deriv::BulkDeriv, aux_acc,
     
     source = evoleq.source
     test = source.time
+    L = evoleq.L
 
     #potential = evoleq.potential
 
@@ -706,25 +711,25 @@ function solve_A!(bulk::Bulk, bc::BC, gauge::Gauge, deriv::BulkDeriv, aux_acc,
             aux = aux_acc[id]
 
             xi    = gauge.xi[1,i,j]
-            xi_x  = Dx(gauge.xi, 1,i,j)
-            xi_y  = Dy(gauge.xi, 1,i,j)
-            xi_xx = Dxx(gauge.xi, 1,i,j)
-            xi_yy = Dyy(gauge.xi, 1,i,j)
-            xi_xy = Dx(Dy, gauge.xi, 1,i,j)
+            xi_x  = Dx(gauge.xi, 1,i,j)/L
+            xi_y  = Dy(gauge.xi, 1,i,j)/L
+            xi_xx = Dxx(gauge.xi, 1,i,j)/L/L
+            xi_yy = Dyy(gauge.xi, 1,i,j)/L/L
+            xi_xy = Dx(Dy, gauge.xi, 1,i,j)/L/L
             
             x = sys.xcoord[i]
 	    S0 = Sz(test, x, y, source)
-            S0_x = Sz_x(test, x, y, source)
-            S0_y = Sz_y(test, x, y, source)
+            S0_x = Sz_x(test, x, y, source)/L
+            S0_y = Sz_y(test, x, y, source)/L
             S0_t = Sz_t(test, x, y, source)
-            S0_xx = Sz_xx(test, x, y, source)
-            S0_yy = Sz_yy(test, x, y, source)
-            S0_xy = Sz_xy(test, x, y, source)
-            S0_tx = Sz_tx(test, x, y, source)
-            S0_txx = Sz_txx(test, x, y, source)
-            S0_ty = Sz_ty(test, x, y, source)
-            S0_tyy = Sz_tyy(test, x, y, source)
-            S0_txy = Sz_txy(test, x, y, source)
+            S0_xx = Sz_xx(test, x, y, source)/L/L
+            S0_yy = Sz_yy(test, x, y, source)/L/L
+            S0_xy = Sz_xy(test, x, y, source)/L/L
+            S0_tx = Sz_tx(test, x, y, source)/L
+            S0_txx = Sz_txx(test, x, y, source)/L/L
+            S0_ty = Sz_ty(test, x, y, source)/L
+            S0_tyy = Sz_tyy(test, x, y, source)/L/L
+            S0_txy = Sz_txy(test, x, y, source)/L/L
             @inbounds @simd for a in 1:Nu
                 u     = sys.ucoord[a]
                 u2    = u * u
@@ -756,40 +761,40 @@ function solve_A!(bulk::Bulk, bc::BC, gauge::Gauge, deriv::BulkDeriv, aux_acc,
 
                 # x and y derivatives
 
-                B_x       = Dx(bulk.B, a,i,j)
-                G_x        = Dx(bulk.G,  a,i,j)
-                S_x        = Dx(bulk.S,  a,i,j)
-                Fx_x       = Dx(bulk.Fx, a,i,j)
-                Fy_x       = Dx(bulk.Fy, a,i,j)
+                B_x       = Dx(bulk.B, a,i,j)/L
+                G_x        = Dx(bulk.G,  a,i,j)/L
+                S_x        = Dx(bulk.S,  a,i,j)/L
+                Fx_x       = Dx(bulk.Fx, a,i,j)/L
+                Fy_x       = Dx(bulk.Fy, a,i,j)/L
 
-                B_y       = Dy(bulk.B, a,i,j)
-                G_y        = Dy(bulk.G,  a,i,j)
-                S_y        = Dy(bulk.S,  a,i,j)
-                Fx_y       = Dy(bulk.Fx, a,i,j)
-                Fy_y       = Dy(bulk.Fy, a,i,j)
+                B_y       = Dy(bulk.B, a,i,j)/L
+                G_y        = Dy(bulk.G,  a,i,j)/L
+                S_y        = Dy(bulk.S,  a,i,j)/L
+                Fx_y       = Dy(bulk.Fx, a,i,j)/L
+                Fy_y       = Dy(bulk.Fy, a,i,j)/L
 
-                Bp_x      = -u2 * Dx(Du_B, a,i,j)
-                Gp_x       = -u2 * Dx(Du_G,  a,i,j)
-                Sp_x       = -u2 * Dx(Du_S,  a,i,j)
-                Fxp_x      = -u2 * Dx(Du_Fx,  a,i,j)
-                Fyp_x      = -u2 * Dx(Du_Fy,  a,i,j)
+                Bp_x      = -u2 * Dx(Du_B, a,i,j)/L
+                Gp_x       = -u2 * Dx(Du_G,  a,i,j)/L
+                Sp_x       = -u2 * Dx(Du_S,  a,i,j)/L
+                Fxp_x      = -u2 * Dx(Du_Fx,  a,i,j)/L
+                Fyp_x      = -u2 * Dx(Du_Fy,  a,i,j)/L
 
-                Bp_y      = -u2 * Dy(Du_B, a,i,j)
-                Gp_y       = -u2 * Dy(Du_G,  a,i,j)
-                Sp_y       = -u2 * Dy(Du_S,  a,i,j)
-                Fxp_y      = -u2 * Dy(Du_Fx, a,i,j)
-                Fyp_y      = -u2 * Dy(Du_Fy, a,i,j)
+                Bp_y      = -u2 * Dy(Du_B, a,i,j)/L
+                Gp_y       = -u2 * Dy(Du_G,  a,i,j)/L
+                Sp_y       = -u2 * Dy(Du_S,  a,i,j)/L
+                Fxp_y      = -u2 * Dy(Du_Fx, a,i,j)/L
+                Fyp_y      = -u2 * Dy(Du_Fy, a,i,j)/L
 
-                B_xx      = Dxx(bulk.B, a,i,j)
-                G_xx       = Dxx(bulk.G,  a,i,j)
-                S_xx       = Dxx(bulk.S,  a,i,j)
+                B_xx      = Dxx(bulk.B, a,i,j)/L/L
+                G_xx       = Dxx(bulk.G,  a,i,j)/L/L
+                S_xx       = Dxx(bulk.S,  a,i,j)/L/L
 
-                B_yy      = Dyy(bulk.B, a,i,j)
-                G_yy       = Dyy(bulk.G,  a,i,j)
-                S_yy       = Dyy(bulk.S,  a,i,j)
+                B_yy      = Dyy(bulk.B, a,i,j)/L/L
+                G_yy       = Dyy(bulk.G,  a,i,j)/L/L
+                S_yy       = Dyy(bulk.S,  a,i,j)/L/L
 
-                G_xy       = Dx(Dy, bulk.G,  a,i,j)
-                S_xy       = Dx(Dy, bulk.S,  a,i,j)
+                G_xy       = Dx(Dy, bulk.G,  a,i,j)/L/L
+                S_xy       = Dx(Dy, bulk.S,  a,i,j)/L/L
                 S0 = Sz(test, x, y, source)
                 S0_t = Sz_t(test, x, y, source)
 
@@ -946,6 +951,7 @@ function set_innerBCs!(bc::BC, bulk::BulkEvolved, boundary::Boundary,
     # Call the source structure
     source = evoleq.source
     test = source.time
+    L = evoleq.L
     
     
     Dx  = sys.Dx
@@ -959,8 +965,8 @@ function set_innerBCs!(bc::BC, bulk::BulkEvolved, boundary::Boundary,
             xi      = gauge.xi[1,i,j]
             xi3     = xi*xi*xi
 
-            xi_x    = Dx(gauge.xi, 1,i,j)
-            xi_y    = Dy(gauge.xi, 1,i,j)
+            xi_x    = Dx(gauge.xi, 1,i,j)/L
+            xi_y    = Dy(gauge.xi, 1,i,j)/L
 
             b13     = bulk.B[1,i,j]
             g3      = bulk.G[1,i,j]
@@ -970,19 +976,19 @@ function set_innerBCs!(bc::BC, bulk::BulkEvolved, boundary::Boundary,
             fx1    = boundary.fx1[1,i,j]
             fy1     = boundary.fy1[1,i,j]
 
-            fx1_x   = Dx(boundary.fx1, 1,i,j)
-            fy1_y   = Dy(boundary.fy1, 1,i,j)
+            fx1_x   = Dx(boundary.fx1, 1,i,j)/L
+            fy1_y   = Dy(boundary.fy1, 1,i,j)/L
 
-            b13_x   = Dx(bulk.B,1,i,j)
-            g3_x    = Dx(bulk.G,1,i,j)
+            b13_x   = Dx(bulk.B,1,i,j)/L
+            g3_x    = Dx(bulk.G,1,i,j)/L
 
-            b13_y   = Dy(bulk.B,1,i,j)
-            g3_y    = Dy(bulk.G,1,i,j)
+            b13_y   = Dy(bulk.B,1,i,j)/L
+            g3_y    = Dy(bulk.G,1,i,j)/L
 	    
 	    
 	    S0 = Sz(test, x, y, source)
-            S0_x = Sz_x(test, x, y, source)
-            S0_y = Sz_y(test, x, y, source)
+            S0_x = Sz_x(test, x, y, source)/L
+            S0_y = Sz_y(test, x, y, source)/L
             S0_t = Sz_t(test, x, y, source)
 	    
             bc.S[i,j]   =0
@@ -1035,6 +1041,7 @@ function set_outerBCs!(bc::BC, bulk::BulkConstrained, gauge::Gauge,
     u0 = sys.ucoord[end]
     source = evoleq.source
     test = source.time
+    L = evoleq.L
 
 
     @fastmath @inbounds @threads for j in 1:Ny
@@ -1057,15 +1064,15 @@ function set_outerBCs!(bc::BC, bulk::BulkConstrained, gauge::Gauge,
             A_u    = deriv.Du_A[end,i,j]
             
             S0 = Sz(test, x, y, source)
-            S0_x = Sz_x(test, x, y, source)
-            S0_xx = Sz_xx(test, x, y, source)
-            S0_y = Sz_y(test, x, y, source)
-            S0_yy = Sz_yy(test, x, y, source)
+            S0_x = Sz_x(test, x, y, source)/L
+            S0_xx = Sz_xx(test, x, y, source)/L/L
+            S0_y = Sz_y(test, x, y, source)/L
+            S0_yy = Sz_yy(test, x, y, source)/L/L
             S0_t = Sz_t(test, x, y, source)
             S0_tt = Sz_tt(test, x, y, source)
             
-            S0_tx = Sz_tx(test, x, y, source)
-            S0_ty = Sz_ty(test, x, y, source)
+            S0_tx = Sz_tx(test, x, y, source)/L
+            S0_ty = Sz_ty(test, x, y, source)/L
 
             bc.S[i,j]   = S_inner_to_outer(S, u0, xi,S0,S0_t)
             bc.S_u[i,j] = S_u_inner_to_outer(S_u, S, u0, xi,S0)

@@ -22,7 +22,7 @@ function compute_bulkevolved_t!(bulkevol_t::BulkEvolved,
     Du  = sys.Du
     Dx  = sys.Dx
     Dy  = sys.Dy
-
+    L = evoleq.L
 
     Nu, Nx, Ny = size(sys)
 
@@ -61,11 +61,11 @@ function compute_bulkevolved_t!(bulkevol_t::BulkEvolved,
             @inbounds @simd for a in 2:Nu
             
                 S0 = Sz(test, x, y, source)
-                S0_x = Sz_x(test, x, y, source)
-                S0_y = Sz_y(test, x, y, source)
+                S0_x = Sz_x(test, x, y, source)/L
+                S0_y = Sz_y(test, x, y, source)/L
                 S0_t = Sz_t(test, x, y, source)
-                S0_xx = Sz_xx(test, x, y, source)
-                S0_yy = Sz_yy(test, x, y, source)
+                S0_xx = Sz_xx(test, x, y, source)/L/L
+                S0_yy = Sz_yy(test, x, y, source)/L/L
                 S0_tt = Sz_tt(test, x, y, source)
                 u      = uu[a]
                 u3     = u * u * u 

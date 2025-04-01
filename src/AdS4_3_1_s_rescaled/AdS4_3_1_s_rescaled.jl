@@ -1,4 +1,4 @@
-module AdS4_3_1_s
+module AdS4_3_1_s_rescaled
 
 
 using Jecco
