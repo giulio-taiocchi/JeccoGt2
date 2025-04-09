@@ -105,7 +105,7 @@ function compute_bulkevolved_t!(bulkevol_t::BulkEvolved,
     Du  = sys.Du
     Dx  = sys.Dx
     Dy  = sys.Dy
-
+    L = evoleq.L
     Nu, Nx, Ny = size(sys)
 
     B_t, G_t = unpack(bulkevol_t)
@@ -151,7 +151,7 @@ function sync_bulkevolved!(bulkevol1_t::BulkEvolved, bulkevol2_t::BulkEvolved,
     u0 = sys2.ucoord[1]
 
     _, Nx, Ny = size(sys2)
-
+    L = evoleq.L
     B1_t, G1_t = unpack(bulkevol1_t)
     B2_t, G2_t = unpack(bulkevol2_t)
 
@@ -186,7 +186,7 @@ function sync_bulkevolved!(bulkevol1_t::BulkEvolved, bulkevol2_t::BulkEvolved,
     u02 = u0 * u0
     u03 = u0 * u02
     u04 = u02 * u02
-
+    L = evoleq.L
     _, Nx, Ny = size(sys2)
 
     B1_t, G1_t = unpack(bulkevol1_t)
