@@ -1,3 +1,4 @@
+# I think that since the dissipation is applied in the time evolution, it should get an L factor. This L factor will simplify with the 1/L factor cmoing from the x and y derivatives.
 
 function apply_dissipation_3D!(var_out, var, sys::System, evoleq::EvolutionEquations)
     Nu, Nx, Ny = size(sys)
@@ -10,7 +11,7 @@ function apply_dissipation_3D!(var_out, var, sys::System, evoleq::EvolutionEquat
     @fastmath @inbounds @threads for j in 1:Ny
         @inbounds for i in 1:Nx
             @inbounds for a in 1:Nu
-                var_out[a,i,j] += DKOx(var, a,i,j)/L + DKOy(var, a,i,j)/L
+                var_out[a,i,j] += DKOx(var, a,i,j) + DKOy(var, a,i,j)
             end
         end
     end
@@ -28,7 +29,7 @@ function apply_dissipation_2D!(var_out, var, sys::System, evoleq::EvolutionEquat
 
     @fastmath @inbounds @threads for j in 1:Ny
         @inbounds for i in 1:Nx
-            var_out[1,i,j] += DKOx(var, 1,i,j)/L + DKOy(var, 1,i,j)/L
+            var_out[1,i,j] += DKOx(var, 1,i,j) + DKOy(var, 1,i,j)
         end
     end
 
