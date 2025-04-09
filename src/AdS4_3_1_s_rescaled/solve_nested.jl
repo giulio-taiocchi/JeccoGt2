@@ -168,7 +168,7 @@ function solve_S!(bulk::Bulk, bc::BC, gauge::Gauge, deriv::BulkDeriv, aux_acc,
                 Bp = -u*u * Du_B[a,i,j]
                 Gp = -u*u * Du_G[a,i,j]          
                 S0 = Sz(test, x, y, source)
-                S0_t = Sz_t(test, x, y, source)
+                S0_t = Sz_t(test, x, y, source)/L
 
                 vars = (S0, S0_t, u, xi, B, Bp, G, Gp)
 
@@ -242,9 +242,9 @@ function solve_Fxy!(bulk::Bulk, bc::BC, gauge::Gauge, deriv::BulkDeriv, aux_acc,
             S0 = Sz(test, x, y, source)
             S0_x = Sz_x(test, x, y, source)/L
             S0_y = Sz_y(test, x, y, source)/L
-            S0_t = Sz_t(test, x, y, source)
-            S0_tx = Sz_tx(test, x, y, source)/L
-            S0_ty = Sz_ty(test, x, y, source)/L
+            S0_t = Sz_t(test, x, y, source)/L
+            S0_tx = Sz_tx(test, x, y, source)/L/L
+            S0_ty = Sz_ty(test, x, y, source)/L/L
 
             @inbounds @simd for a in 1:Nu
                 u     = sys.ucoord[a]
@@ -388,15 +388,15 @@ function solve_Sd!(bulk::Bulk, bc::BC, gauge::Gauge, deriv::BulkDeriv, aux_acc,
 	    S0 = Sz(test, x, y, source)
             S0_x = Sz_x(test, x, y, source)/L
             S0_y = Sz_y(test, x, y, source)/L
-            S0_t = Sz_t(test, x, y, source)
+            S0_t = Sz_t(test, x, y, source)/L
             S0_xx = Sz_xx(test, x, y, source)/L/L
             S0_yy = Sz_yy(test, x, y, source)/L/L
             S0_xy = Sz_xy(test, x, y, source)/L/L
-            S0_tx = Sz_tx(test, x, y, source)/L
-            S0_txx = Sz_txx(test, x, y, source)/L/L
-            S0_ty = Sz_ty(test, x, y, source)/L
-            S0_tyy = Sz_tyy(test, x, y, source)/L/L
-            S0_txy = Sz_txy(test, x, y, source)/L/L
+            S0_tx = Sz_tx(test, x, y, source)/L/L
+            S0_txx = Sz_txx(test, x, y, source)/L/L/L
+            S0_ty = Sz_ty(test, x, y, source)/L/L
+            S0_tyy = Sz_tyy(test, x, y, source)/L/L/L
+            S0_txy = Sz_txy(test, x, y, source)/L/L/L
             
             @inbounds @simd for a in 1:Nu
                 u     = sys.ucoord[a]
@@ -547,15 +547,15 @@ function solve_BdGd!(bulk::Bulk, bc::BC, gauge::Gauge, deriv::BulkDeriv, aux_acc
 	    S0 = Sz(test, x, y, source)
             S0_x = Sz_x(test, x, y, source)/L
             S0_y = Sz_y(test, x, y, source)/L
-            S0_t = Sz_t(test, x, y, source)
+            S0_t = Sz_t(test, x, y, source)/L
             S0_xx = Sz_xx(test, x, y, source)/L/L
             S0_yy = Sz_yy(test, x, y, source)/L/L
             S0_xy = Sz_xy(test, x, y, source)/L/L
-            S0_tx = Sz_tx(test, x, y, source)/L
-            S0_txx = Sz_txx(test, x, y, source)/L/L
-            S0_ty = Sz_ty(test, x, y, source)/L
-            S0_tyy = Sz_tyy(test, x, y, source)/L/L
-            S0_txy = Sz_txy(test, x, y, source)/L/L
+            S0_tx = Sz_tx(test, x, y, source)/L/L
+            S0_txx = Sz_txx(test, x, y, source)/L/L/L
+            S0_ty = Sz_ty(test, x, y, source)/L/L
+            S0_tyy = Sz_tyy(test, x, y, source)/L/L/L
+            S0_txy = Sz_txy(test, x, y, source)/L/L/L
             @inbounds @simd for a in 1:Nu
                 u     = sys.ucoord[a]
                 u2    = u * u
@@ -721,15 +721,15 @@ function solve_A!(bulk::Bulk, bc::BC, gauge::Gauge, deriv::BulkDeriv, aux_acc,
 	    S0 = Sz(test, x, y, source)
             S0_x = Sz_x(test, x, y, source)/L
             S0_y = Sz_y(test, x, y, source)/L
-            S0_t = Sz_t(test, x, y, source)
+            S0_t = Sz_t(test, x, y, source)/L
             S0_xx = Sz_xx(test, x, y, source)/L/L
             S0_yy = Sz_yy(test, x, y, source)/L/L
             S0_xy = Sz_xy(test, x, y, source)/L/L
-            S0_tx = Sz_tx(test, x, y, source)/L
-            S0_txx = Sz_txx(test, x, y, source)/L/L
-            S0_ty = Sz_ty(test, x, y, source)/L
-            S0_tyy = Sz_tyy(test, x, y, source)/L/L
-            S0_txy = Sz_txy(test, x, y, source)/L/L
+            S0_tx = Sz_tx(test, x, y, source)/L/L
+            S0_txx = Sz_txx(test, x, y, source)/L/L/L
+            S0_ty = Sz_ty(test, x, y, source)/L/L
+            S0_tyy = Sz_tyy(test, x, y, source)/L/L/L
+            S0_txy = Sz_txy(test, x, y, source)/L/L/L
             @inbounds @simd for a in 1:Nu
                 u     = sys.ucoord[a]
                 u2    = u * u
@@ -796,7 +796,7 @@ function solve_A!(bulk::Bulk, bc::BC, gauge::Gauge, deriv::BulkDeriv, aux_acc,
                 G_xy       = Dx(Dy, bulk.G,  a,i,j)/L/L
                 S_xy       = Dx(Dy, bulk.S,  a,i,j)/L/L
                 S0 = Sz(test, x, y, source)
-                S0_t = Sz_t(test, x, y, source)
+                S0_t = Sz_t(test, x, y, source)/L
 
                 vars = (
                       S0, S0_x, S0_y, S0_t, S0_tx, S0_ty,S0_xx, S0_yy, S0_xy, S0_txx, S0_tyy, S0_txy, u, xi, xi_x, xi_y, xi_xx, xi_yy, xi_xy,
@@ -989,7 +989,7 @@ function set_innerBCs!(bc::BC, bulk::BulkEvolved, boundary::Boundary,
 	    S0 = Sz(test, x, y, source)
             S0_x = Sz_x(test, x, y, source)/L
             S0_y = Sz_y(test, x, y, source)/L
-            S0_t = Sz_t(test, x, y, source)
+            S0_t = Sz_t(test, x, y, source)/L
 	    
             bc.S[i,j]   =0
             bc.S_u[i,j] = 0
@@ -1068,11 +1068,11 @@ function set_outerBCs!(bc::BC, bulk::BulkConstrained, gauge::Gauge,
             S0_xx = Sz_xx(test, x, y, source)/L/L
             S0_y = Sz_y(test, x, y, source)/L
             S0_yy = Sz_yy(test, x, y, source)/L/L
-            S0_t = Sz_t(test, x, y, source)
-            S0_tt = Sz_tt(test, x, y, source)
+            S0_t = Sz_t(test, x, y, source)/L
+            S0_tt = Sz_tt(test, x, y, source)/L/L
             
-            S0_tx = Sz_tx(test, x, y, source)/L
-            S0_ty = Sz_ty(test, x, y, source)/L
+            S0_tx = Sz_tx(test, x, y, source)/L/L
+            S0_ty = Sz_ty(test, x, y, source)/L/L
 
             bc.S[i,j]   = S_inner_to_outer(S, u0, xi,S0,S0_t)
             bc.S_u[i,j] = S_u_inner_to_outer(S_u, S, u0, xi,S0)

@@ -157,9 +157,11 @@ function (id::ID_ConstantAH)(bulkconstrains, bulkevols, bulkderivs, boundary::Bo
     
    
     init_data!(boundary, systems[1], id)
+    println("boundary initialised")
     init_data!(gauge, systems[end], id)
+    println("gauge initialised")
     init_data!(bulkevols, gauge, systems, id)
-    
+    println("bulk initialised")
     # solve nested system for the constrained variables
     nested(bulkevols, boundary, gauge, evoleq)
 

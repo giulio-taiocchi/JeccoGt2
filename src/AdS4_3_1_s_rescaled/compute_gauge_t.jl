@@ -28,7 +28,7 @@ function compute_xi_t!(gauge_t::Gauge, bulkconstrain::BulkConstrained,
             xi_x  = Dx(xiGF, 1,i,j)/L
             xi_y  = Dy(xiGF, 1,i,j)/L
 
-            xi_t[1,i,j] = -vx * xi_x - vy * xi_y
+            xi_t[1,i,j] = L*(-vx * xi_x - vy * xi_y)
         end
     end
 
@@ -274,9 +274,9 @@ function compute_xi_t!(gauge_t::Gauge, bulkconstrain::BulkConstrained,
             S0 = Sz(test, x, y, source)
             S0_x = Sz_x(test, x, y, source)/L
             S0_y = Sz_y(test, x, y, source)/L
-            S0_t = Sz_t(test, x, y, source)
-            S0_tx = Sz_tx(test, x, y, source)/L
-            S0_ty = Sz_ty(test, x, y, source)/L
+            S0_t = Sz_t(test, x, y, source)/L
+            S0_tx = Sz_tx(test, x, y, source)/L/L
+            S0_ty = Sz_ty(test, x, y, source)/L/L
 
             vars =  (
                 S0, S0_x, S0_y, S0_t, S0_tx, S0_ty, kappa, xi, xi_x, xi_y, xi_xx, xi_yy, xi_xy,
