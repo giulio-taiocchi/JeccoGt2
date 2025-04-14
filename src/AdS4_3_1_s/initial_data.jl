@@ -347,8 +347,8 @@ analytic_B(i, j, k, u, x, y, id::BlackBrane, whichsystem)  = 0
 analytic_G(i, j, k, u, x, y, id::BlackBrane, whichsystem)   = 0
 
 function init_data!(ff::Boundary, sys::System, id::BlackBrane)
-    #a30 = -id.energy_dens/2
-    a30 = -1
+    a30 = -id.energy_dens/2
+    
     
 
     a3  = geta3(ff)
@@ -363,11 +363,11 @@ function init_data!(ff::Boundary, sys::System, id::BlackBrane)
 end
 
 function init_data!(ff::Gauge, sys::System, id::BlackBrane)
-    #a30     = -id.energy_dens/2
-    a30 = -1
+    a30     = -id.energy_dens/2
+    
     AH_pos  = id.AH_pos
-    #xi0     = (-a30)^0.25 - 1/AH_pos
-    xi0 = id.xi_init
+    xi0     = (-a30)^0.25 - 1/AH_pos
+    #xi0 = id.xi_init
 
     xi  = getxi(ff)
 
