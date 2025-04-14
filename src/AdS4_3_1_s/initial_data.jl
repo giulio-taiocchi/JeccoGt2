@@ -22,6 +22,7 @@ Base.@kwdef struct BlackBrane{T} <: ID_ConstantAH
     energy_dens   :: T   = 1.0
     AH_pos        :: T   = 1.0
     ahf           :: AHF = AHF()
+    xi_init 	  :: T   = 0.0
 end
 
 Base.@kwdef struct BlackBranePert{T} <: ID_ConstantAH
@@ -366,7 +367,7 @@ function init_data!(ff::Gauge, sys::System, id::BlackBrane)
     a30 = -1
     AH_pos  = id.AH_pos
     #xi0     = (-a30)^0.25 - 1/AH_pos
-    xi0 = 0
+    xi0 = id.xi_init
 
     xi  = getxi(ff)
 
