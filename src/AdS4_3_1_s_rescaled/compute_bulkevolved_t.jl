@@ -159,9 +159,13 @@ function sync_bulkevolved!(bulkevol1_t::BulkEvolved, bulkevol2_t::BulkEvolved,
         @inbounds for i in 1:Nx
             xi_t   = gauge_t.xi[1,i,j]/L
             A      = bulkconstrain2.A[1,i,j]
-
+  
+  
+  	    #CHECK HERE!
+  	    
+  	    
             # characteristic speed
-            c = u0 * u0 * (A/2 - xi_t)
+            c = u0 * u0 * (A/2 - xi_t)*L
 
             # if c > 0, mode is entering grid1 from grid2;
             # if c < 0, mode is entering grid2 from grid1.
@@ -198,7 +202,7 @@ function sync_bulkevolved!(bulkevol1_t::BulkEvolved, bulkevol2_t::BulkEvolved,
             A      = bulkconstrain2.A[1,i,j]
 
             # characteristic speed
-            c = u0 * u0 * (A/2 - xi_t)
+            c = u0 * u0 * (A/2 - xi_t)*L
 
             # if c > 0, mode is entering grid1 from grid2;
             # if c < 0, mode is entering grid2 from grid1.
