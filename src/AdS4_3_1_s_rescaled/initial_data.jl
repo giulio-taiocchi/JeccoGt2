@@ -165,14 +165,14 @@ function (id::ID_ConstantAH)(bulkconstrains, bulkevols, bulkderivs, boundary::Bo
     println("bulk initialised")
     # solve nested system for the constrained variables
     nested(bulkevols, boundary, gauge, evoleq)
-
+    println("first nested system solved")
     # find the Apparent Horizon
     sigma = similar(gauge.xi)
     #fill!(sigma, 1/AH_pos)  # initial guess
     sigma = fill_guess!(gauge, systems[end], id)
     find_AH!(sigma, bulkconstrains[end], bulkevols[end], bulkderivs[end], gauge,
              horizoncache, systems[end], id.ahf, evoleq)
-
+    
     # assuming that the AH has been found, we now update xi and the bulk variables
     MaxAH=maximum(sigma)
     MaxOldxi= maximum(xi)

@@ -873,7 +873,7 @@ function solve_nested!(bulkconstrain::BulkConstrained, bulkevol::BulkEvolved, bc
     # solve for S
     vprint("INFO: solve_S")
     solve_S!(bulk, bc, gauge, deriv, aux_acc, sys, evoleq)
-
+    println("S solved")
     # take u-derivatives of S
     vprint("INFO: S derivatives")
     @sync begin
@@ -884,7 +884,7 @@ function solve_nested!(bulkconstrain::BulkConstrained, bulkevol::BulkEvolved, bc
     # solve for Fx and Fy
     vprint("INFO: solve_Fxy")
     solve_Fxy!(bulk, bc, gauge, deriv, aux_acc, sys, evoleq)
-
+    println("Fxy solved")
     # take u-derivatives of Fx and Fy
     vprint("INFO: Fxy derivatives")
     @sync begin
@@ -897,7 +897,7 @@ function solve_nested!(bulkconstrain::BulkConstrained, bulkevol::BulkEvolved, bc
     # solve for Sd
     vprint("INFO: solve_Sd")
     solve_Sd!(bulk, bc, gauge, deriv, aux_acc, sys, evoleq)
-
+    println("Sd solved")
     # equations for (Bd, Gd) are actually independent of each
     # other and could be solved in parallel. however, it seems that use of
     # @spawn here is actually harmful for scaling. since the loops in each
@@ -906,11 +906,11 @@ function solve_nested!(bulkconstrain::BulkConstrained, bulkevol::BulkEvolved, bc
 
     vprint("INFO: solve_BdGd")
     solve_BdGd!(bulk, bc, gauge, deriv, aux_acc, sys, evoleq)
-
+    println("BdGd solved")
     # solve for A
     vprint("INFO: solve_A")
     solve_A!(bulk, bc, gauge, deriv, aux_acc, sys, evoleq)
-
+    println("A solved")
     # take u-derivatives of A. they will be needed for syncing the domains and
     # also for the xi_t function
     vprint("INFO: A derivatives")
