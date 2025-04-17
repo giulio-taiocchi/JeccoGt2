@@ -38,11 +38,11 @@ function compute_bulkevolved_t!(bulkevol_t::BulkEvolved,
             B     = bulkevol.B[1,i,j]
             G      = bulkevol.G[1,i,j]
 
-            B_u   = Du(bulkevol.B, 1,i,j)
-            G_u    = Du(bulkevol.G,  1,i,j)
+            B_u   = Du(bulkevol.B, 1,i,j)/L
+            G_u    = Du(bulkevol.G,  1,i,j)/L
 
-            Bd_u  = Du(bulkconstrain.Bd, 1,i,j)
-            Gd_u   = Du(bulkconstrain.Gd,  1,i,j)
+            Bd_u  = Du(bulkconstrain.Bd, 1,i,j)/L
+            Gd_u   = Du(bulkconstrain.Gd,  1,i,j)/L
 	    
 	    # the u->0 limit should stay the same since the source appears at higher orders
 
@@ -77,8 +77,8 @@ function compute_bulkevolved_t!(bulkevol_t::BulkEvolved,
                 Gd     = bulkconstrain.Gd[a,i,j]
                 A      = bulkconstrain.A[a,i,j]
 
-                B_u   = Du(bulkevol.B, a,i,j)
-                G_u    = Du(bulkevol.G,  a,i,j)
+                B_u   = Du(bulkevol.B, a,i,j)/L
+                G_u    = Du(bulkevol.G,  a,i,j)/L
 
 		B_t[a,i,j] = L*(2*Bd + ((3*B + u*(B_u))*(S0^2*u^2*(S0_t)^2 - 2*S0^3*u^2*(S0_tt) + u^2*((S0_x)^2 + (S0_y)^2) - S0*u^2*((S0_xx) + (S0_yy)) + S0^4*(A*u^3 + (1 + u*xi)^2 - 2*u^2*(xi_t))))/S0^4)/(2*u)#((3* B + u * B_u) *
                                #(-2 * u * u * xi_t + A * u3 +
@@ -121,8 +121,8 @@ function compute_bulkevolved_t!(bulkevol_t::BulkEvolved,
                 Gd     = bulkconstrain.Gd[a,i,j]
                 A      = bulkconstrain.A[a,i,j]
 
-                B_u   = Du(bulkevol.B, a,i,j)
-                G_u    = Du(bulkevol.G,  a,i,j)
+                B_u   = Du(bulkevol.B, a,i,j)/L
+                G_u    = Du(bulkevol.G,  a,i,j)/L
 
 		B_t[a,i,j] = L*(Bd + u2 * (A/2 - xi_t) * B_u)
 		G_t[a,i,j] = L*(Gd + u2 * (A/2 - xi_t) * G_u)
@@ -165,7 +165,7 @@ function sync_bulkevolved!(bulkevol1_t::BulkEvolved, bulkevol2_t::BulkEvolved,
   	    
   	    
             # characteristic speed
-            c = u0 * u0 * (A/2 - xi_t)*L
+            c = u0 * u0 * (A/2 - xi_t)
 
             # if c > 0, mode is entering grid1 from grid2;
             # if c < 0, mode is entering grid2 from grid1.
@@ -202,7 +202,7 @@ function sync_bulkevolved!(bulkevol1_t::BulkEvolved, bulkevol2_t::BulkEvolved,
             A      = bulkconstrain2.A[1,i,j]
 
             # characteristic speed
-            c = u0 * u0 * (A/2 - xi_t)*L
+            c = u0 * u0 * (A/2 - xi_t)
 
             # if c > 0, mode is entering grid1 from grid2;
             # if c < 0, mode is entering grid2 from grid1.

@@ -150,22 +150,22 @@ function compute_xi_t!(gauge_t::Gauge, bulkconstrain::BulkConstrained,
             Gd_uAH[1,i,j]       = interp(view(bulk.Gd,  :,i,j))(uAH)
             A_uAH[1,i,j]        = interp(view(bulk.A,   :,i,j))(uAH)
 
-            Du_B_uAH[1,i,j]    = interp(view(deriv.Du_B,  :,i,j))(uAH)
-            Du_G_uAH[1,i,j]     = interp(view(deriv.Du_G,   :,i,j))(uAH)
-            Du_S_uAH[1,i,j]     = interp(view(deriv.Du_S,   :,i,j))(uAH)
-            Du_Fx_uAH[1,i,j]    = interp(view(deriv.Du_Fx,  :,i,j))(uAH)
-            Du_Fy_uAH[1,i,j]    = interp(view(deriv.Du_Fy,  :,i,j))(uAH)
-            Du_Sd_uAH[1,i,j]    = interp(view(deriv.Du_Sd,  :,i,j))(uAH)
-            Du_Bd_uAH[1,i,j]   = interp(view(deriv.Du_Bd, :,i,j))(uAH)
-            Du_Gd_uAH[1,i,j]    = interp(view(deriv.Du_Gd,  :,i,j))(uAH)
-            Du_A_uAH[1,i,j]     = interp(view(deriv.Du_A,   :,i,j))(uAH)
+            Du_B_uAH[1,i,j]    = interp(view(deriv.Du_B,  :,i,j))(uAH)/L
+            Du_G_uAH[1,i,j]     = interp(view(deriv.Du_G,   :,i,j))(uAH)/L
+            Du_S_uAH[1,i,j]     = interp(view(deriv.Du_S,   :,i,j))(uAH)/L
+            Du_Fx_uAH[1,i,j]    = interp(view(deriv.Du_Fx,  :,i,j))(uAH)/L
+            Du_Fy_uAH[1,i,j]    = interp(view(deriv.Du_Fy,  :,i,j))(uAH)/L
+            Du_Sd_uAH[1,i,j]    = interp(view(deriv.Du_Sd,  :,i,j))(uAH)/L
+            Du_Bd_uAH[1,i,j]   = interp(view(deriv.Du_Bd, :,i,j))(uAH)/L
+            Du_Gd_uAH[1,i,j]    = interp(view(deriv.Du_Gd,  :,i,j))(uAH)/L
+            Du_A_uAH[1,i,j]     = interp(view(deriv.Du_A,   :,i,j))(uAH)/L
 
-            Duu_B_uAH[1,i,j]   = interp(view(deriv.Duu_B,  :,i,j))(uAH)
-            Duu_G_uAH[1,i,j]    = interp(view(deriv.Duu_G,   :,i,j))(uAH)
-            Duu_S_uAH[1,i,j]    = interp(view(deriv.Duu_S,   :,i,j))(uAH)
-            Duu_Fx_uAH[1,i,j]   = interp(view(deriv.Duu_Fx,  :,i,j))(uAH)
-            Duu_Fy_uAH[1,i,j]   = interp(view(deriv.Duu_Fy,  :,i,j))(uAH)
-            Duu_A_uAH[1,i,j]    = interp(view(deriv.Duu_A,   :,i,j))(uAH)
+            Duu_B_uAH[1,i,j]   = interp(view(deriv.Duu_B,  :,i,j))(uAH)/L/L
+            Duu_G_uAH[1,i,j]    = interp(view(deriv.Duu_G,   :,i,j))(uAH)/L/L
+            Duu_S_uAH[1,i,j]    = interp(view(deriv.Duu_S,   :,i,j))(uAH)/L/L
+            Duu_Fx_uAH[1,i,j]   = interp(view(deriv.Duu_Fx,  :,i,j))(uAH)/L/L
+            Duu_Fy_uAH[1,i,j]   = interp(view(deriv.Duu_Fy,  :,i,j))(uAH)/L/L
+            Duu_A_uAH[1,i,j]    = interp(view(deriv.Duu_A,   :,i,j))(uAH)/L/L
         end
     end
 
@@ -197,22 +197,22 @@ function compute_xi_t!(gauge_t::Gauge, bulkconstrain::BulkConstrained,
 
             # r derivatives
 
-            Bp        = -u2 * Du_B_uAH[1,i,j]
-            Gp         = -u2 * Du_G_uAH[1,i,j]
-            Sp         = -u2 * Du_S_uAH[1,i,j]
-            Fxp        = -u2 * Du_Fx_uAH[1,i,j]
-            Fyp        = -u2 * Du_Fy_uAH[1,i,j]
-            Sdp        = -u2 * Du_Sd_uAH[1,i,j]
-            Bdp       = -u2 * Du_Bd_uAH[1,i,j]
-            Gdp        = -u2 * Du_Gd_uAH[1,i,j]
-            Ap         = -u2 * Du_A_uAH[1,i,j]
+            Bp        = -u2 * Du_B_uAH[1,i,j]/L
+            Gp         = -u2 * Du_G_uAH[1,i,j]/L
+            Sp         = -u2 * Du_S_uAH[1,i,j]/L
+            Fxp        = -u2 * Du_Fx_uAH[1,i,j]/L
+            Fyp        = -u2 * Du_Fy_uAH[1,i,j]/L
+            Sdp        = -u2 * Du_Sd_uAH[1,i,j]/L
+            Bdp       = -u2 * Du_Bd_uAH[1,i,j]/L
+            Gdp        = -u2 * Du_Gd_uAH[1,i,j]/L
+            Ap         = -u2 * Du_A_uAH[1,i,j]/L
 
-            Bpp       = 2*u3 * Du_B_uAH[1,i,j]  + u4 * Duu_B_uAH[1,i,j]
-            Gpp        = 2*u3 * Du_G_uAH[1,i,j]   + u4 * Duu_G_uAH[1,i,j]
-            Spp        = 2*u3 * Du_S_uAH[1,i,j]   + u4 * Duu_S_uAH[1,i,j]
-            Fxpp       = 2*u3 * Du_Fx_uAH[1,i,j]  + u4 * Duu_Fx_uAH[1,i,j]
-            Fypp       = 2*u3 * Du_Fy_uAH[1,i,j]  + u4 * Duu_Fy_uAH[1,i,j]
-            App        = 2*u3 * Du_A_uAH[1,i,j]   + u4 * Duu_A_uAH[1,i,j]
+            Bpp       = 2*u3 * Du_B_uAH[1,i,j]/L  + u4 * Duu_B_uAH[1,i,j]/L/L
+            Gpp        = 2*u3 * Du_G_uAH[1,i,j]/L   + u4 * Duu_G_uAH[1,i,j]/L/L
+            Spp        = 2*u3 * Du_S_uAH[1,i,j]/L   + u4 * Duu_S_uAH[1,i,j]/L/L
+            Fxpp       = 2*u3 * Du_Fx_uAH[1,i,j]/L  + u4 * Duu_Fx_uAH[1,i,j]/L/L
+            Fypp       = 2*u3 * Du_Fy_uAH[1,i,j]/L  + u4 * Duu_Fy_uAH[1,i,j]/L/L
+            App        = 2*u3 * Du_A_uAH[1,i,j]/L   + u4 * Duu_A_uAH[1,i,j]/L/L
 
             # x and y derivatives
 
@@ -294,12 +294,12 @@ function compute_xi_t!(gauge_t::Gauge, bulkconstrain::BulkConstrained,
 
             a11, a22, a12, b1, b2, c, SS = xi_t_eq_coeff(vars, sys.gridtype)
 
-            axx[idx]   = a11
-            ayy[idx]   = a22
-            axy[idx]   = a12
-            bx[idx]    = b1
-            by[idx]    = b2
-            cc[idx]    = c
+            axx[idx]   = a11/L
+            ayy[idx]   = a22/L
+            axy[idx]   = a12/L
+            bx[idx]    = b1/L
+            by[idx]    = b2/L
+            cc[idx]    = c/L
 
             b_vec[idx] = -SS
         end
