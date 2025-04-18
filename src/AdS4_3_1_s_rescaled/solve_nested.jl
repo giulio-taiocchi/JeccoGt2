@@ -253,29 +253,29 @@ function solve_Fxy!(bulk::Bulk, bc::BC, gauge::Gauge, deriv::BulkDeriv, aux_acc,
                 u4    = u2 * u2
 
                 B    = bulk.B[a,i,j]
-                Bp   = -u2 * Du_B[a,i,j]/L
+                Bp   = -u2 * Du_B[a,i,j]
                 B_x  = Dx(bulk.B, a,i,j)/L
                 B_y  = Dy(bulk.B, a,i,j)/L
-                Bpp  = 2*u3 * Du_B[a,i,j]/L + u4 * Duu_B[a,i,j]/L/L
-                Bp_x = -u2 * Dx(Du_B/L, a,i,j)/L
-                Bp_y = -u2 * Dy(Du_B/L, a,i,j)/L
+                Bpp  = 2*u3 * Du_B[a,i,j] + u4 * Duu_B[a,i,j]
+                Bp_x = -u2 * Dx(Du_B, a,i,j)/L
+                Bp_y = -u2 * Dy(Du_B, a,i,j)/L
 
 
                 G     = bulk.G[a,i,j]
-                Gp    = -u2 * Du_G[a,i,j]/L
+                Gp    = -u2 * Du_G[a,i,j]
                 G_x   = Dx(bulk.G, a,i,j)/L
                 G_y   = Dy(bulk.G, a,i,j)/L
-                Gpp   = 2*u3 * Du_G[a,i,j]/L + u4 * Duu_G[a,i,j]/L/L
-                Gp_x  = -u2 * Dx(Du_G/L, a,i,j)/L
-                Gp_y  = -u2 * Dy(Du_G/L, a,i,j)/L
+                Gpp   = 2*u3 * Du_G[a,i,j] + u4 * Duu_G[a,i,j]
+                Gp_x  = -u2 * Dx(Du_G, a,i,j)/L
+                Gp_y  = -u2 * Dy(Du_G, a,i,j)/L
 
                 S     = bulk.S[a,i,j]
-                Sp    = -u2 * Du_S[a,i,j]/L
+                Sp    = -u2 * Du_S[a,i,j]
                 S_x   = Dx(bulk.S, a,i,j)/L
                 S_y   = Dy(bulk.S, a,i,j)/L
-                Spp   = 2*u3 * Du_S[a,i,j]/L + u4 * Duu_S[a,i,j]/L/L
-                Sp_x  = -u2 * Dx(Du_S/L, a,i,j)/L
-                Sp_y  = -u2 * Dy(Du_S/L, a,i,j)/L
+                Spp   = 2*u3 * Du_S[a,i,j] + u4 * Duu_S[a,i,j]
+                Sp_x  = -u2 * Dx(Du_S, a,i,j)/L
+                Sp_y  = -u2 * Dy(Du_S, a,i,j)/L
                 
                 
 
@@ -294,10 +294,10 @@ function solve_Fxy!(bulk::Bulk, bc::BC, gauge::Gauge, deriv::BulkDeriv, aux_acc,
                 aux.b_vec2[a]    = -aux.SS[1]
                 aux.b_vec2[a+Nu] = -aux.SS[2]
                 @inbounds @simd for aa in 1:Nu
-                    aux.A_mat2[a,aa]         = aux.AA[1,1] * Duu[a,aa]/L/L + aux.BB[1,1] * Du[a,aa]/L
-                    aux.A_mat2[a,aa+Nu]      = aux.AA[1,2] * Duu[a,aa]/L/L+ aux.BB[1,2] * Du[a,aa]/L
-                    aux.A_mat2[a+Nu,aa]      = aux.AA[2,1] * Duu[a,aa]/L/L + aux.BB[2,1] * Du[a,aa]/L
-                    aux.A_mat2[a+Nu,aa+Nu]   = aux.AA[2,2] * Duu[a,aa]/L/L + aux.BB[2,2] * Du[a,aa]/L
+                    aux.A_mat2[a,aa]         = aux.AA[1,1] * Duu[a,aa] + aux.BB[1,1] * Du[a,aa]
+                    aux.A_mat2[a,aa+Nu]      = aux.AA[1,2] * Duu[a,aa]+ aux.BB[1,2] * Du[a,aa]
+                    aux.A_mat2[a+Nu,aa]      = aux.AA[2,1] * Duu[a,aa] + aux.BB[2,1] * Du[a,aa]
+                    aux.A_mat2[a+Nu,aa+Nu]   = aux.AA[2,2] * Duu[a,aa] + aux.BB[2,2] * Du[a,aa]
                 end
                 aux.A_mat2[a,a]       += aux.CC[1,1]
                 aux.A_mat2[a,a+Nu]    += aux.CC[1,2]
@@ -318,16 +318,16 @@ function solve_Fxy!(bulk::Bulk, bc::BC, gauge::Gauge, deriv::BulkDeriv, aux_acc,
             aux.A_mat2[1+Nu,1+Nu] = 1.0
 
            
-            aux.b_vec2[Nu]   = bc.Fx_u[i,j]/L
+            aux.b_vec2[Nu]   = bc.Fx_u[i,j]
             
-            aux.b_vec2[2*Nu] = bc.Fy_u[i,j]/L
+            aux.b_vec2[2*Nu] = bc.Fy_u[i,j]
            
             
             aux.A_mat2[Nu,:]   .= 0.0
             aux.A_mat2[2*Nu,:] .= 0.0
             @inbounds @simd for aa in 1:Nu
-                aux.A_mat2[Nu,aa]      = Du[1,aa]/L
-                aux.A_mat2[2*Nu,aa+Nu] = Du[1,aa]/L
+                aux.A_mat2[Nu,aa]      = Du[1,aa]
+                aux.A_mat2[2*Nu,aa+Nu] = Du[1,aa]
             end
 	    #detA2= det(aux.A_mat2)
 	    #println("in ( $x $y ) detA2 is $detA2, source is $S0")
@@ -880,7 +880,7 @@ function solve_nested!(bulkconstrain::BulkConstrained, bulkevol::BulkEvolved, bc
         @spawn mul!(Du_S,   Du,  bulk.S)
         @spawn mul!(Duu_S,  Duu, bulk.S)
     end
-
+    println("S derivatives written")
     # solve for Fx and Fy
     vprint("INFO: solve_Fxy")
     solve_Fxy!(bulk, bc, gauge, deriv, aux_acc, sys, evoleq)
@@ -893,7 +893,7 @@ function solve_nested!(bulkconstrain::BulkConstrained, bulkevol::BulkEvolved, bc
         @spawn mul!(Duu_Fx,  Duu, bulk.Fx)
         @spawn mul!(Duu_Fy,  Duu, bulk.Fy)
     end
-
+    println("Fxy derivatives written")
     # solve for Sd
     vprint("INFO: solve_Sd")
     solve_Sd!(bulk, bc, gauge, deriv, aux_acc, sys, evoleq)
