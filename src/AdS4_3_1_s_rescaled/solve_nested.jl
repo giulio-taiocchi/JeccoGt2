@@ -257,8 +257,8 @@ function solve_Fxy!(bulk::Bulk, bc::BC, gauge::Gauge, deriv::BulkDeriv, aux_acc,
                 B_x  = Dx(bulk.B, a,i,j)/L
                 B_y  = Dy(bulk.B, a,i,j)/L
                 Bpp  = 2*u3 * Du_B[a,i,j]/L + u4 * Duu_B[a,i,j]/L/L
-                Bp_x = -u2 * Dx(Du_B/L, a,i,j)/L
-                Bp_y = -u2 * Dy(Du_B/L, a,i,j)/L
+                Bp_x = -u2 * Dx(Du_B, a,i,j)/L
+                Bp_y = -u2 * Dy(Du_B, a,i,j)/L
 
 
                 G     = bulk.G[a,i,j]
@@ -266,16 +266,16 @@ function solve_Fxy!(bulk::Bulk, bc::BC, gauge::Gauge, deriv::BulkDeriv, aux_acc,
                 G_x   = Dx(bulk.G, a,i,j)/L
                 G_y   = Dy(bulk.G, a,i,j)/L
                 Gpp   = 2*u3 * Du_G[a,i,j]/L + u4 * Duu_G[a,i,j]/L/L
-                Gp_x  = -u2 * Dx(Du_G/L, a,i,j)/L
-                Gp_y  = -u2 * Dy(Du_G/L, a,i,j)/L
+                Gp_x  = -u2 * Dx(Du_G, a,i,j)/L
+                Gp_y  = -u2 * Dy(Du_G, a,i,j)/L
 
                 S     = bulk.S[a,i,j]
                 Sp    = -u2 * Du_S[a,i,j]/L
                 S_x   = Dx(bulk.S, a,i,j)/L
                 S_y   = Dy(bulk.S, a,i,j)/L
                 Spp   = 2*u3 * Du_S[a,i,j]/L + u4 * Duu_S[a,i,j]/L/L
-                Sp_x  = -u2 * Dx(Du_S/L, a,i,j)/L
-                Sp_y  = -u2 * Dy(Du_S/L, a,i,j)/L
+                Sp_x  = -u2 * Dx(Du_S, a,i,j)/L
+                Sp_y  = -u2 * Dy(Du_S, a,i,j)/L
                 
                 
 
