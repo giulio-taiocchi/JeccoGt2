@@ -294,10 +294,10 @@ function solve_Fxy!(bulk::Bulk, bc::BC, gauge::Gauge, deriv::BulkDeriv, aux_acc,
                 aux.b_vec2[a]    = -aux.SS[1]
                 aux.b_vec2[a+Nu] = -aux.SS[2]
                 @inbounds @simd for aa in 1:Nu
-                    aux.A_mat2[a,aa]         = aux.AA[1,1] * Duu[a,aa] + aux.BB[1,1] * Du[a,aa]
-                    aux.A_mat2[a,aa+Nu]      = aux.AA[1,2] * Duu[a,aa]+ aux.BB[1,2] * Du[a,aa]
-                    aux.A_mat2[a+Nu,aa]      = aux.AA[2,1] * Duu[a,aa] + aux.BB[2,1] * Du[a,aa]
-                    aux.A_mat2[a+Nu,aa+Nu]   = aux.AA[2,2] * Duu[a,aa] + aux.BB[2,2] * Du[a,aa]
+                    aux.A_mat2[a,aa]         = aux.AA[1,1] * Duu[a,aa]/L/L + aux.BB[1,1] * Du[a,aa]/L
+                    aux.A_mat2[a,aa+Nu]      = aux.AA[1,2] * Duu[a,aa]/L/L+ aux.BB[1,2] * Du[a,aa]/L
+                    aux.A_mat2[a+Nu,aa]      = aux.AA[2,1] * Duu[a,aa]/L/L + aux.BB[2,1] * Du[a,aa]/L
+                    aux.A_mat2[a+Nu,aa+Nu]   = aux.AA[2,2] * Duu[a,aa]/L/L + aux.BB[2,2] * Du[a,aa]/L
                 end
                 aux.A_mat2[a,a]       += aux.CC[1,1]
                 aux.A_mat2[a,a+Nu]    += aux.CC[1,2]
@@ -318,16 +318,16 @@ function solve_Fxy!(bulk::Bulk, bc::BC, gauge::Gauge, deriv::BulkDeriv, aux_acc,
             aux.A_mat2[1+Nu,1+Nu] = 1.0
 
            
-            aux.b_vec2[Nu]   = bc.Fx_u[i,j]
+            aux.b_vec2[Nu]   = bc.Fx_u[i,j]/L
             
-            aux.b_vec2[2*Nu] = bc.Fy_u[i,j]
+            aux.b_vec2[2*Nu] = bc.Fy_u[i,j]/L
            
             
             aux.A_mat2[Nu,:]   .= 0.0
             aux.A_mat2[2*Nu,:] .= 0.0
             @inbounds @simd for aa in 1:Nu
-                aux.A_mat2[Nu,aa]      = Du[1,aa]
-                aux.A_mat2[2*Nu,aa+Nu] = Du[1,aa]
+                aux.A_mat2[Nu,aa]      = Du[1,aa]/L
+                aux.A_mat2[2*Nu,aa+Nu] = Du[1,aa]/L
             end
 	    #detA2= det(aux.A_mat2)
 	    #println("in ( $x $y ) detA2 is $detA2, source is $S0")
