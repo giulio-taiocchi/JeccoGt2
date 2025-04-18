@@ -20,18 +20,18 @@ function compute_residual_AH!(res::Array, sigma::Array,
     Fy_uAH      = cache.bulkhorizon.Fy_uAH
     Sd_uAH      = cache.bulkhorizon.Sd_uAH
 
-    Du_B_uAH   = cache.bulkhorizon.Du_B_uAH/L
-    Du_G_uAH    = cache.bulkhorizon.Du_G_uAH/L
-    Du_S_uAH    = cache.bulkhorizon.Du_S_uAH/L
-    Du_Fx_uAH   = cache.bulkhorizon.Du_Fx_uAH/L
-    Du_Fy_uAH   = cache.bulkhorizon.Du_Fy_uAH/L
-    Du_Sd_uAH   = cache.bulkhorizon.Du_Sd_uAH/L
+    Du_B_uAH   = cache.bulkhorizon.Du_B_uAH
+    Du_G_uAH    = cache.bulkhorizon.Du_G_uAH
+    Du_S_uAH    = cache.bulkhorizon.Du_S_uAH
+    Du_Fx_uAH   = cache.bulkhorizon.Du_Fx_uAH
+    Du_Fy_uAH   = cache.bulkhorizon.Du_Fy_uAH
+    Du_Sd_uAH   = cache.bulkhorizon.Du_Sd_uAH
 
-    Duu_B_uAH  = cache.bulkhorizon.Duu_B_uAH/L/L
-    Duu_G_uAH   = cache.bulkhorizon.Duu_G_uAH/L/L
-    Duu_S_uAH   = cache.bulkhorizon.Duu_S_uAH/L/L
-    Duu_Fx_uAH  = cache.bulkhorizon.Duu_Fx_uAH/L/L
-    Duu_Fy_uAH  = cache.bulkhorizon.Duu_Fy_uAH/L/L
+    Duu_B_uAH  = cache.bulkhorizon.Duu_B_uAH
+    Duu_G_uAH   = cache.bulkhorizon.Duu_G_uAH
+    Duu_S_uAH   = cache.bulkhorizon.Duu_S_uAH
+    Duu_Fx_uAH  = cache.bulkhorizon.Duu_Fx_uAH
+    Duu_Fy_uAH  = cache.bulkhorizon.Duu_Fy_uAH
 
     # compute AH equation residual
     @fastmath @inbounds Threads.@threads for j in 1:Ny
@@ -140,18 +140,18 @@ function compute_coeffs_AH!(sigma::Array, gauge::Gauge, cache::HorizonCache,
     Fy_uAH      = cache.bulkhorizon.Fy_uAH
     Sd_uAH      = cache.bulkhorizon.Sd_uAH
 
-    Du_B_uAH   = cache.bulkhorizon.Du_B_uAH/L
-    Du_G_uAH    = cache.bulkhorizon.Du_G_uAH/L
-    Du_S_uAH    = cache.bulkhorizon.Du_S_uAH/L
-    Du_Fx_uAH   = cache.bulkhorizon.Du_Fx_uAH/L
-    Du_Fy_uAH   = cache.bulkhorizon.Du_Fy_uAH/L
-    Du_Sd_uAH   = cache.bulkhorizon.Du_Sd_uAH/L
+    Du_B_uAH   = cache.bulkhorizon.Du_B_uAH
+    Du_G_uAH    = cache.bulkhorizon.Du_G_uAH
+    Du_S_uAH    = cache.bulkhorizon.Du_S_uAH
+    Du_Fx_uAH   = cache.bulkhorizon.Du_Fx_uAH
+    Du_Fy_uAH   = cache.bulkhorizon.Du_Fy_uAH
+    Du_Sd_uAH   = cache.bulkhorizon.Du_Sd_uAH
 
-    Duu_B_uAH  = cache.bulkhorizon.Duu_B_uAH/L/L
-    Duu_G_uAH   = cache.bulkhorizon.Duu_G_uAH/L/L
-    Duu_S_uAH   = cache.bulkhorizon.Duu_S_uAH/L/L
-    Duu_Fx_uAH  = cache.bulkhorizon.Duu_Fx_uAH/L/L
-    Duu_Fy_uAH  = cache.bulkhorizon.Duu_Fy_uAH/L/L
+    Duu_B_uAH  = cache.bulkhorizon.Duu_B_uAH
+    Duu_G_uAH   = cache.bulkhorizon.Duu_G_uAH
+    Duu_S_uAH   = cache.bulkhorizon.Duu_S_uAH
+    Duu_Fx_uAH  = cache.bulkhorizon.Duu_Fx_uAH
+    Duu_Fy_uAH  = cache.bulkhorizon.Duu_Fy_uAH
 
     axx         = cache.axx
     ayy         = cache.ayy
@@ -225,17 +225,17 @@ function compute_coeffs_AH!(sigma::Array, gauge::Gauge, cache::HorizonCache,
             Fy_y    = (Dy(Fy_uAH,   1,i,j) - Fyp * sigma0_y)/L
             Sd_y    = (Dy(Sd_uAH,   1,i,j) - Sdp * sigma0_y)/L
 
-            Bp_x   = (-u2 * Dx(Du_B_uAH, 1,i,j) - Bpp * sigma0_x + 2 * u3 * sigma0_x * Du_B_uAH[1,i,j])/L
-            Gp_x    = (-u2 * Dx(Du_G_uAH,  1,i,j) -  Gpp * sigma0_x + 2 * u3 * sigma0_x *  Du_G_uAH[1,i,j])/L
-            Sp_x    = (-u2 * Dx(Du_S_uAH,  1,i,j) -  Spp * sigma0_x + 2 * u3 * sigma0_x *  Du_S_uAH[1,i,j])/L
-            Fxp_x   = (-u2 * Dx(Du_Fx_uAH, 1,i,j) - Fxpp * sigma0_x + 2 * u3 * sigma0_x * Du_Fx_uAH[1,i,j])/L
-            Fyp_x   = (-u2 * Dx(Du_Fy_uAH, 1,i,j) - Fypp * sigma0_x + 2 * u3 * sigma0_x * Du_Fy_uAH[1,i,j])/L
+            Bp_x   = (-u2 * Dx(Du_B_uAH/L, 1,i,j) - Bpp * sigma0_x + 2 * u3 * sigma0_x * Du_B_uAH[1,i,j]/L)/L
+            Gp_x    = (-u2 * Dx(Du_G_uAH/L,  1,i,j) -  Gpp * sigma0_x + 2 * u3 * sigma0_x *  Du_G_uAH[1,i,j]/L)/L
+            Sp_x    = (-u2 * Dx(Du_S_uAH/L,  1,i,j) -  Spp * sigma0_x + 2 * u3 * sigma0_x *  Du_S_uAH[1,i,j]/L)/L
+            Fxp_x   = (-u2 * Dx(Du_Fx_uAH/L, 1,i,j) - Fxpp * sigma0_x + 2 * u3 * sigma0_x * Du_Fx_uAH[1,i,j]/L)/L
+            Fyp_x   = (-u2 * Dx(Du_Fy_uAH/L, 1,i,j) - Fypp * sigma0_x + 2 * u3 * sigma0_x * Du_Fy_uAH[1,i,j]/L)/L
 
-            Bp_y   = (-u2 * Dy(Du_B_uAH, 1,i,j) - Bpp * sigma0_y + 2 * u3 * sigma0_y * Du_B_uAH[1,i,j])/L
-            Gp_y    = (-u2 * Dy(Du_G_uAH,  1,i,j) -  Gpp * sigma0_y + 2 * u3 * sigma0_y *  Du_G_uAH[1,i,j])/L
-            Sp_y    = (-u2 * Dy(Du_S_uAH,  1,i,j) -  Spp * sigma0_y + 2 * u3 * sigma0_y *  Du_S_uAH[1,i,j])/L
-            Fxp_y   = (-u2 * Dy(Du_Fx_uAH, 1,i,j) - Fxpp * sigma0_y + 2 * u3 * sigma0_y * Du_Fx_uAH[1,i,j])/L
-            Fyp_y   = (-u2 * Dy(Du_Fy_uAH, 1,i,j) - Fypp * sigma0_y + 2 * u3 * sigma0_y * Du_Fy_uAH[1,i,j])/L
+            Bp_y   = (-u2 * Dy(Du_B_uAH/L, 1,i,j) - Bpp * sigma0_y + 2 * u3 * sigma0_y * Du_B_uAH[1,i,j])/L
+            Gp_y    = (-u2 * Dy(Du_G_uAH/L,  1,i,j) -  Gpp * sigma0_y + 2 * u3 * sigma0_y *  Du_G_uAH[1,i,j]/L)/L
+            Sp_y    = (-u2 * Dy(Du_S_uAH/L,  1,i,j) -  Spp * sigma0_y + 2 * u3 * sigma0_y *  Du_S_uAH[1,i,j]/L)/L
+            Fxp_y   = (-u2 * Dy(Du_Fx_uAH/L, 1,i,j) - Fxpp * sigma0_y + 2 * u3 * sigma0_y * Du_Fx_uAH[1,i,j]/L)/L
+            Fyp_y   = (-u2 * Dy(Du_Fy_uAH/L, 1,i,j) - Fypp * sigma0_y + 2 * u3 * sigma0_y * Du_Fy_uAH[1,i,j]/L)/L
 
             vars = (
                 sigma0, sigma0_x, sigma0_y, sigma0_xx, sigma0_yy, sigma0_xy,
@@ -299,18 +299,18 @@ function find_AH!(sigma::Array, bulkconstrain::BulkConstrained,
     Fy_uAH      = cache.bulkhorizon.Fy_uAH
     Sd_uAH      = cache.bulkhorizon.Sd_uAH
 
-    Du_B_uAH   = cache.bulkhorizon.Du_B_uAH/L
-    Du_G_uAH    = cache.bulkhorizon.Du_G_uAH/L
-    Du_S_uAH    = cache.bulkhorizon.Du_S_uAH/L
-    Du_Fx_uAH   = cache.bulkhorizon.Du_Fx_uAH/L
-    Du_Fy_uAH   = cache.bulkhorizon.Du_Fy_uAH/L
-    Du_Sd_uAH   = cache.bulkhorizon.Du_Sd_uAH/L
+    Du_B_uAH   = cache.bulkhorizon.Du_B_uAH
+    Du_G_uAH    = cache.bulkhorizon.Du_G_uAH
+    Du_S_uAH    = cache.bulkhorizon.Du_S_uAH
+    Du_Fx_uAH   = cache.bulkhorizon.Du_Fx_uAH
+    Du_Fy_uAH   = cache.bulkhorizon.Du_Fy_uAH
+    Du_Sd_uAH   = cache.bulkhorizon.Du_Sd_uAH
 
-    Duu_B_uAH  = cache.bulkhorizon.Duu_B_uAH/L/L
-    Duu_G_uAH   = cache.bulkhorizon.Duu_G_uAH/L/L
-    Duu_S_uAH   = cache.bulkhorizon.Duu_S_uAH/L/L
-    Duu_Fx_uAH  = cache.bulkhorizon.Duu_Fx_uAH/L/L
-    Duu_Fy_uAH  = cache.bulkhorizon.Duu_Fy_uAH/L/L
+    Duu_B_uAH  = cache.bulkhorizon.Duu_B_uAH
+    Duu_G_uAH   = cache.bulkhorizon.Duu_G_uAH
+    Duu_S_uAH   = cache.bulkhorizon.Duu_S_uAH
+    Duu_Fx_uAH  = cache.bulkhorizon.Duu_Fx_uAH
+    Duu_Fy_uAH  = cache.bulkhorizon.Duu_Fy_uAH
 
     axx         = cache.axx
     ayy         = cache.ayy
@@ -372,18 +372,18 @@ function find_AH!(sigma::Array, bulkconstrain::BulkConstrained,
                 Fy_uAH[1,i,j]       = interp(view(bulk.Fy,  :,i,j))(uAH)
                 Sd_uAH[1,i,j]       = interp(view(bulk.Sd,  :,i,j))(uAH)
 
-                Du_B_uAH[1,i,j]    = interp(view(deriv.Du_B,  :,i,j))(uAH)/L
-                Du_G_uAH[1,i,j]     = interp(view(deriv.Du_G,   :,i,j))(uAH)/L
-                Du_S_uAH[1,i,j]     = interp(view(deriv.Du_S,   :,i,j))(uAH)/L
-                Du_Fx_uAH[1,i,j]    = interp(view(deriv.Du_Fx,  :,i,j))(uAH)/L
-                Du_Fy_uAH[1,i,j]    = interp(view(deriv.Du_Fy,  :,i,j))(uAH)/L
-                Du_Sd_uAH[1,i,j]    = interp(view(deriv.Du_Sd,  :,i,j))(uAH)/L
+                Du_B_uAH[1,i,j]    = interp(view(deriv.Du_B,  :,i,j))(uAH)
+                Du_G_uAH[1,i,j]     = interp(view(deriv.Du_G,   :,i,j))(uAH)
+                Du_S_uAH[1,i,j]     = interp(view(deriv.Du_S,   :,i,j))(uAH)
+                Du_Fx_uAH[1,i,j]    = interp(view(deriv.Du_Fx,  :,i,j))(uAH)
+                Du_Fy_uAH[1,i,j]    = interp(view(deriv.Du_Fy,  :,i,j))(uAH)
+                Du_Sd_uAH[1,i,j]    = interp(view(deriv.Du_Sd,  :,i,j))(uAH)
 
-                Duu_B_uAH[1,i,j]   = interp(view(deriv.Duu_B,  :,i,j))(uAH)/L/L
-                Duu_G_uAH[1,i,j]    = interp(view(deriv.Duu_G,   :,i,j))(uAH)/L/L
-                Duu_S_uAH[1,i,j]    = interp(view(deriv.Duu_S,   :,i,j))(uAH)/L/L
-                Duu_Fx_uAH[1,i,j]   = interp(view(deriv.Duu_Fx,  :,i,j))(uAH)/L/L
-                Duu_Fy_uAH[1,i,j]   = interp(view(deriv.Duu_Fy,  :,i,j))(uAH)/L/L
+                Duu_B_uAH[1,i,j]   = interp(view(deriv.Duu_B,  :,i,j))(uAH)
+                Duu_G_uAH[1,i,j]    = interp(view(deriv.Duu_G,   :,i,j))(uAH)
+                Duu_S_uAH[1,i,j]    = interp(view(deriv.Duu_S,   :,i,j))(uAH)
+                Duu_Fx_uAH[1,i,j]   = interp(view(deriv.Duu_Fx,  :,i,j))(uAH)
+                Duu_Fy_uAH[1,i,j]   = interp(view(deriv.Duu_Fy,  :,i,j))(uAH)
             end
         end
 
