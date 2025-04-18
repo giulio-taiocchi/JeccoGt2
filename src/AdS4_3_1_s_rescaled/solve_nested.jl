@@ -438,17 +438,17 @@ function solve_Sd!(bulk::Bulk, bc::BC, gauge::Gauge, deriv::BulkDeriv, aux_acc,
                 Fx_y       = Dy(bulk.Fx, a,i,j)/L
                 Fy_y       = Dy(bulk.Fy, a,i,j)/L
 
-                Bp_x      = -u2 * Dx(Du_B/L, a,i,j)/L
-                Gp_x       = -u2 * Dx(Du_G/L,  a,i,j)/L
-                Sp_x       = -u2 * Dx(Du_S/L,  a,i,j)/L
-                Fxp_x      = -u2 * Dx(Du_Fx/L,  a,i,j)/L
-                Fyp_x      = -u2 * Dx(Du_Fy/L,  a,i,j)/L
+                Bp_x      = -u2 * Dx(Du_B, a,i,j)/L/L
+                Gp_x       = -u2 * Dx(Du_G,  a,i,j)/L/L
+                Sp_x       = -u2 * Dx(Du_S,  a,i,j)/L/L
+                Fxp_x      = -u2 * Dx(Du_Fx,  a,i,j)/L/L
+                Fyp_x      = -u2 * Dx(Du_Fy,  a,i,j)/L/L
 
-                Bp_y      = -u2 * Dy(Du_B/L, a,i,j)/L
-                Gp_y       = -u2 * Dy(Du_G/L,  a,i,j)/L
-                Sp_y       = -u2 * Dy(Du_S/L,  a,i,j)/L
-                Fxp_y      = -u2 * Dy(Du_Fx/L, a,i,j)/L
-                Fyp_y      = -u2 * Dy(Du_Fy/L, a,i,j)/L
+                Bp_y      = -u2 * Dy(Du_B, a,i,j)/L/L
+                Gp_y       = -u2 * Dy(Du_G,  a,i,j)/L/L
+                Sp_y       = -u2 * Dy(Du_S,  a,i,j)/L/L
+                Fxp_y      = -u2 * Dy(Du_Fx, a,i,j)/L/L
+                Fyp_y      = -u2 * Dy(Du_Fy, a,i,j)/L/L
 
                 B_xx      = Dxx(bulk.B, a,i,j)/L/L
                 G_xx       = Dxx(bulk.G,  a,i,j)/L/L
@@ -597,17 +597,17 @@ function solve_BdGd!(bulk::Bulk, bc::BC, gauge::Gauge, deriv::BulkDeriv, aux_acc
                 Fx_y       = Dy(bulk.Fx, a,i,j)/L
                 Fy_y       = Dy(bulk.Fy, a,i,j)/L
 
-                Bp_x      = -u2 * Dx(Du_B/L, a,i,j)/L
-                Gp_x       = -u2 * Dx(Du_G/L,  a,i,j)/L
-                Sp_x       = -u2 * Dx(Du_S/L,  a,i,j)/L
-                Fxp_x      = -u2 * Dx(Du_Fx/L,  a,i,j)/L
-                Fyp_x      = -u2 * Dx(Du_Fy/L,  a,i,j)/L
+                Bp_x      = -u2 * Dx(Du_B, a,i,j)/L/L
+                Gp_x       = -u2 * Dx(Du_G,  a,i,j)/L/L
+                Sp_x       = -u2 * Dx(Du_S,  a,i,j)/L/L
+                Fxp_x      = -u2 * Dx(Du_Fx,  a,i,j)/L/L
+                Fyp_x      = -u2 * Dx(Du_Fy,  a,i,j)/L/L
 
-                Bp_y      = -u2 * Dy(Du_B/L, a,i,j)/L
-                Gp_y       = -u2 * Dy(Du_G/L,  a,i,j)/L
-                Sp_y       = -u2 * Dy(Du_S/L,  a,i,j)/L
-                Fxp_y      = -u2 * Dy(Du_Fx/L, a,i,j)/L
-                Fyp_y      = -u2 * Dy(Du_Fy/L, a,i,j)/L
+                Bp_y      = -u2 * Dy(Du_B, a,i,j)/L/L
+                Gp_y       = -u2 * Dy(Du_G,  a,i,j)/L/L
+                Sp_y       = -u2 * Dy(Du_S,  a,i,j)/L/L
+                Fxp_y      = -u2 * Dy(Du_Fx, a,i,j)/L/L
+                Fyp_y      = -u2 * Dy(Du_Fy, a,i,j)/L/L
 
                 B_xx      = Dxx(bulk.B, a,i,j)/L/L
                 G_xx       = Dxx(bulk.G,  a,i,j)/L/L
@@ -773,17 +773,17 @@ function solve_A!(bulk::Bulk, bc::BC, gauge::Gauge, deriv::BulkDeriv, aux_acc,
                 Fx_y       = Dy(bulk.Fx, a,i,j)/L
                 Fy_y       = Dy(bulk.Fy, a,i,j)/L
 
-                Bp_x      = -u2 * Dx(Du_B/L, a,i,j)/L
-                Gp_x       = -u2 * Dx(Du_G/L,  a,i,j)/L
-                Sp_x       = -u2 * Dx(Du_S/L,  a,i,j)/L
-                Fxp_x      = -u2 * Dx(Du_Fx/L,  a,i,j)/L
-                Fyp_x      = -u2 * Dx(Du_Fy/L,  a,i,j)/L
+                Bp_x      = -u2 * Dx(Du_B, a,i,j)/L
+                Gp_x       = -u2 * Dx(Du_G,  a,i,j)/L/L
+                Sp_x       = -u2 * Dx(Du_S,  a,i,j)/L/L
+                Fxp_x      = -u2 * Dx(Du_Fx,  a,i,j)/L/L
+                Fyp_x      = -u2 * Dx(Du_Fy,  a,i,j)/L/L
 
-                Bp_y      = -u2 * Dy(Du_B/L, a,i,j)/L
-                Gp_y       = -u2 * Dy(Du_G/L,  a,i,j)/L
-                Sp_y       = -u2 * Dy(Du_S/L,  a,i,j)/L
-                Fxp_y      = -u2 * Dy(Du_Fx/L, a,i,j)/L
-                Fyp_y      = -u2 * Dy(Du_Fy/L, a,i,j)/L
+                Bp_y      = -u2 * Dy(Du_B, a,i,j)/L/L
+                Gp_y       = -u2 * Dy(Du_G,  a,i,j)/L/L
+                Sp_y       = -u2 * Dy(Du_S,  a,i,j)/L/L
+                Fxp_y      = -u2 * Dy(Du_Fx, a,i,j)/L/L
+                Fyp_y      = -u2 * Dy(Du_Fy, a,i,j)/L/L
 
                 B_xx      = Dxx(bulk.B, a,i,j)/L/L
                 G_xx       = Dxx(bulk.G,  a,i,j)/L/L
