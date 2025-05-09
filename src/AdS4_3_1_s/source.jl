@@ -66,7 +66,7 @@ Base.@kwdef mutable struct SpatialConstantSource{T} <: Source
 	tau :: T = 1.0
 end
 
-Sz(t, x, y, GS ::SpatialConstantSource) = 1/sqrt(1 + GS.Amp*(1 + tanh((t - GS.t0)/GS.tau)))
+Sz(t, x, y, GS ::SpatialConstantSource) = 1 - (GS.Amp*(1 + tanh((t - GS.t0)/GS.tau)))/2.
 Sz_x(t, x, y, GS ::SpatialConstantSource) = 0
 Sz_xx(t, x, y, GS ::SpatialConstantSource) = 0
 Sz_xxx(t, x, y, GS ::SpatialConstantSource) = 0
@@ -79,8 +79,8 @@ Sz_xxyy(t, x, y, GS ::SpatialConstantSource) = 0
 Sz_yy(t, x, y, GS ::SpatialConstantSource) = 0
 Sz_yyy(t, x, y, GS ::SpatialConstantSource) = 0
 Sz_yyyy(t, x, y, GS ::SpatialConstantSource) = 0
-Sz_t(t, x, y, GS ::SpatialConstantSource) = -0.5*(GS.Amp*sech((t - GS.t0)/GS.tau)^2)/(GS.tau*(1 + GS.Amp*(1 + tanh((t - GS.t0)/GS.tau)))^1.5)
-Sz_tt(t, x, y, GS ::SpatialConstantSource) = (GS.Amp*sech((t - GS.t0)/GS.tau)^2*(3*GS.Amp*sech((t - GS.t0)/GS.tau)^2 + 4*tanh((t - GS.t0)/GS.tau)*(1 + GS.Amp*(1 + tanh((t - GS.t0)/GS.tau)))))/(4*GS.tau^2*(1 + GS.Amp*(1 + tanh((t - GS.t0)/GS.tau)))^2.5)
+Sz_t(t, x, y, GS ::SpatialConstantSource) = -0.5*(GS.Amp*sech((t - GS.t0)/GS.tau)^2)/GS.tau
+Sz_tt(t, x, y, GS ::SpatialConstantSource) = (GS.Amp*sech((t - GS.t0)/GS.tau)^2*tanh((t - GS.t0)/GS.tau))/GS.tau^2
 Sz_tx(t, x, y, GS ::SpatialConstantSource) = 0
 Sz_ty(t, x, y, GS ::SpatialConstantSource) = 0
 Sz_txx(t, x, y, GS ::SpatialConstantSource) = 0
