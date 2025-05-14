@@ -88,6 +88,40 @@ Sz_tyy(t, x, y, GS ::SpatialConstantSource) = 0
 Sz_txy(t, x, y, GS ::SpatialConstantSource) = 0
 
 
+# localized source in space and time.
+Base.@kwdef mutable struct PertSource{T} <: Source
+	time :: T = 0.0
+	Amp :: T = 0.01
+	x0 :: T = 0.0
+	y0 :: T = 0.0
+	sigmax :: T = 0.5
+	sigmay :: T = 0.5
+	t0 :: T = 10.0
+	L :: T = 100.0
+	tau :: T = 1.0
+end
+
+Sz(t, x, y, GS ::PertSource) = 1 - (GS.Amp*(1 + tanh((t - GS.t0)/GS.tau)))/(2*MathConstants.e^(((x - GS.x0)^2/GS.sigmax^2 + (y - GS.y0)^2/GS.sigmay^2)/(2*GS.L^2)))
+Sz_x(t, x, y, GS ::PertSource) = (GS.Amp*(x - GS.x0)*(1 + tanh((t - GS.t0)/GS.tau)))/(2*MathConstants.e^(((x - GS.x0)^2/GS.sigmax^2 + (y - GS.y0)^2/GS.sigmay^2)/(2*GS.L^2))*GS.L^2*GS.sigmax^2)
+Sz_xx(t, x, y, GS ::PertSource) =-0.5*(GS.Amp*(-(GS.L^2*GS.sigmax^2) + (x - GS.x0)^2)*(1 + tanh((t - GS.t0)/GS.tau)))/(MathConstants.e^(((x - GS.x0)^2/GS.sigmax^2 + (y - GS.y0)^2/GS.sigmay^2)/(2*GS.L^2))*GS.L^4*GS.sigmax^4)
+Sz_xxx(t, x, y, GS ::PertSource) = (GS.Amp*(-3*GS.L^2*GS.sigmax^2 + (x - GS.x0)^2)*(x - GS.x0)*(1 + tanh((t - GS.t0)/GS.tau)))/(2*MathConstants.e^(((x - GS.x0)^2/GS.sigmax^2 + (y - GS.y0)^2/GS.sigmay^2)/(2*GS.L^2))*GS.L^6*GS.sigmax^6)
+Sz_xxxx(t, x, y, GS ::PertSource) = -0.5*(GS.Amp*(3*GS.L^4*GS.sigmax^4 - 6*GS.L^2*GS.sigmax^2*(x - GS.x0)^2 + (x - GS.x0)^4)*(1 + tanh((t - GS.t0)/GS.tau)))/(MathConstants.e^(((x - GS.x0)^2/GS.sigmax^2 + (y - GS.y0)^2/GS.sigmay^2)/(2*GS.L^2))*GS.L^8*GS.sigmax^8)
+Sz_y(t, x, y, GS ::PertSource) = (GS.Amp*(y - GS.y0)*(1 + tanh((t - GS.t0)/GS.tau)))/(2*MathConstants.e^(((x - GS.x0)^2/GS.sigmax^2 + (y - GS.y0)^2/GS.sigmay^2)/(2*GS.L^2))*GS.L^2*GS.sigmay^2)
+Sz_xy(t, x, y, GS ::PertSource) = -0.5*(GS.Amp*(x - GS.x0)*(y - GS.y0)*(1 + tanh((t - GS.t0)/GS.tau)))/(MathConstants.e^(((x - GS.x0)^2/GS.sigmax^2 + (y - GS.y0)^2/GS.sigmay^2)/(2*GS.L^2))*GS.L^4*GS.sigmax^2*GS.sigmay^2)
+Sz_xxy(t, x, y, GS ::PertSource) = (GS.Amp*(-(GS.L^2*GS.sigmax^2) + (x - GS.x0)^2)*(y - GS.y0)*(1 + tanh((t - GS.t0)/GS.tau)))/(2*MathConstants.e^(((x - GS.x0)^2/GS.sigmax^2 + (y - GS.y0)^2/GS.sigmay^2)/(2*GS.L^2))*GS.L^6*GS.sigmax^4*GS.sigmay^2)
+Sz_xyy(t, x, y, GS ::PertSource) = (GS.Amp*(x - GS.x0)*(-(GS.L^2*GS.sigmay^2) + (y - GS.y0)^2)*(1 + tanh((t - GS.t0)/GS.tau)))/(2*MathConstants.e^(((x - GS.x0)^2/GS.sigmax^2 + (y - GS.y0)^2/GS.sigmay^2)/(2*GS.L^2))*GS.L^6*GS.sigmax^2*GS.sigmay^4)
+Sz_xxyy(t, x, y, GS ::PertSource) = (GS.Amp*(-(GS.L^2*GS.sigmax^2) + (x - GS.x0)^2)*(GS.L^2*GS.sigmay^2 - (y - GS.y0)^2)*(1 + tanh((t - GS.t0)/GS.tau)))/(2*MathConstants.e^(((x - GS.x0)^2/GS.sigmax^2 + (y - GS.y0)^2/GS.sigmay^2)/(2*GS.L^2))*GS.L^8*GS.sigmax^4*GS.sigmay^4)
+Sz_yy(t, x, y, GS ::PertSource) = -0.5*(GS.Amp*(-(GS.L^2*GS.sigmay^2) + (y - GS.y0)^2)*(1 + tanh((t - GS.t0)/GS.tau)))/(MathConstants.e^(((x - GS.x0)^2/GS.sigmax^2 + (y - GS.y0)^2/GS.sigmay^2)/(2*GS.L^2))*GS.L^4*GS.sigmay^4)
+Sz_yyy(t, x, y, GS ::PertSource) = (GS.Amp*(-3*GS.L^2*GS.sigmay^2 + (y - GS.y0)^2)*(y - GS.y0)*(1 + tanh((t - GS.t0)/GS.tau)))/(2*MathConstants.e^(((x - GS.x0)^2/GS.sigmax^2 + (y - GS.y0)^2/GS.sigmay^2)/(2*GS.L^2))*GS.L^6*GS.sigmay^6)
+Sz_yyyy(t, x, y, GS ::PertSource) = -0.5*(GS.Amp*(3*GS.L^4*GS.sigmay^4 - 6*GS.L^2*GS.sigmay^2*(y - GS.y0)^2 + (y - GS.y0)^4)*(1 + tanh((t - GS.t0)/GS.tau)))/(MathConstants.e^(((x - GS.x0)^2/GS.sigmax^2 + (y - GS.y0)^2/GS.sigmay^2)/(2*GS.L^2))*GS.L^8*GS.sigmay^8)
+Sz_t(t, x, y, GS ::PertSource) = -0.5*(GS.Amp*sech((t - GS.t0)/GS.tau)^2)/(MathConstants.e^(((x - GS.x0)^2/GS.sigmax^2 + (y - GS.y0)^2/GS.sigmay^2)/(2*GS.L^2))*GS.tau)
+Sz_tt(t, x, y, GS ::PertSource) = (GS.Amp*sech((t - GS.t0)/GS.tau)^2*tanh((t - GS.t0)/GS.tau))/(MathConstants.e^(((x - GS.x0)^2/GS.sigmax^2 + (y - GS.y0)^2/GS.sigmay^2)/(2*GS.L^2))*GS.tau^2)
+Sz_tx(t, x, y, GS ::PertSource) = (GS.Amp*(x - GS.x0)*sech((t - GS.t0)/GS.tau)^2)/(2*MathConstants.e^(((x - GS.x0)^2/GS.sigmax^2 + (y - GS.y0)^2/GS.sigmay^2)/(2*GS.L^2))*GS.L^2*GS.sigmax^2*GS.tau)
+Sz_ty(t, x, y, GS ::PertSource) = (GS.Amp*(y - GS.y0)*sech((t - GS.t0)/GS.tau)^2)/(2*MathConstants.e^(((x - GS.x0)^2/GS.sigmax^2 + (y - GS.y0)^2/GS.sigmay^2)/(2*GS.L^2))*GS.L^2*GS.sigmay^2*GS.tau)
+Sz_txx(t, x, y, GS ::PertSource) = -0.5*(GS.Amp*(-(GS.L^2*GS.sigmax^2) + (x - GS.x0)^2)*sech((t - GS.t0)/GS.tau)^2)/(MathConstants.e^(((x - GS.x0)^2/GS.sigmax^2 + (y - GS.y0)^2/GS.sigmay^2)/(2*GS.L^2))*GS.L^4*GS.sigmax^4*GS.tau)
+Sz_tyy(t, x, y, GS ::PertSource) = -0.5*(GS.Amp*(-(GS.L^2*GS.sigmay^2) + (y - GS.y0)^2)*sech((t - GS.t0)/GS.tau)^2)/(MathConstants.e^(((x - GS.x0)^2/GS.sigmax^2 + (y - GS.y0)^2/GS.sigmay^2)/(2*GS.L^2))*GS.L^4*GS.sigmay^4*GS.tau)
+Sz_txy(t, x, y, GS ::PertSource) = -0.5*(GS.Amp*(x - GS.x0)*(y - GS.y0)*sech((t - GS.t0)/GS.tau)^2)/(MathConstants.e^(((x - GS.x0)^2/GS.sigmax^2 + (y - GS.y0)^2/GS.sigmay^2)/(2*GS.L^2))*GS.L^4*GS.sigmax^2*GS.sigmay^2*GS.tau)
+
 #exp source
 Base.@kwdef mutable struct ExpSource{T} <: Source
 	time :: T = 0.0
