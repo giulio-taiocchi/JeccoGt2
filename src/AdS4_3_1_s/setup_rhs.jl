@@ -2,7 +2,7 @@
 function setup_rhs(tmp::EvolVars, bulkconstrains::BulkPartition{Nsys},
                    bulkderivs::BulkPartition{Nsys},
                    cache::HorizonCache, systems::SystemPartition,
-                   integration::Integration) where {Nsys}
+                   integration::Integration,tzero) where {Nsys}
     # function to solve the nested system
     nested = Nested(systems, bulkconstrains, bulkderivs)
 
@@ -14,7 +14,7 @@ function setup_rhs(tmp::EvolVars, bulkconstrains::BulkPartition{Nsys},
 
     function (ff_t::EvolVars, ff::EvolVars, evoleq::EvolutionEquations, t)
         println("t in setup_RHS is $t")
-	evoleq.source.time = t
+	evoleq.source.time = t+tzero
 	timing = getSourcetime(evoleq.source)
 	println("source time in setup_RHS is $timing")
         bulkevols_t = getbulkevolvedpartition(ff_t)
