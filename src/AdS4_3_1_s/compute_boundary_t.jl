@@ -82,6 +82,8 @@ function compute_boundary_t!(boundary_t::Boundary, bulk::BulkEvolved,
             fy1_t[1,i,j] = (-6*fy1*(S0_t) + 6*g3*(S0_x) + 6*b13*(S0_y) - S0*(a3_y) + 3*S0*(g3_x) + 3*S0*(b13_y))/(3*S0)#g3_x + b13_y - 1//3 * a3_y #
         end
     end
-
+	println("Max of dxfx = ", maximum(fx1_x))
+	println("Min of dyfy = ", minimum(fy1_y))
+	
     nothing
 end
