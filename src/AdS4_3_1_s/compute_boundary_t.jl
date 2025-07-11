@@ -29,6 +29,7 @@ function compute_boundary_t!(boundary_t::Boundary, bulk::BulkEvolved,
     
     fx1_x_vals = zeros(Nx, Ny)
     fy1_y_vals = zeros(Nx, Ny)
+    no_source_terms = zeros(Nx,Ny)
 
     @fastmath @inbounds for j in 1:Ny
         y = sys.ycoord[j]
@@ -80,6 +81,8 @@ function compute_boundary_t!(boundary_t::Boundary, bulk::BulkEvolved,
             fy1_y   = Dy(boundary.fy1, 1,i,j)
             fx1_x_vals[i, j] = fx1_x
             fy1_y_vals[i, j] = fy1_y
+            no_source_terms[i,j] = -3/2*(((fx1_x) + (fy1_y)))/(S0^2)
+            
 
             a3_t[1,i,j]  = (-6*S0^7*a3*(S0_t) + 20*(S0_x)^4 + 20*(S0_y)^4 - 16*S0*(S0_x)^2*(2*(S0_xx) + (S0_yy)) + S0^2*(5*(S0_xx)^2 + 4*(S0_xy)^2 + 8*(S0_x)*((S0_xxx) + (S0_xyy)) + 6*(S0_xx)*(S0_yy) + 5*(S0_yy)^2) - 8*(S0_y)^2*(-5*(S0_x)^2 + 2*S0*((S0_xx) + 2*(S0_yy))) + 8*S0*(S0_y)*(-4*(S0_x)*(S0_xy) + S0*((S0_xxy) + (S0_yyy))) - S0^3*((S0_xxxx) + 2*(S0_xxyy) + (S0_yyyy)) - 3*S0^6*((fx1_x) + (fy1_y)))/(2*S0^8)#-3//2 * (fx1_x + fy1_y)#
 
@@ -87,8 +90,12 @@ function compute_boundary_t!(boundary_t::Boundary, bulk::BulkEvolved,
             fy1_t[1,i,j] = (-6*fy1*(S0_t) + 6*g3*(S0_x) + 6*b13*(S0_y) - S0*(a3_y) + 3*S0*(g3_x) + 3*S0*(b13_y))/(3*S0)#g3_x + b13_y - 1//3 * a3_y #
         end
     end
-	println("Max of dxfx = ", maximum(fx1_x_vals))
-	println("Min of dyfy = ", minimum(fy1_y_vals))
+	#println("Max of dxfx = ", maximum(fx1_x_vals))
+	#println("Min of dxfx = ", minimum(fx1_x_vals))
+	println("-------------------------------------------------------")
+	println("Max of no source terms = ", maximum(no_source_terms))
+	println("Min of no source terms = ", minimum(no_source_terms))
+	println("-------------------------------------------------------")
 	
     nothing
 end
