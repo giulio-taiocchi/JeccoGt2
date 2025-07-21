@@ -1,6 +1,7 @@
 # no source
 Base.@kwdef mutable struct NoSource{T} <: Source
 	time :: T = 0.0
+	step :: Integer = 0
 	
 end
 
@@ -33,6 +34,7 @@ Base.@kwdef mutable struct Quench{T} <: Source
 	Amp :: T = 0.01
 	t0 :: T = 10.0
 	sigmat :: T = 1.0 
+	step :: Integer = 0
 	
 end
 
@@ -64,6 +66,7 @@ Base.@kwdef mutable struct SpatialConstantSource{T} <: Source
 	Amp :: T = 0.01
 	t0 :: T = 10.0
 	tau :: T = 1.0
+	step :: Integer = 0
 end
 
 Sz(t, x, y, GS ::SpatialConstantSource) = 1 - (GS.Amp*(1 + tanh((t - GS.t0)/GS.tau)))/2.
@@ -99,6 +102,7 @@ Base.@kwdef mutable struct PertSource{T} <: Source
 	t0 :: T = 10.0
 	L :: T = 100.0
 	tau :: T = 1.0
+	step :: Integer = 0
 end
 
 Sz(t, x, y, GS ::PertSource) = 1 - (GS.Amp*(1 + tanh((t - GS.t0)/GS.tau)))/(2*MathConstants.e^(((x - GS.x0)^2/GS.sigmax^2 + (y - GS.y0)^2/GS.sigmay^2)/(2*GS.L^2)))
@@ -133,6 +137,7 @@ Base.@kwdef mutable struct ExpSource{T} <: Source
 	t0 :: T = 10.0
 	L :: T = 100.0
 	tau :: T = 1.0
+	step :: Integer = 0
 end
 
 Sz(t, x, y, GS ::ExpSource) = 1/sqrt(1 + (MathConstants.e^(-0.5*((-2*pi*x)/GS.L + GS.x0)^2/GS.sigmax^2 - ((-2*pi*y)/GS.L + GS.y0)^2/(2*GS.sigmay^2))*GS.Amp*(1 + tanh((t - GS.t0)/GS.tau)))/(4*pi^2*GS.sigmax^2))
@@ -172,6 +177,7 @@ Base.@kwdef mutable struct GaussianSource{T} <: Source
 	t0 :: T = 20.0
 	L :: T = 100.0
 	tau :: T = 1.0
+	step :: Integer = 0
 end
 
 Sz(t, x, y, GS ::GaussianSource) = 1 - (GS.Amp*(1 + tanh((t - GS.t0)/GS.tau)))/(2*exp(((x - GS.x0)^2/GS.sigmax^2 + (y - GS.y0)^2/GS.sigmay^2)/(2*GS.L^2)))
@@ -205,6 +211,7 @@ Base.@kwdef mutable struct LC{T} <: Source
 	t0 :: T = 10.0
 	L :: T = 100.0
 	tau :: T = 1.0
+	step :: Integer = 0
 end
 
 Sz(t, x, y, GS ::LC) = 1/sqrt(1 + (GS.Amp*(1 + tanh((t - GS.t0)/GS.tau)))/((1 + x^2/GS.Lsigmax^2)*(1 + y^2/GS.Lsigmay^2)))
@@ -244,6 +251,7 @@ Base.@kwdef mutable struct MovingGaussianSource{T} <: Source
 	L :: T = 100.0
 	tau :: T = 1.0
 	v :: T = 10
+	step :: Integer = 0
 	
 end
 
@@ -281,6 +289,7 @@ Base.@kwdef mutable struct GaussianTilt{T} <: Source
 	L :: T = 100.0
 	tau :: T = 1.0
 	phi :: T = 0.0
+	step :: Integer = 0
 end
 
 #tilted gaussian
@@ -316,6 +325,7 @@ Base.@kwdef mutable struct Gaussiangtt{T} <: Source
 	t0 :: T = 20.0
 	L :: T = 100.0
 	tau :: T = 1.0
+	step :: Integer = 0
 end
 
 Sz(t, x, y, GS ::Gaussiangtt) = 1/sqrt(1 - (GS.Amp*(1 + tanh((t - GS.t0)/GS.tau)))/(2*exp(((x - GS.x0)^2/GS.sigmax^2 + (y - GS.y0)^2/GS.sigmay^2)/(2*GS.L^2))))
