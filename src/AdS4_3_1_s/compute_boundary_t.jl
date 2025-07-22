@@ -28,7 +28,11 @@ function compute_boundary_t!(boundary_t::Boundary, bulk::BulkEvolved,
     test = source.time
     step = source.step
     fx1_x_vals = zeros(Nx, Ny)
+    a3_x_vals = zeros(Nx, Ny)
+    b3_x_vals = zeros(Nx, Ny)
+    g3_y_vals = zeros(Nx, Ny)
     fy1_y_vals = zeros(Nx, Ny)
+    source_vals = zeros(Nx,Ny)
     no_source_terms = zeros(Nx,Ny)
 
     @fastmath @inbounds for j in 1:Ny
@@ -37,6 +41,7 @@ function compute_boundary_t!(boundary_t::Boundary, bulk::BulkEvolved,
             x = sys.xcoord[i]
             #importing the source and its derivatives
             S0 = Sz(test, x, y, source)
+            source_vals[i,j] = S0 
             S0_x = Sz_x(test, x, y, source)
             S0_y = Sz_y(test, x, y, source)
             S0_t = Sz_t(test, x, y, source)
@@ -64,14 +69,17 @@ function compute_boundary_t!(boundary_t::Boundary, bulk::BulkEvolved,
 
 	    b13	    = bulk.B[1,i,j]
             b13_x   = Dx(bulk.B, 1,i,j)
+            b3_x_vals[i, j] = b13_x
             b13_y   = Dy(bulk.B, 1,i,j)
 
 	    g3	    = bulk.G[1,i,j]
             g3_x    = Dx(bulk.G, 1,i,j)
             g3_y    = Dy(bulk.G, 1,i,j)
+            g3_y_vals[i, j] = g3_y
             
 	    a3      = boundary.a3[1,i,j]
             a3_x    = Dx(boundary.a3, 1,i,j)
+            a3_x_vals[i, j] = a3_x          
             a3_y    = Dy(boundary.a3, 1,i,j)
 
 	    
@@ -115,6 +123,16 @@ function compute_boundary_t!(boundary_t::Boundary, bulk::BulkEvolved,
         h5write(g_filename, "g3", bulk.G)
         b_filename = joinpath(output_dir, "b$(step).h5")
         h5write(b_filename, "b3", bulk.B)
+        
+        ax_filename = joinpath(output_dir, "ax$(step).h5")
+        h5write(ax_filename, "a3x", a3_x_vals)
+        bx_filename = joinpath(output_dir, "bx$(step).h5")
+        h5write(bx_filename, "b3x", b3_x_vals)
+        gx_filename = joinpath(output_dir, "gx$(step).h5")
+        h5write(gx_filename, "g3x", g3_x_vals)
+        source_filename = joinpath(output_dir, "sigma$(step).h5")
+        h5write(source_filename, "sigma", source_vals)
+        
     end
 	
 	
