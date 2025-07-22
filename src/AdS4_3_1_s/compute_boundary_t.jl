@@ -98,13 +98,11 @@ function compute_boundary_t!(boundary_t::Boundary, bulk::BulkEvolved,
 	#println("-------------------------------------------------------")
 	#println("t = ", test)
 	#println("iteration : ", step)
-    h5file = h5open("/home/giulio/University/PhD/Simulations/fx_toutput.h5", "w")  # "w" overwrites the file, use "r+" to append if needed
+    output_dir = "/home/giulio/University/PhD/Simulations/"
     if step % 100 == 0
-        # Save fx1_t at this step
-        dset_name = "/fx1_t_step_$step"
-        h5file[dset_name] = fx1_t
+        filename = joinpath(output_dir, "fx_t$(step).h5")
+        h5write(filename, "fx1_t", fx1_t)
     end
-    close(h5file)
 	
 	
     nothing
