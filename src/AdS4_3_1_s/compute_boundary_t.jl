@@ -128,8 +128,8 @@ function compute_boundary_t!(boundary_t::Boundary, bulk::BulkEvolved,
         h5write(ax_filename, "a3x", a3_x_vals)
         bx_filename = joinpath(output_dir, "bx$(step).h5")
         h5write(bx_filename, "b3x", b3_x_vals)
-        gx_filename = joinpath(output_dir, "gx$(step).h5")
-        h5write(gx_filename, "g3x", g3_x_vals)
+        gy_filename = joinpath(output_dir, "gy$(step).h5")
+        h5write(gy_filename, "g3y", g3_y_vals)
         source_filename = joinpath(output_dir, "sigma$(step).h5")
         h5write(source_filename, "sigma", source_vals)
         
