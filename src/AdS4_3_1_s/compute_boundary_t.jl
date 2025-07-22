@@ -106,15 +106,15 @@ function compute_boundary_t!(boundary_t::Boundary, bulk::BulkEvolved,
         fx_t_filename = joinpath(output_dir, "fx_t$(step).h5")
         h5write(fx_t_filename, "fx1_t", fx1_t)
         fx_filename = joinpath(output_dir, "fx$(step).h5")
-        h5write(fx_filename, "fx1", fx1)
+        h5write(fx_filename, "fx1", boundary.fx1)
         fy_filename = joinpath(output_dir, "fy$(step).h5")
-        h5write(fy_filename, "fy1", fy1)
+        h5write(fy_filename, "fy1", boundary.fy1)
         a_filename = joinpath(output_dir, "a$(step).h5")
-        h5write(a_filename, "a3", a3)
+        h5write(a_filename, "a3", boundary.a3)
         g_filename = joinpath(output_dir, "g$(step).h5")
-        h5write(g_filename, "g3", g3)
+        h5write(g_filename, "g3", bulk.G)
         b_filename = joinpath(output_dir, "b$(step).h5")
-        h5write(b_filename, "b3", b3)
+        h5write(b_filename, "b3", bulk.B)
     end
 	
 	
