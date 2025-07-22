@@ -96,8 +96,15 @@ function compute_boundary_t!(boundary_t::Boundary, bulk::BulkEvolved,
 	#println("Max of no source terms = ", maximum(no_source_terms))
 	#println("Min of no source terms = ", minimum(no_source_terms))
 	#println("-------------------------------------------------------")
-	println("t = ", test)
-	println("iteration : ", step)
+	#println("t = ", test)
+	#println("iteration : ", step)
+    h5file = h5open("/home/giulio/University/PhD/Simulations/fx_toutput.h5", "w")  # "w" overwrites the file, use "r+" to append if needed
+    if step % 100 == 0
+        # Save fx1_t at this step
+        dset_name = "/fx1_t_step_$step"
+        h5file[dset_name] = fx1_t
+    end
+    close(h5file)
 	
 	
     nothing
