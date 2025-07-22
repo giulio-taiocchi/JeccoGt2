@@ -84,10 +84,13 @@ function compute_boundary_t!(boundary_t::Boundary, bulk::BulkEvolved,
             no_source_terms[i,j] = (-3*S0^6*(((fx1_x) + (fy1_y)))/(S0^2))
             
 
-            a3_t[1,i,j]  = (-6*S0^7*a3*(S0_t) + 20*(S0_x)^4 + 20*(S0_y)^4 - 16*S0*(S0_x)^2*(2*(S0_xx) + (S0_yy)) + S0^2*(5*(S0_xx)^2 + 4*(S0_xy)^2 + 8*(S0_x)*((S0_xxx) + (S0_xyy)) + 6*(S0_xx)*(S0_yy) + 5*(S0_yy)^2) - 8*(S0_y)^2*(-5*(S0_x)^2 + 2*S0*((S0_xx) + 2*(S0_yy))) + 8*S0*(S0_y)*(-4*(S0_x)*(S0_xy) + S0*((S0_xxy) + (S0_yyy))) - S0^3*((S0_xxxx) + 2*(S0_xxyy) + (S0_yyyy)) - 3*S0^6*((fx1_x) + (fy1_y)))/(2*S0^8)#-3//2 * (fx1_x + fy1_y)#
+            a3_t[1,i,j]  = (20*(S0_x)^4 + 20*(S0_y)^4 - 16*S0*(S0_x)^2*(2*(S0_xx) + (S0_yy)) + S0^2*(5*(S0_xx)^2 + 4*(S0_xy)^2 + 8*(S0_x)*((S0_xxx) + (S0_xyy)) + 6*(S0_xx)*(S0_yy) + 5*(S0_yy)^2) - 8*(S0_y)^2*(-5*(S0_x)^2 + 2*S0*((S0_xx) + 2*(S0_yy))) + 8*S0*(S0_y)*(-4*(S0_x)*(S0_xy) + S0*((S0_xxy) + (S0_yyy))) - S0^3*((S0_xxxx) + 2*(S0_xxyy) + (S0_yyyy)))/(2*S0^8) - 3*((fx1_x) + (fy1_y))/(2*S0^2)-3*a3*(S0_t)/S0#-3//2 * (fx1_x + fy1_y)#
+            #a3_t[1,i,j]  = (-6*S0^7*a3*(S0_t) + 20*(S0_x)^4 + 20*(S0_y)^4 - 16*S0*(S0_x)^2*(2*(S0_xx) + (S0_yy)) + S0^2*(5*(S0_xx)^2 + 4*(S0_xy)^2 + 8*(S0_x)*((S0_xxx) + (S0_xyy)) + 6*(S0_xx)*(S0_yy) + 5*(S0_yy)^2) - 8*(S0_y)^2*(-5*(S0_x)^2 + 2*S0*((S0_xx) + 2*(S0_yy))) + 8*S0*(S0_y)*(-4*(S0_x)*(S0_xy) + S0*((S0_xxy) + (S0_yyy))) - S0^3*((S0_xxxx) + 2*(S0_xxyy) + (S0_yyyy)) - 3*S0^6*((fx1_x) + (fy1_y)))/(2*S0^8)
 
-            fx1_t[1,i,j] = (-6*fx1*(S0_t) - 6*b13*(S0_x) + 6*g3*(S0_y) - S0*(a3_x) + 3*S0*(g3_y) - 3*S0*(b13_x))/(3*S0)#g3_y - b13_x - 1//3 * a3_x #
-            fy1_t[1,i,j] = (-6*fy1*(S0_t) + 6*g3*(S0_x) + 6*b13*(S0_y) - S0*(a3_y) + 3*S0*(g3_x) + 3*S0*(b13_y))/(3*S0)#g3_x + b13_y - 1//3 * a3_y #
+            #fx1_t[1,i,j] = (-6*fx1*(S0_t) - 6*b13*(S0_x) + 6*g3*(S0_y) - S0*(a3_x) + 3*S0*(g3_y) - 3*S0*(b13_x))/(3*S0)#g3_y - b13_x - 1//3 * a3_x #
+            #fy1_t[1,i,j] = (-6*fy1*(S0_t) + 6*g3*(S0_x) + 6*b13*(S0_y) - S0*(a3_y) + 3*S0*(g3_x) + 3*S0*(b13_y))/(3*S0)#g3_x + b13_y - 1//3 * a3_y #
+            fx1_t[1,i,j] = (-6*fx1*(S0_t) - 6*b13*(S0_x) + 6*g3*(S0_y))/(3*S0) - (a3_x)/3 + (g3_y) - (b13_x)#g3_y - b13_x - 1//3 * a3_x #
+            fy1_t[1,i,j] = (-6*fy1*(S0_t) + 6*g3*(S0_x) + 6*b13*(S0_y))/(3*S0) - (a3_y)/3 + (g3_x) + (b13_y)#g3_x + b13_y - 1//3 * a3_y #
         end
     end
 	#println("Max of dxfx = ", maximum(fx1_x_vals))
@@ -95,13 +98,23 @@ function compute_boundary_t!(boundary_t::Boundary, bulk::BulkEvolved,
 	#println("-------------------------------------------------------")
 	#println("Max of no source terms = ", maximum(no_source_terms))
 	#println("Min of no source terms = ", minimum(no_source_terms))
-	#println("-------------------------------------------------------")
-	#println("t = ", test)
-	#println("iteration : ", step)
-    output_dir = "/home/giulio/University/PhD/Simulations/"
+	println("-------------------------------------------------------")
+	println("t = ", test)
+	println("iteration : ", step)
+    output_dir = "/home/giulio/University/PhD/Simulations/testoutput/"
     if step % 100 == 0
-        filename = joinpath(output_dir, "fx_t$(step).h5")
-        h5write(filename, "fx1_t", fx1_t)
+        fx_t_filename = joinpath(output_dir, "fx_t$(step).h5")
+        h5write(fx_t_filename, "fx1_t", fx1_t)
+        fx_filename = joinpath(output_dir, "fx$(step).h5")
+        h5write(fx_filename, "fx1", fx1)
+        fy_filename = joinpath(output_dir, "fy$(step).h5")
+        h5write(fy_filename, "fy1", fy1)
+        a_filename = joinpath(output_dir, "a$(step).h5")
+        h5write(a_filename, "a3", a3)
+        g_filename = joinpath(output_dir, "g$(step).h5")
+        h5write(g_filename, "g3", g3)
+        b_filename = joinpath(output_dir, "b$(step).h5")
+        h5write(b_filename, "b3", b3)
     end
 	
 	
