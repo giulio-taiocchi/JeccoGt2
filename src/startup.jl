@@ -43,7 +43,7 @@ function startup(outdir::String; remove_existing::Bool=false)
         end
     end
 
-    num_threads = try
+    #= num_threads = try
         ENV["JULIA_NUM_THREADS"]
     catch e
         if isa(e, KeyError)
@@ -54,6 +54,9 @@ function startup(outdir::String; remove_existing::Bool=false)
             throw(e)
         end
     end
+    =#
+    
+    num_threads = Threads.nthreads()
     println("-------------------------------------------------------------")
 
     println(raw"                                     _      ")
