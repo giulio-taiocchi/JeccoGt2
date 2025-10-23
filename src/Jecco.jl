@@ -35,5 +35,6 @@ include("AdS5_3_1/AdS5_3_1.jl")
 include("AdS4_3_1/AdS4_3_1.jl")
 include("AdS4_3_1_s/AdS4_3_1_s.jl")
 include("AdS4_3_1_s_rescaled/AdS4_3_1_s_rescaled.jl")
+include("ODESolver/ODESolver.jl")
 
 end # module
