@@ -1,7 +1,7 @@
 module Jecco
 
 using HDF5
-using LinearAlgebra
+using LinearAlgebra, SparseArrays
 using FFTW
 
 
@@ -18,11 +18,11 @@ include("utils.jl")
 
 export AbstractPartition, FlattenedVector
 
-export AbstractCoord, CartesianCoord, GaussLobattoCoord
+export AbstractCoord, CartesianCoord, GaussLobattoCoord, TrivialCoord
 export Chart, Atlas
 export Cartesian, GaussLobatto
 
-export CenteredDiff, EqualSizeStencilFD, ChebDeriv, FourierDeriv
+export CenteredDiff, EqualSizeStencilFD, ChebDeriv, FourierDeriv, ZeroDeriv
 export ChebInterpolator
 export KO_Filter, Exp_Filter
 export KO_Centered

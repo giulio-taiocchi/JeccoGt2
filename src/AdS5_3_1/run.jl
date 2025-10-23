@@ -3,6 +3,14 @@ function estimate_dtmax(chart::Chart)
     ucoord, xcoord, ycoord = chart.coords
     dx = Jecco.delta(xcoord)
     dy = Jecco.delta(ycoord)
+    # when there is a trivial direction with just one point, the method delta
+    # above will return NaN. so let's safeguard against that
+    if isnan(dx)
+        dx = 1000
+    end
+    if isnan(dy)
+        dy = 1000
+    end
     # spacing in u is not uniform, so let's compute the average spacing
     du_avg = (ucoord[end] - ucoord[1]) / (ucoord.nodes - 1)
     0.8 * min(dx, dy, du_avg)
@@ -67,36 +75,6 @@ function run_model(grid::SpecCartGrid3D, id::InitialData, evoleq::EvolutionEquat
     rhs! = setup_rhs(evolvars, bulkconstrains, bulkderivs, horizoncache,
                      systems, integration)
 
-#=
-    #=
-    limit the default integrator dtmax and qmax values. see:
-      https://diffeq.sciml.ai/latest/extras/timestepping/
-      https://diffeq.sciml.ai/latest/basics/common_solver_opts/
-    =#
-    dtmax = estimate_dtmax(atlas)
-    qmax  = 1.2
-
-    if isa(integration.dt, Number)
-        dt0   = integration.dt
-    elseif integration.dt == :auto
-        dt0   = 0.5 * dtmax
-    else
-        error("Unknown dt value")
-    end
-    tmax  = integration.tmax
-
-    # decide in the evolution loop when to terminate the run, so set here an
-    # impossibly large value for tstop
-    tspan = (0.0, 1.e20)
-    alg   = integration.ODE_method
-
-    prob  = ODEProblem(rhs!, evolvars, tspan, evoleq)
-    # https://diffeq.sciml.ai/stable/basics/integrator/
-    integrator = init(prob, alg, save_everystep=false, dt=dt0, dtmax=dtmax, qmax=qmax,
-                      adaptive=integration.adaptive, reltol=integration.reltol,
-                      calck=false)
-=#
-
     tinfo  = Jecco.TimeInfo(it0, t0, 0.0, 0.0)
 
     # for the boundary/xi grid
@@ -140,12 +118,7 @@ function run_model(grid::SpecCartGrid3D, id::InitialData, evoleq::EvolutionEquat
         diag()
     end
 
-
- # prepare time integrator
-
-
-
-
+    # prepare time integrator
 
     if isa(integration.dt, Number)
         dt0 = integration.dt
@@ -160,6 +133,7 @@ function run_model(grid::SpecCartGrid3D, id::InitialData, evoleq::EvolutionEquat
     # decide in the evolution loop when to terminate the run, so set here an
     # impossibly large value for tstop
     tspan = (0.0, 1.e20)
+
     if isa(alg, OrdinaryDiffEq.OrdinaryDiffEqAlgorithm)
         #=
         limit the default integrator dtmax and qmax values. see:
@@ -168,6 +142,7 @@ function run_model(grid::SpecCartGrid3D, id::InitialData, evoleq::EvolutionEquat
         =#
         dtmax = estimate_dtmax(atlas)
         qmax  = 1.2
+
         prob  = ODEProblem(rhs!, evolvars, tspan, evoleq)
         # https://diffeq.sciml.ai/stable/basics/integrator/
         integrator = init(prob, alg, save_everystep=false, dt=dt0, dtmax=dtmax, qmax=qmax,
@@ -183,21 +158,20 @@ function run_model(grid::SpecCartGrid3D, id::InitialData, evoleq::EvolutionEquat
         error("Unknown option for integration.ODE_method")
     end
 
+
     # for stdout info
     Jecco.out_info(tinfo.it, tinfo.t, 0.0, gauge.xi, "ξ", 1, 1)
 
-    # tstart = time() 
-    
+    # start integration
     tmax   = integration.tmax
     tstart = time()
-    
-    # start integration
     vprint("INFO: Starting time integration...")
-   # for (u,t) in tuples(integrator)
-   while true
+    while true
         step!(integrator)
+
         t = integrator.t
         u = integrator.u
+
         tinfo.it     += 1
         tinfo.dt      = integrator.dt
         tinfo.t       = t0 + t
@@ -227,7 +201,6 @@ function run_model(grid::SpecCartGrid3D, id::InitialData, evoleq::EvolutionEquat
         # terminate run?
         if t >= tmax || telapsed >= io.max_walltime
             checkpoint(u)
-            #terminate!(integrator)
             break
         end
         if io.termination_from_file && tinfo.it % io.check_file_every == 0
@@ -235,7 +208,6 @@ function run_model(grid::SpecCartGrid3D, id::InitialData, evoleq::EvolutionEquat
                 println("INFO: Found termination file.")
                 println("INFO: Triggering termination...")
                 checkpoint(u)
-                #terminate!(integrator)
                 break
             end
         end
