@@ -101,37 +101,7 @@ function compute_boundary_t!(boundary_t::Boundary, bulk::BulkEvolved,
             fy1_t[1,i,j] = (-6*fy1*(S0_t) + 6*g3*(S0_x) + 6*b13*(S0_y))/(3*S0) - (a3_y)/3 + (g3_x) + (b13_y)#g3_x + b13_y - 1//3 * a3_y #
         end
     end
-	#println("Max of dxfx = ", maximum(fx1_x_vals))
-	#println("Min of dxfx = ", minimum(fx1_x_vals))
-	#println("-------------------------------------------------------")
-	#println("Max of no source terms = ", maximum(no_source_terms))
-	#println("Min of no source terms = ", minimum(no_source_terms))
-	println("-------------------------------------------------------")
-	println("t = ", test)
-	println("iteration : ", step)
-    output_dir = "/home/giulio/University/PhD/Simulations/testoutput/"
-    if step % 100 == 0
-        fx_t_filename = joinpath(output_dir, "fx_t$(step).h5")
-        h5write(fx_t_filename, "fx1_t", fx1_t)
-        fx_filename = joinpath(output_dir, "fx$(step).h5")
-        h5write(fx_filename, "fx1", boundary.fx1)
-        fy_filename = joinpath(output_dir, "fy$(step).h5")
-        h5write(fy_filename, "fy1", boundary.fy1)
-        a_filename = joinpath(output_dir, "a$(step).h5")
-        h5write(a_filename, "a3", boundary.a3)
-        g_filename = joinpath(output_dir, "g$(step).h5")
-        h5write(g_filename, "g3", bulk.G)
-        b_filename = joinpath(output_dir, "b$(step).h5")
-        h5write(b_filename, "b3", bulk.B)
-        
-        ax_filename = joinpath(output_dir, "ax$(step).h5")
-        h5write(ax_filename, "a3x", a3_x_vals)
-        bx_filename = joinpath(output_dir, "bx$(step).h5")
-        h5write(bx_filename, "b3x", b3_x_vals)
-        gy_filename = joinpath(output_dir, "gy$(step).h5")
-        h5write(gy_filename, "g3y", g3_y_vals)
-        source_filename = joinpath(output_dir, "sigma$(step).h5")
-        h5write(source_filename, "sigma", source_vals)
+	
         
     end
 	
