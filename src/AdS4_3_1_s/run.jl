@@ -68,34 +68,48 @@ function run_model(grid::SpecCartGrid3D, id::InitialData, evoleq::EvolutionEquat
     rhs! = setup_rhs(evolvars, bulkconstrains, bulkderivs, horizoncache,
                      systems, integration,t0)
 
-    #=
-    limit the default integrator dtmax and qmax values. see:
-      https://diffeq.sciml.ai/latest/extras/timestepping/
-      https://diffeq.sciml.ai/latest/basics/common_solver_opts/
-    =#
-    dtmax = estimate_dtmax(atlas)
-    qmax  = 1.2
+    # prepare time integrator
+
+
+
+
+
 
     if isa(integration.dt, Number)
-        dt0   = integration.dt
+        dt0 = integration.dt
     elseif integration.dt == :auto
-        dt0   = 0.5 * dtmax
+        dt0 = 0.5 * dtmax
     else
         error("Unknown dt value")
     end
-    tmax  = integration.tmax
-
+    alg = integration.ODE_method
     # decide in the evolution loop when to terminate the run, so set here an
     # impossibly large value for tstop
     tspan = (0.0, 1.e20)
-    alg   = integration.ODE_method
 
-    prob  = ODEProblem(rhs!, evolvars, tspan, evoleq)
+    if isa(alg, OrdinaryDiffEq.OrdinaryDiffEqAlgorithm)
+        #=
+        limit the default integrator dtmax and qmax values. see:
+        https://diffeq.sciml.ai/latest/extras/timestepping/
+        https://diffeq.sciml.ai/latest/basics/common_solver_opts/
+        =#
+        dtmax = estimate_dtmax(atlas)
+        qmax  = 1.2
 
-    # https://diffeq.sciml.ai/stable/basics/integrator/
-    integrator = init(prob, alg, save_everystep=false, dt=dt0, dtmax=dtmax, qmax=qmax,
-                      adaptive=integration.adaptive, reltol=integration.reltol,
-                      calck=false)
+        prob  = ODEProblem(rhs!, evolvars, tspan, evoleq)
+        # https://diffeq.sciml.ai/stable/basics/integrator/
+        integrator = init(prob, alg, save_everystep=false, dt=dt0, dtmax=dtmax, qmax=qmax,
+                          adaptive=integration.adaptive, reltol=integration.reltol,
+                          calck=false)
+    elseif isa(alg, Jecco.ODESolver.ODEAlgorithm)
+        if integration.adaptive
+            error("adaptive time step not implemented for this integrator.")
+        end
+        prob = Jecco.ODESolver.ODEProblem(rhs!, evolvars, tspan, evoleq)
+        integrator = Jecco.ODESolver.ODEIntegrator(prob, alg, dt0)
+    else
+        error("Unknown option for integration.ODE_method")
+    end
 
     tinfo  = Jecco.TimeInfo(it0, t0, 0.0, 0.0)
 
@@ -143,9 +157,14 @@ function run_model(grid::SpecCartGrid3D, id::InitialData, evoleq::EvolutionEquat
     # for stdout info
     Jecco.out_info(tinfo.it, tinfo.t, 0.0, gauge.xi, "ξ", 1, 1)
 
+    tmax   = integration.tmax
     tstart = time()
     # start integration
-    for (u,t) in tuples(integrator)
+    #for (u,t) in tuples(integrator)
+    while true
+        step!(integrator)
+        t = integrator.t
+        u = integrator.u
         tinfo.it     += 1
         tinfo.dt      = integrator.dt
         tinfo.t       = t0 + t
@@ -178,14 +197,14 @@ function run_model(grid::SpecCartGrid3D, id::InitialData, evoleq::EvolutionEquat
         # terminate run?
         if t >= tmax || telapsed >= io.max_walltime
             checkpoint(u)
-            terminate!(integrator)
+            break
         end
         if io.termination_from_file && tinfo.it % io.check_file_every == 0
             if isfile(finish_him)
                 println("INFO: Found termination file.")
                 println("INFO: Triggering termination...")
                 checkpoint(u)
-                terminate!(integrator)
+                break
             end
         end
 
