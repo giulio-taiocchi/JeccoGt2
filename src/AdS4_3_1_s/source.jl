@@ -29,26 +29,51 @@ Sz_txy(t, x, y, ::NoSource) = 0.0
 
 Sz_tt(t, x, y, ::NoSource) = 0.0
 
-# sourced turbulence as a sum of changing sinusoidals
+
+# Sourced-driven turbulence: sequence of random Fourier blocks with smooth transitions.
+#
+# follows the paper
+# "Driven black holes: from Kolmogorov scaling to turbulent wakes.pdf"
+#
+# Notes:
+#  - All random draws happen once at construction time
+#  - b == 0 interval transitions from zero to block 1 smoothly
+#  - Mixed time-space derivatives include the b == 0 case
+#  - Use Random.seed!(s) before construction for reproducibility, or pass seed kwarg
+
 
 Base.@kwdef mutable struct RandomFourierSequence{T} <: Source
+    # time (user-updated by driver)
     time::T = 0.0
 
+    # geometry / sampling
     MM::Int          # number of blocks
     M::Int           # modes per block
-    delta::T         # duration of each block interval
-    kradius::T       # wavevector magnitude
+    delta::T         # duration of each block interval (Δ)
+    L::T             # physical domain size L (periodic domain [0,L]×[0,L])
+    kradius::T       # base wavenumber magnitude |K|
 
     # block data: Vector of length MM, each containing vectors of length M
-    C::Vector{Vector{T}}
-    kx::Vector{Vector{T}}
-    ky::Vector{Vector{T}}
-    phi::Vector{Vector{T}}
+    C::Vector{Vector{T}}     # amplitudes normalized per block
+    kx::Vector{Vector{T}}    # mode kx per block
+    ky::Vector{Vector{T}}    # mode ky per block
+    phi::Vector{Vector{T}}   # phase per block
 
-    step::Int = 0    # optional
+    step::Int = 0    # optional bookkeeping
 end
 
-function RandomFourierSequence(MM::Int, M::Int; kradius=1.0, delta=1.0)
+"""
+Constructor:
+  RandomFourierSequence(MM, M; kradius=1.0, delta=1.0, L=1.0, seed=nothing)
+
+Generates MM independent blocks, each with M modes.
+Set seed (integer) for reproducibility.
+"""
+function RandomFourierSequence(MM::Int, M::Int; kradius=1.0, delta=1.0, L=1.0, seed=nothing)
+    if seed !== nothing
+        Random.seed!(seed)
+    end
+
     C  = Vector{Vector{Float64}}(undef, MM)
     kx = Vector{Vector{Float64}}(undef, MM)
     ky = Vector{Vector{Float64}}(undef, MM)
@@ -56,7 +81,7 @@ function RandomFourierSequence(MM::Int, M::Int; kradius=1.0, delta=1.0)
 
     for b in 1:MM
         Craw = rand(M)
-        C[b] = Craw ./ sum(Craw)
+        C[b] = Craw ./ sum(Craw) # normalize so sum_i C_i = 1
 
         θ = 2π .* rand(M)
         kx[b] = kradius .* cos.(θ)
@@ -70,6 +95,7 @@ function RandomFourierSequence(MM::Int, M::Int; kradius=1.0, delta=1.0)
         MM = MM,
         M = M,
         delta = delta,
+        L = L,
         kradius = kradius,
         C = C,
         kx = kx,
@@ -78,90 +104,108 @@ function RandomFourierSequence(MM::Int, M::Int; kradius=1.0, delta=1.0)
     )
 end
 
-@inline function spatial_block(x, y, b, RS::RandomFourierSequence)
+# -----------------------
+# low-level mode evaluator
+# -----------------------
+@inline function _mode_arg(two_pi_over_L, kx, ky, x, y, phi)
+    return two_pi_over_L * (kx * x + ky * y) + phi
+end
+
+@inline function mode_with_phase(two_pi_over_L, kx, ky, x, y, phi, shift)
+    return cos(_mode_arg(two_pi_over_L, kx, ky, x, y, phi) + shift)
+end
+
+# -----------------------
+# block spatial sum F^{(b)}(x,y)
+# -----------------------
+@inline function spatial_block(x::Float64, y::Float64, b::Int, RS::RandomFourierSequence)
     s = 0.0
+    two_pi_over_L = 2π / RS.L
     @inbounds @simd for m in 1:RS.M
-        s += RS.C[b][m] * cos(RS.kx[b][m]*x + RS.ky[b][m]*y + RS.phi[b][m])
+        s += RS.C[b][m] * cos(two_pi_over_L * (RS.kx[b][m]*x + RS.ky[b][m]*y) + RS.phi[b][m])
     end
     return s
 end
 
-@inline function Sz(t, x, y, RS::RandomFourierSequence)
-    δ = RS.delta
-    b = floor(Int, t/δ)
-
-    # interpolation pair (i1 = current block, i2 = next)
-    i1 = mod(b, RS.MM) + 1
-    i2 = mod(b + 1, RS.MM) + 1
-
-    # interpolation angle
-    θ = (π/2) * ((t - b*δ)/δ)
-    w1 = cos(θ)
-    w2 = sin(θ)
-
-    # special case: first interval, previous block = zero
-    if b == 0
-        return w2 * spatial_block(x, y, 1, RS)
-    end
-
-    return w1 * spatial_block(x, y, i1, RS) +
-           w2 * spatial_block(x, y, i2, RS)
-end
-
-@inline function mode_with_phase(kx, ky, x, y, phi, shift)
-    return cos(kx*x + ky*y + phi + shift)
-end
-
-@inline function block_dpq(x, y, b, p, q, RS::RandomFourierSequence)
+# -----------------------
+# generalized derivative of a single block:
+# block_dpq returns ∂_x^p ∂_y^q F^{(b)}(x,y)
+# chain rule implies multiplication by (2π/L)^(p+q) * kx^p * ky^q
+# and a phase shift of (π/2)*(p+q)
+# -----------------------
+@inline function block_dpq(x::Float64, y::Float64, b::Int, p::Int, q::Int, RS::RandomFourierSequence)
     s = 0.0
-    shift = (p+q)*(π/2)
+    two_pi_over_L = 2π / RS.L
+    shift = (p + q) * (π/2)
+    prefactor_scale = (two_pi_over_L)^(p + q)
     @inbounds @simd for m in 1:RS.M
         kxm = RS.kx[b][m]
         kym = RS.ky[b][m]
         Cm  = RS.C[b][m]
-        s += Cm * (kxm^p) * (kym^q) *
-             mode_with_phase(kxm, kym, x, y, RS.phi[b][m], shift)
+        # multiply by (kx^p)*(ky^q) and by (2π/L)^(p+q)
+        s += Cm * (kxm^p) * (kym^q) * prefactor_scale *
+             mode_with_phase(two_pi_over_L, kxm, kym, x, y, RS.phi[b][m], shift)
     end
     return s
 end
 
+# convenient wrappers for p,q pairs (up to order 4)
 @inline block_x(   x,y,b,RS) = block_dpq(x,y,b,1,0,RS)
 @inline block_xx(  x,y,b,RS) = block_dpq(x,y,b,2,0,RS)
 @inline block_xxx( x,y,b,RS) = block_dpq(x,y,b,3,0,RS)
 @inline block_xxxx(x,y,b,RS) = block_dpq(x,y,b,4,0,RS)
+
 @inline block_y(   x,y,b,RS) = block_dpq(x,y,b,0,1,RS)
 @inline block_yy(  x,y,b,RS) = block_dpq(x,y,b,0,2,RS)
 @inline block_yyy( x,y,b,RS) = block_dpq(x,y,b,0,3,RS)
 @inline block_yyyy(x,y,b,RS) = block_dpq(x,y,b,0,4,RS)
+
 @inline block_xy(  x,y,b,RS) = block_dpq(x,y,b,1,1,RS)
 @inline block_xxy( x,y,b,RS) = block_dpq(x,y,b,2,1,RS)
 @inline block_xyy( x,y,b,RS) = block_dpq(x,y,b,1,2,RS)
 @inline block_xxyy(x,y,b,RS) = block_dpq(x,y,b,2,2,RS)
 
-@inline function interp_data(t, RS)
+# -----------------------
+# returns (b, i1, i2, θ, w1, w2, dθdt)
+# -----------------------
+@inline function interp_data(t::Float64, RS::RandomFourierSequence)
     δ = RS.delta
-    b = floor(Int, t/δ)
-    i1 = mod(b, RS.MM) + 1
-    i2 = mod(b+1, RS.MM) + 1
+    b = floor(Int, t / δ)           # current interval index (0-based)
+    i1 = mod(b, RS.MM) + 1         # current block index (1-based)
+    i2 = mod(b + 1, RS.MM) + 1     # next block index (1-based)
 
-    θ = (π/2) * ((t - b*δ)/δ)
+    θ = (π/2) * ((t - b * δ) / δ)   # angle ∈ [0, π/2]
     w1 = cos(θ)
     w2 = sin(θ)
-    dθdt = (π/2)/δ
+    dθdt = (π/2) / δ
 
     return b, i1, i2, θ, w1, w2, dθdt
 end
 
-@inline function F_dpq(t, x, y, p, q, RS)
+# -----------------------
+# combined F_dpq = ∂_x^p ∂_y^q S(t,x,y)
+# where S = cosθ * F^{(i1)} + sinθ * F^{(i2)},
+# and for b==0 the "previous" block is zero by convention
+# -----------------------
+@inline function F_dpq(t::Float64, x::Float64, y::Float64, p::Int, q::Int, RS::RandomFourierSequence)
     b, i1, i2, θ, w1, w2, dθdt = interp_data(t, RS)
 
     if b == 0
-        # first block is zero, only use second
+        # previous block is zero; only w2 * F^{(1)}
         return w2 * block_dpq(x, y, 1, p, q, RS)
     end
 
     return w1 * block_dpq(x, y, i1, p, q, RS) +
            w2 * block_dpq(x, y, i2, p, q, RS)
+end
+
+# -----------------------
+# Primary Sz (value) and spatial derivatives up to 4th order
+# All arguments use Float64 to avoid ambiguous dispatch in inner loops
+# -----------------------
+@inline function Sz(t::Float64, x::Float64, y::Float64, RS::RandomFourierSequence)
+    # return S(t,x,y) with same logic as F_dpq with p=q=0
+    return F_dpq(t, x, y, 0, 0, RS)
 end
 
 @inline Sz_x(   t,x,y,RS) = F_dpq(t,x,y,1,0,RS)
@@ -179,83 +223,85 @@ end
 @inline Sz_xyy( t,x,y,RS) = F_dpq(t,x,y,1,2,RS)
 @inline Sz_xxyy(t,x,y,RS) = F_dpq(t,x,y,2,2,RS)
 
-@inline function Sz_t(t, x, y, RS::RandomFourierSequence)
+# -----------------------
+# Time derivative Sz_t and mixed time-space derivatives
+# (the spatial blocks themselves have no explicit t-dependence)
+# Sz_t = θ'(t) * (-sinθ F_i1 + cosθ F_i2)
+# if b==0: F_i1 == 0 and F_i2 == block 1
+# -----------------------
+@inline function Sz_t(t::Float64, x::Float64, y::Float64, RS::RandomFourierSequence)
     b, i1, i2, θ, w1, w2, dθdt = interp_data(t, RS)
 
     if b == 0
         F2 = block_dpq(x, y, 1, 0, 0, RS)
-        return  cos(θ)*dθdt*F2
+        return  cos(θ) * dθdt * F2
     else
         F1 = block_dpq(x, y, i1, 0, 0, RS)
         F2 = block_dpq(x, y, i2, 0, 0, RS)
-        return (-sin(θ)*dθdt)*F1 + (cos(θ)*dθdt)*F2
+        return (-sin(θ) * dθdt) * F1 + (cos(θ) * dθdt) * F2
     end
 end
 
-@inline function Sz_tx(t, x, y, RS)
+@inline function Sz_tx(t::Float64, x::Float64, y::Float64, RS::RandomFourierSequence)
     b, i1, i2, θ, w1, w2, dθdt = interp_data(t, RS)
-
     if b == 0
-        Fx2 = block_x(x, y, 1, RS)
-        return  cos(θ)*dθdt*Fx2
+        Fx2 = block_dpq(x, y, 1, 1, 0, RS)
+        return cos(θ) * dθdt * Fx2
     else
-        Fx1 = block_x(x, y, i1, RS)
-        Fx2 = block_x(x, y, i2, RS)
-        return (-sin(θ)*dθdt)*Fx1 + (cos(θ)*dθdt)*Fx2
+        Fx1 = block_dpq(x, y, i1, 1, 0, RS)
+        Fx2 = block_dpq(x, y, i2, 1, 0, RS)
+        return (-sin(θ) * dθdt) * Fx1 + (cos(θ) * dθdt) * Fx2
     end
 end
 
-@inline function Sz_ty(t, x, y, RS)
+@inline function Sz_ty(t::Float64, x::Float64, y::Float64, RS::RandomFourierSequence)
     b, i1, i2, θ, w1, w2, dθdt = interp_data(t, RS)
-
     if b == 0
-        Fy2 = block_y(x, y, 1, RS)
-        return  cos(θ)*dθdt*Fy2
+        Fy2 = block_dpq(x, y, 1, 0, 1, RS)
+        return cos(θ) * dθdt * Fy2
     else
-        Fy1 = block_y(x, y, i1, RS)
-        Fy2 = block_y(x, y, i2, RS)
-        return (-sin(θ)*dθdt)*Fy1 + (cos(θ)*dθdt)*Fy2
+        Fy1 = block_dpq(x, y, i1, 0, 1, RS)
+        Fy2 = block_dpq(x, y, i2, 0, 1, RS)
+        return (-sin(θ) * dθdt) * Fy1 + (cos(θ) * dθdt) * Fy2
     end
 end
 
-@inline function Sz_txx(t, x, y, RS)
+@inline function Sz_txx(t::Float64, x::Float64, y::Float64, RS::RandomFourierSequence)
     b, i1, i2, θ, w1, w2, dθdt = interp_data(t, RS)
-
     if b == 0
-        Fxx2 = block_xx(x, y, 1, RS)
-        return  cos(θ)*dθdt*Fxx2
+        Fxx2 = block_dpq(x, y, 1, 2, 0, RS)
+        return cos(θ) * dθdt * Fxx2
     else
-        Fxx1 = block_xx(x, y, i1, RS)
-        Fxx2 = block_xx(x, y, i2, RS)
-        return (-sin(θ)*dθdt)*Fxx1 + (cos(θ)*dθdt)*Fxx2
+        Fxx1 = block_dpq(x, y, i1, 2, 0, RS)
+        Fxx2 = block_dpq(x, y, i2, 2, 0, RS)
+        return (-sin(θ) * dθdt) * Fxx1 + (cos(θ) * dθdt) * Fxx2
     end
 end
 
-@inline function Sz_tyy(t, x, y, RS)
+@inline function Sz_tyy(t::Float64, x::Float64, y::Float64, RS::RandomFourierSequence)
     b, i1, i2, θ, w1, w2, dθdt = interp_data(t, RS)
-
     if b == 0
-        Fyy2 = block_yy(x, y, 1, RS)
-        return  cos(θ)*dθdt*Fyy2
+        Fyy2 = block_dpq(x, y, 1, 0, 2, RS)
+        return cos(θ) * dθdt * Fyy2
     else
-        Fyy1 = block_yy(x, y, i1, RS)
-        Fyy2 = block_yy(x, y, i2, RS)
-        return (-sin(θ)*dθdt)*Fyy1 + (cos(θ)*dθdt)*Fyy2
+        Fyy1 = block_dpq(x, y, i1, 0, 2, RS)
+        Fyy2 = block_dpq(x, y, i2, 0, 2, RS)
+        return (-sin(θ) * dθdt) * Fyy1 + (cos(θ) * dθdt) * Fyy2
     end
 end
 
-@inline function Sz_txy(t, x, y, RS)
+@inline function Sz_txy(t::Float64, x::Float64, y::Float64, RS::RandomFourierSequence)
     b, i1, i2, θ, w1, w2, dθdt = interp_data(t, RS)
-
     if b == 0
-        Fxy2 = block_xy(x, y, 1, RS)
-        return  cos(θ)*dθdt*Fxy2
+        Fxy2 = block_dpq(x, y, 1, 1, 1, RS)
+        return cos(θ) * dθdt * Fxy2
     else
-        Fxy1 = block_xy(x, y, i1, RS)
-        Fxy2 = block_xy(x, y, i2, RS)
-        return (-sin(θ)*dθdt)*Fxy1 + (cos(θ)*dθdt)*Fxy2
+        Fxy1 = block_dpq(x, y, i1, 1, 1, RS)
+        Fxy2 = block_dpq(x, y, i2, 1, 1, RS)
+        return (-sin(θ) * dθdt) * Fxy1 + (cos(θ) * dθdt) * Fxy2
     end
 end
+
 
 
 
