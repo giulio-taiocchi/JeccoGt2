@@ -29,6 +29,238 @@ Sz_txy(t, x, y, ::NoSource) = 0.0
 
 Sz_tt(t, x, y, ::NoSource) = 0.0
 
+# sourced turbulence as a sum of changing sinusoidals
+
+Base.@kwdef mutable struct RandomFourierSequence{T} <: Source
+    time::T = 0.0
+
+    MM::Int          # number of blocks
+    M::Int           # modes per block
+    delta::T         # duration of each block interval
+    kradius::T       # wavevector magnitude
+
+    # block data: Vector of length MM, each containing vectors of length M
+    C::Vector{Vector{T}}
+    kx::Vector{Vector{T}}
+    ky::Vector{Vector{T}}
+    phi::Vector{Vector{T}}
+
+    step::Int = 0    # optional
+end
+
+function RandomFourierSequence(MM::Int, M::Int; kradius=1.0, delta=1.0)
+    C  = Vector{Vector{Float64}}(undef, MM)
+    kx = Vector{Vector{Float64}}(undef, MM)
+    ky = Vector{Vector{Float64}}(undef, MM)
+    phi = Vector{Vector{Float64}}(undef, MM)
+
+    for b in 1:MM
+        Craw = rand(M)
+        C[b] = Craw ./ sum(Craw)
+
+        θ = 2π .* rand(M)
+        kx[b] = kradius .* cos.(θ)
+        ky[b] = kradius .* sin.(θ)
+
+        phi[b] = 2π .* rand(M)
+    end
+
+    return RandomFourierSequence(
+        time = 0.0,
+        MM = MM,
+        M = M,
+        delta = delta,
+        kradius = kradius,
+        C = C,
+        kx = kx,
+        ky = ky,
+        phi = phi,
+    )
+end
+
+@inline function spatial_block(x, y, b, RS::RandomFourierSequence)
+    s = 0.0
+    @inbounds @simd for m in 1:RS.M
+        s += RS.C[b][m] * cos(RS.kx[b][m]*x + RS.ky[b][m]*y + RS.phi[b][m])
+    end
+    return s
+end
+
+@inline function Sz(t, x, y, RS::RandomFourierSequence)
+    δ = RS.delta
+    b = floor(Int, t/δ)
+
+    # interpolation pair (i1 = current block, i2 = next)
+    i1 = mod(b, RS.MM) + 1
+    i2 = mod(b + 1, RS.MM) + 1
+
+    # interpolation angle
+    θ = (π/2) * ((t - b*δ)/δ)
+    w1 = cos(θ)
+    w2 = sin(θ)
+
+    # special case: first interval, previous block = zero
+    if b == 0
+        return w2 * spatial_block(x, y, 1, RS)
+    end
+
+    return w1 * spatial_block(x, y, i1, RS) +
+           w2 * spatial_block(x, y, i2, RS)
+end
+
+@inline function mode_with_phase(kx, ky, x, y, phi, shift)
+    return cos(kx*x + ky*y + phi + shift)
+end
+
+@inline function block_dpq(x, y, b, p, q, RS::RandomFourierSequence)
+    s = 0.0
+    shift = (p+q)*(π/2)
+    @inbounds @simd for m in 1:RS.M
+        kxm = RS.kx[b][m]
+        kym = RS.ky[b][m]
+        Cm  = RS.C[b][m]
+        s += Cm * (kxm^p) * (kym^q) *
+             mode_with_phase(kxm, kym, x, y, RS.phi[b][m], shift)
+    end
+    return s
+end
+
+@inline block_x(   x,y,b,RS) = block_dpq(x,y,b,1,0,RS)
+@inline block_xx(  x,y,b,RS) = block_dpq(x,y,b,2,0,RS)
+@inline block_xxx( x,y,b,RS) = block_dpq(x,y,b,3,0,RS)
+@inline block_xxxx(x,y,b,RS) = block_dpq(x,y,b,4,0,RS)
+@inline block_y(   x,y,b,RS) = block_dpq(x,y,b,0,1,RS)
+@inline block_yy(  x,y,b,RS) = block_dpq(x,y,b,0,2,RS)
+@inline block_yyy( x,y,b,RS) = block_dpq(x,y,b,0,3,RS)
+@inline block_yyyy(x,y,b,RS) = block_dpq(x,y,b,0,4,RS)
+@inline block_xy(  x,y,b,RS) = block_dpq(x,y,b,1,1,RS)
+@inline block_xxy( x,y,b,RS) = block_dpq(x,y,b,2,1,RS)
+@inline block_xyy( x,y,b,RS) = block_dpq(x,y,b,1,2,RS)
+@inline block_xxyy(x,y,b,RS) = block_dpq(x,y,b,2,2,RS)
+
+@inline function interp_data(t, RS)
+    δ = RS.delta
+    b = floor(Int, t/δ)
+    i1 = mod(b, RS.MM) + 1
+    i2 = mod(b+1, RS.MM) + 1
+
+    θ = (π/2) * ((t - b*δ)/δ)
+    w1 = cos(θ)
+    w2 = sin(θ)
+    dθdt = (π/2)/δ
+
+    return b, i1, i2, θ, w1, w2, dθdt
+end
+
+@inline function F_dpq(t, x, y, p, q, RS)
+    b, i1, i2, θ, w1, w2, dθdt = interp_data(t, RS)
+
+    if b == 0
+        # first block is zero, only use second
+        return w2 * block_dpq(x, y, 1, p, q, RS)
+    end
+
+    return w1 * block_dpq(x, y, i1, p, q, RS) +
+           w2 * block_dpq(x, y, i2, p, q, RS)
+end
+
+@inline Sz_x(   t,x,y,RS) = F_dpq(t,x,y,1,0,RS)
+@inline Sz_xx(  t,x,y,RS) = F_dpq(t,x,y,2,0,RS)
+@inline Sz_xxx( t,x,y,RS) = F_dpq(t,x,y,3,0,RS)
+@inline Sz_xxxx(t,x,y,RS) = F_dpq(t,x,y,4,0,RS)
+
+@inline Sz_y(   t,x,y,RS) = F_dpq(t,x,y,0,1,RS)
+@inline Sz_yy(  t,x,y,RS) = F_dpq(t,x,y,0,2,RS)
+@inline Sz_yyy( t,x,y,RS) = F_dpq(t,x,y,0,3,RS)
+@inline Sz_yyyy(t,x,y,RS) = F_dpq(t,x,y,0,4,RS)
+
+@inline Sz_xy(  t,x,y,RS) = F_dpq(t,x,y,1,1,RS)
+@inline Sz_xxy( t,x,y,RS) = F_dpq(t,x,y,2,1,RS)
+@inline Sz_xyy( t,x,y,RS) = F_dpq(t,x,y,1,2,RS)
+@inline Sz_xxyy(t,x,y,RS) = F_dpq(t,x,y,2,2,RS)
+
+@inline function Sz_t(t, x, y, RS::RandomFourierSequence)
+    b, i1, i2, θ, w1, w2, dθdt = interp_data(t, RS)
+
+    if b == 0
+        F2 = block_dpq(x, y, 1, 0, 0, RS)
+        return  cos(θ)*dθdt*F2
+    else
+        F1 = block_dpq(x, y, i1, 0, 0, RS)
+        F2 = block_dpq(x, y, i2, 0, 0, RS)
+        return (-sin(θ)*dθdt)*F1 + (cos(θ)*dθdt)*F2
+    end
+end
+
+@inline function Sz_tx(t, x, y, RS)
+    b, i1, i2, θ, w1, w2, dθdt = interp_data(t, RS)
+
+    if b == 0
+        Fx2 = block_x(x, y, 1, RS)
+        return  cos(θ)*dθdt*Fx2
+    else
+        Fx1 = block_x(x, y, i1, RS)
+        Fx2 = block_x(x, y, i2, RS)
+        return (-sin(θ)*dθdt)*Fx1 + (cos(θ)*dθdt)*Fx2
+    end
+end
+
+@inline function Sz_ty(t, x, y, RS)
+    b, i1, i2, θ, w1, w2, dθdt = interp_data(t, RS)
+
+    if b == 0
+        Fy2 = block_y(x, y, 1, RS)
+        return  cos(θ)*dθdt*Fy2
+    else
+        Fy1 = block_y(x, y, i1, RS)
+        Fy2 = block_y(x, y, i2, RS)
+        return (-sin(θ)*dθdt)*Fy1 + (cos(θ)*dθdt)*Fy2
+    end
+end
+
+@inline function Sz_txx(t, x, y, RS)
+    b, i1, i2, θ, w1, w2, dθdt = interp_data(t, RS)
+
+    if b == 0
+        Fxx2 = block_xx(x, y, 1, RS)
+        return  cos(θ)*dθdt*Fxx2
+    else
+        Fxx1 = block_xx(x, y, i1, RS)
+        Fxx2 = block_xx(x, y, i2, RS)
+        return (-sin(θ)*dθdt)*Fxx1 + (cos(θ)*dθdt)*Fxx2
+    end
+end
+
+@inline function Sz_tyy(t, x, y, RS)
+    b, i1, i2, θ, w1, w2, dθdt = interp_data(t, RS)
+
+    if b == 0
+        Fyy2 = block_yy(x, y, 1, RS)
+        return  cos(θ)*dθdt*Fyy2
+    else
+        Fyy1 = block_yy(x, y, i1, RS)
+        Fyy2 = block_yy(x, y, i2, RS)
+        return (-sin(θ)*dθdt)*Fyy1 + (cos(θ)*dθdt)*Fyy2
+    end
+end
+
+@inline function Sz_txy(t, x, y, RS)
+    b, i1, i2, θ, w1, w2, dθdt = interp_data(t, RS)
+
+    if b == 0
+        Fxy2 = block_xy(x, y, 1, RS)
+        return  cos(θ)*dθdt*Fxy2
+    else
+        Fxy1 = block_xy(x, y, i1, RS)
+        Fxy2 = block_xy(x, y, i2, RS)
+        return (-sin(θ)*dθdt)*Fxy1 + (cos(θ)*dθdt)*Fxy2
+    end
+end
+
+
+
+# Quench
+
 Base.@kwdef mutable struct Quench{T} <: Source
 	time :: T = 0.0
 	Amp :: T = 0.01

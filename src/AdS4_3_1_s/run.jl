@@ -78,7 +78,8 @@ function run_model(grid::SpecCartGrid3D, id::InitialData, evoleq::EvolutionEquat
     if isa(integration.dt, Number)
         dt0 = integration.dt
     elseif integration.dt == :auto
-        dt0 = 0.5 * dtmax
+        #dt0 = 0.5 * dtmax
+        dt0 = dtmax
     else
         error("Unknown dt value")
     end
