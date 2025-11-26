@@ -42,7 +42,7 @@ Sz_tt(t, x, y, ::NoSource) = 0.0
 #  - Use Random.seed!(s) before construction for reproducibility, or pass seed kwarg
 
 
-Base.@kwdef mutable struct RandomFourierSequence{T} <: Source
+mutable struct RandomFourierSequence{T} <: Source
     # time (user-updated by driver)
     time::T = 0.0
 

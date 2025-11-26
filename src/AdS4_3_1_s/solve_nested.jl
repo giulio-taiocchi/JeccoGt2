@@ -149,6 +149,7 @@ function solve_S!(bulk::Bulk, bc::BC, gauge::Gauge, deriv::BulkDeriv, aux_acc,
 
     @fastmath @inbounds @threads for j in 1:Ny
     	y = sys.ycoord[j]
+    	
         @inbounds for i in 1:Nx
             id  = Threads.threadid()
             aux = aux_acc[id]
