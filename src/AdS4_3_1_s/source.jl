@@ -190,10 +190,10 @@ end
 # -----------------------
 @inline function Sz(t::Float64, x::Float64, y::Float64, RS::RandomFourierSequence)
     # return S(t,x,y) with same logic as F_dpq with p=q=0
-    return F_dpq(t, x, y, 0, 0, RS)
+    return 1+F_dpq(t, x, y, 0, 0, RS)
 end
 
-@inline Sz_x(   t,x,y,RS) = 1+F_dpq(t,x,y,1,0,RS)
+@inline Sz_x(   t,x,y,RS) = F_dpq(t,x,y,1,0,RS)
 @inline Sz_xx(  t,x,y,RS) = F_dpq(t,x,y,2,0,RS)
 @inline Sz_xxx( t,x,y,RS) = F_dpq(t,x,y,3,0,RS)
 @inline Sz_xxxx(t,x,y,RS) = F_dpq(t,x,y,4,0,RS)
