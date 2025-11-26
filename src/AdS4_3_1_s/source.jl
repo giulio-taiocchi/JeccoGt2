@@ -42,25 +42,25 @@ Sz_tt(t, x, y, ::NoSource) = 0.0
 #  - Use Random.seed!(s) before construction for reproducibility, or pass seed kwarg
 
 
-Base.@kwdef mutable struct RandomFourierSequence{T} <: Source
-    # time (user-updated by driver)
-    time::T = 0.0
 
-    # geometry / sampling
-    MM::Int          # number of blocks
-    M::Int           # modes per block
-    delta::T         # duration of each block interval (Δ)
-    L::T             # physical domain size L (periodic domain [0,L]×[0,L])
-    kradius::T       # base wavenumber magnitude |K|
 
-    # block data: Vector of length MM, each containing vectors of length M
-    C::Vector{Vector{T}} = Vector{Vector{Float64}}()    # amplitudes normalized per block
-    kx::Vector{Vector{T}} = Vector{Vector{Float64}}()    # mode kx per block
-    ky::Vector{Vector{T}} = Vector{Vector{Float64}}()   # mode ky per block
-    phi::Vector{Vector{T}} = Vector{Vector{Float64}}()   # phase per block
+mutable struct RandomFourierSequence{T} <: Source
+    time::T
 
-    step::Int = 0    # optional bookkeeping
+    MM::Int
+    M::Int
+    delta::T
+    L::T
+    kradius::T
+
+    C::Vector{Vector{T}}
+    kx::Vector{Vector{T}}
+    ky::Vector{Vector{T}}
+    phi::Vector{Vector{T}}
+
+    step::Int
 end
+
 
 """
 Constructor:
