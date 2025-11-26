@@ -155,7 +155,6 @@ end
 # -----------------------
 @inline function interp_data(t::Float64, RS::RandomFourierSequence)
     δ = RS.delta
-    println("delta is $δ")
     b = floor(Int, t / δ)           # current interval index (0-based)
     i1 = mod(b, RS.MM) + 1         # current block index (1-based)
     i2 = mod(b + 1, RS.MM) + 1     # next block index (1-based)
