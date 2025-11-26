@@ -155,6 +155,7 @@ end
 # -----------------------
 @inline function interp_data(t::Float64, RS::RandomFourierSequence)
     δ = RS.delta
+    println("delta is $δ")
     b = floor(Int, t / δ)           # current interval index (0-based)
     i1 = mod(b, RS.MM) + 1         # current block index (1-based)
     i2 = mod(b + 1, RS.MM) + 1     # next block index (1-based)
@@ -174,7 +175,7 @@ end
 # -----------------------
 @inline function F_dpq(t::Float64, x::Float64, y::Float64, p::Int, q::Int, RS::RandomFourierSequence)
     b, i1, i2, θ, w1, w2, dθdt = interp_data(t, RS)
-
+    println("derivative: x:$p y:$q")
     if b == 0
         # previous block is zero; only w2 * F^{(1)}
         return w2 * block_dpq(x, y, 1, p, q, RS)
