@@ -59,6 +59,7 @@ mutable struct RandomFourierSequence{T} <: Source
     phi::Vector{Vector{T}}
 
     step::Int
+    A::T
 end
 
 
@@ -69,7 +70,7 @@ Constructor:
 Generates MM independent blocks, each with M modes.
 Set seed (integer) for reproducibility.
 """
-function RandomFourierSequence(; MM, M, kradius=1.0, delta=1.0, L=1.0, seed=nothing)
+function RandomFourierSequence(; MM, M, kradius=1.0, delta=1.0, L=1.0, seed=nothing, A=1.0)
     if seed !== nothing
         Random.seed!(seed)
     end
@@ -82,7 +83,7 @@ function RandomFourierSequence(; MM, M, kradius=1.0, delta=1.0, L=1.0, seed=noth
 
     phi = [2π .* rand(M) for _ in 1:MM]
 
-    return RandomFourierSequence(0.0, MM, M, delta, L, kradius, C, kx, ky, phi, 0)
+    return RandomFourierSequence(0.0, MM, M, delta, L, kradius, C, kx, ky, phi, 0,A)
 end
 
 
@@ -101,12 +102,13 @@ end
 # block spatial sum F^{(b)}(x,y)
 # -----------------------
 @inline function spatial_block(x::Float64, y::Float64, b::Int, RS::RandomFourierSequence)
+    A = RS.A
     s = 0.0
     two_pi_over_L = 2π / RS.L
     @inbounds @simd for m in 1:RS.M
         s += RS.C[b][m] * cos(two_pi_over_L * (RS.kx[b][m]*x + RS.ky[b][m]*y) + RS.phi[b][m])
     end
-    return s
+    return A*s
 end
 
 # -----------------------
@@ -116,6 +118,7 @@ end
 # and a phase shift of (π/2)*(p+q)
 # -----------------------
 @inline function block_dpq(x::Float64, y::Float64, b::Int, p::Int, q::Int, RS::RandomFourierSequence)
+    A = RS.A
     s = 0.0
     two_pi_over_L = 2π / RS.L
     shift = (p + q) * (π/2)
@@ -128,7 +131,7 @@ end
         s += Cm * (kxm^p) * (kym^q) * prefactor_scale *
              mode_with_phase(two_pi_over_L, kxm, kym, x, y, RS.phi[b][m], shift)
     end
-    return s
+    return A*s
 end
 
 # convenient wrappers for p,q pairs (up to order 4)
