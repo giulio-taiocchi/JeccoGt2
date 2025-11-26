@@ -284,6 +284,20 @@ end
     end
 end
 
+@inline function Sz_tt(t::Float64, x::Float64, y::Float64, RS::RandomFourierSequence)
+    b, i1, i2, θ, w1, w2, dθdt = interp_data(t, RS)
+    dθdt2 = dθdt * dθdt
+
+    if b == 0
+        # F_i1 = 0, F_i2 = block 1
+        F2 = block_dpq(x, y, 1, 0, 0, RS)
+        return -dθdt2 * w2 * F2
+    else
+        F1 = block_dpq(x, y, i1, 0, 0, RS)
+        F2 = block_dpq(x, y, i2, 0, 0, RS)
+        return -dθdt2 * (w1 * F1 + w2 * F2)
+    end
+end
 
 
 
