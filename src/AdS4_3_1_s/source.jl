@@ -54,10 +54,10 @@ Base.@kwdef mutable struct RandomFourierSequence{T} <: Source
     kradius::T       # base wavenumber magnitude |K|
 
     # block data: Vector of length MM, each containing vectors of length M
-    C::Vector{Vector{T}} = Vector{Vector{T}}()    # amplitudes normalized per block
-    kx::Vector{Vector{T}} = Vector{Vector{T}}()    # mode kx per block
-    ky::Vector{Vector{T}} = Vector{Vector{T}}()   # mode ky per block
-    phi::Vector{Vector{T}} = Vector{Vector{T}}()   # phase per block
+    C::Vector{Vector{T}} = Vector{Vector{Float64}}()    # amplitudes normalized per block
+    kx::Vector{Vector{T}} = Vector{Vector{Float64}}()    # mode kx per block
+    ky::Vector{Vector{T}} = Vector{Vector{Float64}}()   # mode ky per block
+    phi::Vector{Vector{T}} = Vector{Vector{Float64}}()   # phase per block
 
     step::Int = 0    # optional bookkeeping
 end
