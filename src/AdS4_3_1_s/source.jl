@@ -69,40 +69,22 @@ Constructor:
 Generates MM independent blocks, each with M modes.
 Set seed (integer) for reproducibility.
 """
-function RandomFourierSequence(MM::Int, M::Int; kradius=1.0, delta=1.0, L=1.0, seed=nothing)
+function RandomFourierSequence(; MM, M, kradius=1.0, delta=1.0, L=1.0, seed=nothing)
     if seed !== nothing
         Random.seed!(seed)
     end
 
-    C  = Vector{Vector{Float64}}(undef, MM)
-    kx = Vector{Vector{Float64}}(undef, MM)
-    ky = Vector{Vector{Float64}}(undef, MM)
-    phi = Vector{Vector{Float64}}(undef, MM)
+    C  = [normalize(rand(M)) for _ in 1:MM]
+    θ  = [2π .* rand(M) for _ in 1:MM]
 
-    for b in 1:MM
-        Craw = rand(M)
-        C[b] = Craw ./ sum(Craw) # normalize so sum_i C_i = 1
+    kx = [kradius .* cos.(θb) for θb in θ]
+    ky = [kradius .* sin.(θb) for θb in θ]
 
-        θ = 2π .* rand(M)
-        kx[b] = kradius .* cos.(θ)
-        ky[b] = kradius .* sin.(θ)
+    phi = [2π .* rand(M) for _ in 1:MM]
 
-        phi[b] = 2π .* rand(M)
-    end
-
-    return RandomFourierSequence(
-        time = 0.0,
-        MM = MM,
-        M = M,
-        delta = delta,
-        L = L,
-        kradius = kradius,
-        C = C,
-        kx = kx,
-        ky = ky,
-        phi = phi,
-    )
+    return RandomFourierSequence(0.0, MM, M, delta, L, kradius, C, kx, ky, phi, 0)
 end
+
 
 # -----------------------
 # low-level mode evaluator
