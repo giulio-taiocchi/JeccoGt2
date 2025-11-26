@@ -131,7 +131,7 @@ of replacing the last line of the A_mat matrix and last entry of b_vec vector.
 function solve_S!(bulk::Bulk, bc::BC, gauge::Gauge, deriv::BulkDeriv, aux_acc,
                   sys::System, evoleq::AffineNull)
     Nu, Nx, Ny = size(sys)
-
+    println("solving for S")
     Du_B   = deriv.Du_B
     Du_G    = deriv.Du_G
     # Duu_B  = deriv.Duu_B
@@ -207,6 +207,7 @@ end
 function solve_Fxy!(bulk::Bulk, bc::BC, gauge::Gauge, deriv::BulkDeriv, aux_acc,
                     sys::System, evoleq::AffineNull)
     Nu, Nx, Ny = size(sys)
+    println("solving for fxy")
 
     Du_B   = deriv.Du_B
     Du_G    = deriv.Du_G
@@ -345,7 +346,7 @@ end
 function solve_Sd!(bulk::Bulk, bc::BC, gauge::Gauge, deriv::BulkDeriv, aux_acc,
                    sys::System, evoleq::AffineNull)
     Nu, Nx, Ny = size(sys)
-
+    println("solving for Sd")
     Du_B   = deriv.Du_B
     Du_G    = deriv.Du_G
     Du_S    = deriv.Du_S
@@ -505,7 +506,7 @@ end
 function solve_BdGd!(bulk::Bulk, bc::BC, gauge::Gauge, deriv::BulkDeriv, aux_acc,
                       sys::System, evoleq::AffineNull)
     Nu, Nx, Ny = size(sys)
-
+    println("solving for BdGd")
     Du_B   = deriv.Du_B
     Du_G    = deriv.Du_G
     Du_S    = deriv.Du_S
@@ -676,7 +677,7 @@ end
 function solve_A!(bulk::Bulk, bc::BC, gauge::Gauge, deriv::BulkDeriv, aux_acc,
                   sys::System, evoleq::AffineNull)
     Nu, Nx, Ny = size(sys)
-
+    println("solving for A")
     Du_B   = deriv.Du_B
     Du_G    = deriv.Du_G
     Du_S    = deriv.Du_S

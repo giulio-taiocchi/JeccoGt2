@@ -174,7 +174,7 @@ end
 # -----------------------
 @inline function F_dpq(t::Float64, x::Float64, y::Float64, p::Int, q::Int, RS::RandomFourierSequence)
     b, i1, i2, θ, w1, w2, dθdt = interp_data(t, RS)
-    println("derivative: x:$p y:$q")
+    
     if b == 0
         # previous block is zero; only w2 * F^{(1)}
         return w2 * block_dpq(x, y, 1, p, q, RS)
@@ -216,7 +216,7 @@ end
 # -----------------------
 @inline function Sz_t(t::Float64, x::Float64, y::Float64, RS::RandomFourierSequence)
     b, i1, i2, θ, w1, w2, dθdt = interp_data(t, RS)
-
+    println("t ")
     if b == 0
         F2 = block_dpq(x, y, 1, 0, 0, RS)
         return  cos(θ) * dθdt * F2
@@ -229,6 +229,7 @@ end
 
 @inline function Sz_tx(t::Float64, x::Float64, y::Float64, RS::RandomFourierSequence)
     b, i1, i2, θ, w1, w2, dθdt = interp_data(t, RS)
+        println("tx ")
     if b == 0
         Fx2 = block_dpq(x, y, 1, 1, 0, RS)
         return cos(θ) * dθdt * Fx2
@@ -241,6 +242,7 @@ end
 
 @inline function Sz_ty(t::Float64, x::Float64, y::Float64, RS::RandomFourierSequence)
     b, i1, i2, θ, w1, w2, dθdt = interp_data(t, RS)
+        println("ty ")
     if b == 0
         Fy2 = block_dpq(x, y, 1, 0, 1, RS)
         return cos(θ) * dθdt * Fy2
@@ -253,6 +255,7 @@ end
 
 @inline function Sz_txx(t::Float64, x::Float64, y::Float64, RS::RandomFourierSequence)
     b, i1, i2, θ, w1, w2, dθdt = interp_data(t, RS)
+        println("txx ")
     if b == 0
         Fxx2 = block_dpq(x, y, 1, 2, 0, RS)
         return cos(θ) * dθdt * Fxx2
@@ -265,6 +268,7 @@ end
 
 @inline function Sz_tyy(t::Float64, x::Float64, y::Float64, RS::RandomFourierSequence)
     b, i1, i2, θ, w1, w2, dθdt = interp_data(t, RS)
+        println("tyy ")
     if b == 0
         Fyy2 = block_dpq(x, y, 1, 0, 2, RS)
         return cos(θ) * dθdt * Fyy2
@@ -277,6 +281,7 @@ end
 
 @inline function Sz_txy(t::Float64, x::Float64, y::Float64, RS::RandomFourierSequence)
     b, i1, i2, θ, w1, w2, dθdt = interp_data(t, RS)
+        println("txy ")
     if b == 0
         Fxy2 = block_dpq(x, y, 1, 1, 1, RS)
         return cos(θ) * dθdt * Fxy2
@@ -289,6 +294,7 @@ end
 
 @inline function Sz_tt(t::Float64, x::Float64, y::Float64, RS::RandomFourierSequence)
     b, i1, i2, θ, w1, w2, dθdt = interp_data(t, RS)
+        println("tt ")
     dθdt2 = dθdt * dθdt
 
     if b == 0
