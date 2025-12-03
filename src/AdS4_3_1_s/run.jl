@@ -87,7 +87,7 @@ function run_model(grid::SpecCartGrid3D, id::InitialData, evoleq::EvolutionEquat
     # decide in the evolution loop when to terminate the run, so set here an
     # impossibly large value for tstop
     tspan = (0.0, 1.e20)
-
+    #=
     if isa(alg, OrdinaryDiffEq.OrdinaryDiffEqAlgorithm)
         #=
         limit the default integrator dtmax and qmax values. see:
@@ -102,7 +102,8 @@ function run_model(grid::SpecCartGrid3D, id::InitialData, evoleq::EvolutionEquat
         integrator = init(prob, alg, save_everystep=false, dt=dt0, dtmax=dtmax, qmax=qmax,
                           adaptive=integration.adaptive, reltol=integration.reltol,
                           calck=false)
-    elseif isa(alg, Jecco.ODESolver.ODEAlgorithm)
+    =#
+    if isa(alg, Jecco.ODESolver.ODEAlgorithm)
         if integration.adaptive
             error("adaptive time step not implemented for this integrator.")
         end
