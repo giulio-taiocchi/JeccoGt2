@@ -30,16 +30,16 @@ Sz_txy(t, x, y, ::NoSource) = 0.0
 Sz_tt(t, x, y, ::NoSource) = 0.0
 
 
-# Sourced-driven turbulence: sequence of random Fourier blocks with smooth transitions.
+# Sourced driven turbulence: sequence of random Fourier blocks with smooth transitions.
 #
 # follows the paper
-# "Driven black holes: from Kolmogorov scaling to turbulent wakes.pdf"
+# "Driven black holes: from Kolmogorov scaling to turbulent wakes "
 #
 # Notes:
 #  - All random draws happen once at construction time
 #  - b == 0 interval transitions from zero to block 1 smoothly
 #  - Mixed time-space derivatives include the b == 0 case
-#  - Use Random.seed!(s) before construction for reproducibility, or pass seed kwarg
+#  - Use Random.seed!(s) before construction for reproducibility, or pass seed kwarg, still to do!
 
 
 

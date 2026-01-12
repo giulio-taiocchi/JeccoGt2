@@ -383,7 +383,7 @@ function fill_guess!(ff::Gauge, sys::System, id::BlackBrane)
     
     guess = similar(ff.xi)
     fill!(guess, 0) 
-    guess_value = id.AH_pos
+    guess_value = 1/id.AH_pos
     #guessdirectory = dir*"Initialguess_BBB.h5"
     #guessdata = h5open(guessdirectory)
     #guessread = read(guessdata["guess"])
