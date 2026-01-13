@@ -75,7 +75,8 @@ function RandomFourierSequence(; MM, M, kradius=1.0, delta=1.0, L=1.0, seed=noth
         Random.seed!(seed)
     end
 
-    C  = [normalize(rand(M)) for _ in 1:MM]
+    sigma = delta
+    C  = [normalize(sigma .* randn(M)) for _ in 1:MM]
     θ  = [2π .* rand(M) for _ in 1:MM]
 
     kx = [kradius .* cos.(θb) for θb in θ]
