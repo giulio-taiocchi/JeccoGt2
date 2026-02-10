@@ -75,16 +75,33 @@ function RandomFourierSequence(; MM, M, kradius=1.0, delta=1.0, L=1.0, seed=noth
         Random.seed!(seed)
     end
 
+    # --- Integer Annulus Sampling ---
+    # 1. Find all integer pairs (nx, ny) in the annulus
+    # The paper uses a width delta_m. We'll use 1.0 as a default width here.
+    width = 2.0 
+    pool = Tuple{Int, Int}[]
+    r_search = ceil(Int, kradius + width)
+    for nx in -r_search:r_search, ny in -r_search:r_search
+        mag = sqrt(nx^2 + ny^2)
+        if (kradius - width) <= mag <= (kradius + width)
+            push!(pool, (nx, ny))
+        end
+    end
+
+    if length(pool) < M
+        @warn "Annulus too thin or kradius too small; sampling with replacement."
+    end
+
+    # 2. Randomly select M integer pairs from the pool for each block
+    kx = [ [Float64(rand(pool)[1]) for _ in 1:M] for _ in 1:MM ]
+    ky = [ [Float64(rand(pool)[2]) for _ in 1:M] for _ in 1:MM ]
+    # -------------------------------------
+
     sigma = delta
-    C  = [normalize(sigma .* randn(M)) for _ in 1:MM]
-    θ  = [2π .* rand(M) for _ in 1:MM]
-
-    kx = [kradius .* cos.(θb) for θb in θ]
-    ky = [kradius .* sin.(θb) for θb in θ]
-
+    C   = [normalize(sigma .* randn(M)) for _ in 1:MM]
     phi = [2π .* rand(M) for _ in 1:MM]
 
-    return RandomFourierSequence(0.0, MM, M, delta, L, kradius, C, kx, ky, phi, 0,A)
+    return RandomFourierSequence(0.0, MM, M, delta, L, kradius, C, kx, ky, phi, 0, A)
 end
 
 
