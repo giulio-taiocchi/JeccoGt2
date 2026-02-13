@@ -92,10 +92,15 @@ function RandomFourierSequence(; MM, M, kradius=1.0, delta=1.0, L=1.0, seed=noth
         @warn "Annulus too thin or kradius too small; sampling with replacement."
     end
 
+
     # 2. Randomly select M integer pairs from the pool for each block
-    kx = [ [Float64(rand(pool)[1]) for _ in 1:M] for _ in 1:MM ]
-    ky = [ [Float64(rand(pool)[2]) for _ in 1:M] for _ in 1:MM ]
-    # -------------------------------------
+    # We create a temporary structure to hold the pairs together first
+    selected_vectors = [ [rand(pool) for _ in 1:M] for _ in 1:MM ]
+
+    # Now we unpack the components into the kx and ky vectors
+    kx = [ [Float64(v[1]) for v in block] for block in selected_vectors ]
+    ky = [ [Float64(v[2]) for v in block] for block in selected_vectors ]
+    
 
     sigma = delta
     C   = [normalize(sigma .* randn(M)) for _ in 1:MM]
