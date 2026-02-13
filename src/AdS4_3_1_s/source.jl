@@ -52,6 +52,7 @@ mutable struct RandomFourierSequence{T} <: Source
     delta::T
     L::T
     kradius::T
+    
 
     C::Vector{Vector{T}}
     kx::Vector{Vector{T}}
@@ -60,6 +61,7 @@ mutable struct RandomFourierSequence{T} <: Source
 
     step::Int
     A::T
+    width::T
 end
 
 
@@ -70,15 +72,13 @@ Constructor:
 Generates MM independent blocks, each with M modes.
 Set seed (integer) for reproducibility.
 """
-function RandomFourierSequence(; MM, M, kradius=1.0, delta=1.0, L=1.0, seed=nothing, A=1.0)
+function RandomFourierSequence(; MM, M, kradius=1.0, delta=1.0, L=1.0, seed=nothing, A=1.0, width=1.0)
     if seed !== nothing
         Random.seed!(seed)
     end
 
     # --- Integer Annulus Sampling ---
     # 1. Find all integer pairs (nx, ny) in the annulus
-    # The paper uses a width delta_m. We'll use 1.0 as a default width here.
-    width = 2.0 
     pool = Tuple{Int, Int}[]
     r_search = ceil(Int, kradius + width)
     for nx in -r_search:r_search, ny in -r_search:r_search
@@ -101,7 +101,7 @@ function RandomFourierSequence(; MM, M, kradius=1.0, delta=1.0, L=1.0, seed=noth
     C   = [normalize(sigma .* randn(M)) for _ in 1:MM]
     phi = [2π .* rand(M) for _ in 1:MM]
 
-    return RandomFourierSequence(0.0, MM, M, delta, L, kradius, C, kx, ky, phi, 0, A)
+    return RandomFourierSequence(0.0, MM, M, delta, L, kradius, C, kx, ky, phi, 0, A,width)
 end
 
 
