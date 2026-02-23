@@ -43,7 +43,7 @@ Sz_tt(t, x, y, ::NoSource) = 0.0
 
 using Random, LinearAlgebra
 
-mutable struct QuinticRandomFourierSequence{T}
+mutable struct QuinticRandomFourierSequence{T} <: Source
     time::T
     MM::Int
     M::Int
