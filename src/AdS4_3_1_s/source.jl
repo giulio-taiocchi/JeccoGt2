@@ -41,7 +41,140 @@ Sz_tt(t, x, y, ::NoSource) = 0.0
 #  - Mixed time-space derivatives include the b == 0 case
 #  - Use Random.seed!(s) before construction for reproducibility, or pass seed kwarg, still to do!
 
+using Random, LinearAlgebra
 
+mutable struct QuinticRandomFourierSequence{T}
+    time::T
+    MM::Int
+    M::Int
+    delta::T
+    L::T
+    kradius::T
+    C::Vector{Vector{T}}
+    kx::Vector{Vector{T}}
+    ky::Vector{Vector{T}}
+    phi::Vector{Vector{T}}
+    step::Int
+    A::T
+    width::T
+end
+
+function QuinticRandomFourierSequence(; MM, M, kradius=1.0, delta=1.0, L=1.0, seed=nothing, A=1.0, width=1.0)
+    if seed !== nothing
+        Random.seed!(seed)
+    end
+
+    pool = Tuple{Int, Int}[]
+    r_search = ceil(Int, kradius + width)
+    for nx in -r_search:r_search, ny in -r_search:r_search
+        mag = sqrt(nx^2 + ny^2)
+        if (kradius - width) <= mag <= (kradius + width)
+            push!(pool, (nx, ny))
+        end
+    end
+
+    selected_vectors = [ [rand(pool) for _ in 1:M] for _ in 1:MM ]
+    kx = [ [Float64(v[1]) for v in block] for block in selected_vectors ]
+    ky = [ [Float64(v[2]) for v in block] for block in selected_vectors ]
+    
+    sigma = delta
+    C   = [normalize(sigma .* randn(M)) for _ in 1:MM]
+    phi = [2π .* rand(M) for _ in 1:MM]
+
+    return QuinticRandomFourierSequence(0.0, MM, M, delta, L, kradius, C, kx, ky, phi, 0, A, width)
+end
+
+# -----------------------
+# Smooth Interpolation Data
+# -----------------------
+@inline function interp_data(t::Float64, RS::QuinticRandomFourierSequence)
+    δ = RS.delta
+    b = floor(Int, t / δ)
+    i1 = mod(b, RS.MM) + 1
+    i2 = mod(b + 1, RS.MM) + 1
+
+    τ = (t - b * δ) / δ
+    
+    # Quintic polynomial: zero velocity and acceleration at τ=0 and τ=1
+    s = 10*τ^3 - 15*τ^4 + 6*τ^5
+    ds_dτ = 30*τ^2 - 60*τ^3 + 30*τ^4
+    d2s_dτ2 = 60*τ - 180*τ^2 + 120*τ^3
+
+    θ = (π/2) * s
+    w1, w2 = cos(θ), sin(θ)
+    
+    dθdt = (π/2) * ds_dτ / δ
+    d2θdt2 = (π/2) * d2s_dτ2 / (δ^2)
+
+    return b, i1, i2, θ, w1, w2, dθdt, d2θdt2
+end
+
+# -----------------------
+# Spatial Block Evaluators
+# -----------------------
+@inline function block_dpq(x::Float64, y::Float64, b::Int, p::Int, q::Int, RS::QuinticRandomFourierSequence)
+    A = RS.A
+    s = 0.0
+    two_pi_over_L = 2π / RS.L
+    shift = (p + q) * (π/2)
+    prefactor_scale = (two_pi_over_L)^(p + q)
+    @inbounds @simd for m in 1:RS.M
+        kxm, kym = RS.kx[b][m], RS.ky[b][m]
+        arg = two_pi_over_L * (kxm * x + kym * y) + RS.phi[b][m]
+        s += RS.C[b][m] * (kxm^p) * (kym^q) * prefactor_scale * cos(arg + shift)
+    end
+    return A * s
+end
+
+# -----------------------
+# Source Value and Space Derivatives
+# -----------------------
+@inline function Sz(t::Float64, x::Float64, y::Float64, RS::QuinticRandomFourierSequence)
+    b, i1, i2, θ, w1, w2, _, _ = interp_data(t, RS)
+    F1 = (b == 0) ? 0.0 : block_dpq(x, y, i1, 0, 0, RS)
+    F2 = block_dpq(x, y, i2, 0, 0, RS)
+    return 1.0 + w1*F1 + w2*F2
+end
+
+@inline function F_dpq(t::Float64, x::Float64, y::Float64, p::Int, q::Int, RS::QuinticRandomFourierSequence)
+    b, i1, i2, θ, w1, w2, _, _ = interp_data(t, RS)
+    F1 = (b == 0) ? 0.0 : block_dpq(x, y, i1, p, q, RS)
+    F2 = block_dpq(x, y, i2, p, q, RS)
+    return w1*F1 + w2*F2
+end
+
+# (Wrappers like Sz_x, Sz_xx follow the same F_dpq logic as before)
+
+# -----------------------
+# Smooth Time Derivatives
+# -----------------------
+@inline function Sz_t(t::Float64, x::Float64, y::Float64, RS::QuinticRandomFourierSequence)
+    b, i1, i2, θ, w1, w2, dθdt, _ = interp_data(t, RS)
+    F1 = (b == 0) ? 0.0 : block_dpq(x, y, i1, 0, 0, RS)
+    F2 = block_dpq(x, y, i2, 0, 0, RS)
+    
+    # S_t = -sin(θ)θ' F1 + cos(θ)θ' F2
+    return (-w2 * dθdt) * F1 + (w1 * dθdt) * F2
+end
+
+@inline function Sz_tt(t::Float64, x::Float64, y::Float64, RS::QuinticRandomFourierSequence)
+    b, i1, i2, θ, w1, w2, dθdt, d2θdt2 = interp_data(t, RS)
+    F1 = (b == 0) ? 0.0 : block_dpq(x, y, i1, 0, 0, RS)
+    F2 = block_dpq(x, y, i2, 0, 0, RS)
+
+    # S_tt = (-cos(θ)θ'^2 - sin(θ)θ'')F1 + (-sin(θ)θ'^2 + cos(θ)θ'')F2
+    term1 = (-w1 * dθdt^2 - w2 * d2θdt2) * F1
+    term2 = (-w2 * dθdt^2 + w1 * d2θdt2) * F2
+    return term1 + term2
+end
+
+# Example Mixed Derivative
+@inline function Sz_tx(t::Float64, x::Float64, y::Float64, RS::QuinticRandomFourierSequence)
+    b, i1, i2, θ, w1, w2, dθdt, _ = interp_data(t, RS)
+    Fx1 = (b == 0) ? 0.0 : block_dpq(x, y, i1, 1, 0, RS)
+    Fx2 = block_dpq(x, y, i2, 1, 0, RS)
+    return (-w2 * dθdt) * Fx1 + (w1 * dθdt) * Fx2
+end
 
 
 mutable struct RandomFourierSequence{T} <: Source
