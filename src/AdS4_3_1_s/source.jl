@@ -43,8 +43,6 @@ Sz_tt(t, x, y, ::NoSource) = 0.0
 
 using Random, LinearAlgebra
 
-using Random, LinearAlgebra
-
 mutable struct QuinticRandomFourierSequence{T} <: Source
     time::T
     MM::Int
@@ -63,11 +61,6 @@ mutable struct QuinticRandomFourierSequence{T} <: Source
     width::T
 end
 
-"""
-Constructor: QuinticRandomFourierSequence(...)
-Generates MM independent blocks, each with M modes.
-Transition between blocks is handled by a C2 quintic polynomial.
-"""
 function QuinticRandomFourierSequence(; MM, M, kradius=1.0, delta=1.0, L=1.0, seed=nothing, A=1.0, width=1.0)
     if seed !== nothing
         Random.seed!(seed)
@@ -80,10 +73,6 @@ function QuinticRandomFourierSequence(; MM, M, kradius=1.0, delta=1.0, L=1.0, se
         if (kradius - width) <= mag <= (kradius + width)
             push!(pool, (nx, ny))
         end
-    end
-
-    if length(pool) < M
-        @warn "Annulus too thin; sampling with replacement."
     end
 
     selected_vectors = [ [rand(pool) for _ in 1:M] for _ in 1:MM ]
@@ -108,7 +97,7 @@ end
 
     τ = (t - b * δ) / δ
     
-    # Quintic: s(0)=0, s(1)=1, s'=0 and s''=0 at ends.
+    # s(τ) is the quintic polynomial
     s = 10*τ^3 - 15*τ^4 + 6*τ^5
     ds_dτ = 30*τ^2 - 60*τ^3 + 30*τ^4
     d2s_dτ2 = 60*τ - 180*τ^2 + 120*τ^3
@@ -123,47 +112,36 @@ end
 end
 
 # ---------------------------------------------------------
-# SPATIAL BLOCK EVALUATION
+# SPATIAL EVALUATION (Amplitude + Phase Interpolation)
 # ---------------------------------------------------------
-@inline function block_dpq(x::Float64, y::Float64, b::Int, p::Int, q::Int, RS::QuinticRandomFourierSequence)
+@inline function F_dpq(t::Float64, x::Float64, y::Float64, p::Int, q::Int, RS::QuinticRandomFourierSequence)
+    b, i1, i2, θ, w1, w2, _, _ = interp_data(t, RS)
+    
     A = RS.A
     s = 0.0
     two_pi_over_L = 2π / RS.L
     shift = (p + q) * (π/2)
     pre_scale = (two_pi_over_L)^(p + q)
+    
     @inbounds @simd for m in 1:RS.M
-        kxm, kym = RS.kx[b][m], RS.ky[b][m]
-        arg = two_pi_over_L * (kxm * x + kym * y) + RS.phi[b][m]
-        s += RS.C[b][m] * (kxm^p) * (kym^q) * pre_scale * cos(arg + shift)
+        # Interpolate Amplitudes & Phases
+        c1 = (b == 0) ? 0.0 : RS.C[i1][m]
+        c2 = RS.C[i2][m]
+        p1 = (b == 0) ? 0.0 : RS.phi[i1][m]
+        p2 = RS.phi[i2][m]
+        
+        Ct = w1 * c1 + w2 * c2
+        phit = w1 * p1 + w2 * p2
+        
+        kxm, kym = RS.kx[i2][m], RS.ky[i2][m]
+        arg = two_pi_over_L * (kxm * x + kym * y) + phit
+        
+        s += Ct * (kxm^p) * (kym^q) * pre_scale * cos(arg + shift)
     end
     return A * s
 end
 
-# Spatial wrappers
-@inline block_x(x,y,b,RS)    = block_dpq(x,y,b,1,0,RS)
-@inline block_xx(x,y,b,RS)   = block_dpq(x,y,b,2,0,RS)
-@inline block_xxx(x,y,b,RS)  = block_dpq(x,y,b,3,0,RS)
-@inline block_xxxx(x,y,b,RS) = block_dpq(x,y,b,4,0,RS)
-@inline block_y(x,y,b,RS)    = block_dpq(x,y,b,0,1,RS)
-@inline block_yy(x,y,b,RS)   = block_dpq(x,y,b,0,2,RS)
-@inline block_yyy(x,y,b,RS)  = block_dpq(x,y,b,0,3,RS)
-@inline block_yyyy(x,y,b,RS) = block_dpq(x,y,b,0,4,RS)
-@inline block_xy(x,y,b,RS)   = block_dpq(x,y,b,1,1,RS)
-@inline block_xxy(x,y,b,RS)  = block_dpq(x,y,b,2,1,RS)
-@inline block_xyy(x,y,b,RS)  = block_dpq(x,y,b,1,2,RS)
-@inline block_xxyy(x,y,b,RS) = block_dpq(x,y,b,2,2,RS)
-
-# ---------------------------------------------------------
-# FULL SOURCE VALUE AND SPACE DERIVATIVES
-# ---------------------------------------------------------
-@inline function F_dpq(t::Float64, x::Float64, y::Float64, p::Int, q::Int, RS::QuinticRandomFourierSequence)
-    b, i1, i2, θ, w1, w2, _, _ = interp_data(t, RS)
-    f2 = block_dpq(x, y, i2, p, q, RS)
-    (b == 0) && return w2 * f2
-    f1 = block_dpq(x, y, i1, p, q, RS)
-    return w1 * f1 + w2 * f2
-end
-
+# Spatial Wrappers
 @inline Sz(t,x,y,RS)      = 1.0 + F_dpq(t,x,y,0,0,RS)
 @inline Sz_x(t,x,y,RS)    = F_dpq(t,x,y,1,0,RS)
 @inline Sz_xx(t,x,y,RS)   = F_dpq(t,x,y,2,0,RS)
@@ -179,34 +157,64 @@ end
 @inline Sz_xxyy(t,x,y,RS) = F_dpq(t,x,y,2,2,RS)
 
 # ---------------------------------------------------------
-# SMOOTH TIME AND MIXED DERIVATIVES
+# TIME DERIVATIVES (Full Chain + Product Rule)
 # ---------------------------------------------------------
 @inline function Sz_tpq(t::Float64, x::Float64, y::Float64, p::Int, q::Int, RS::QuinticRandomFourierSequence)
     b, i1, i2, θ, w1, w2, dθdt, _ = interp_data(t, RS)
-    Fpq2 = block_dpq(x, y, i2, p, q, RS)
-    (b == 0) && return (cos(θ) * dθdt) * Fpq2
-    Fpq1 = block_dpq(x, y, i1, p, q, RS)
-    return (-sin(θ) * dθdt) * Fpq1 + (cos(θ) * dθdt) * Fpq2
+    A, two_pi_over_L = RS.A, 2π / RS.L
+    shift, pre_scale = (p + q) * (π/2), (two_pi_over_L)^(p + q)
+    s = 0.0
+
+    dw1, dw2 = -sin(θ) * dθdt, cos(θ) * dθdt
+
+    @inbounds @simd for m in 1:RS.M
+        c1 = (b == 0) ? 0.0 : RS.C[i1][m]; c2 = RS.C[i2][m]
+        p1 = (b == 0) ? 0.0 : RS.phi[i1][m]; p2 = RS.phi[i2][m]
+
+        Ct, dC_dt = w1*c1 + w2*c2, dw1*c1 + dw2*c2
+        phit, dphi_dt = w1*p1 + w2*p2, dw1*p1 + dw2*p2
+
+        kxm, kym = RS.kx[i2][m], RS.ky[i2][m]
+        arg = two_pi_over_L * (kxm * x + kym * y) + phit + shift
+        
+        # d/dt [Ct * cos(arg)] = dC/dt*cos(arg) - Ct*sin(arg)*dphi/dt
+        s += (kxm^p) * (kym^q) * (dC_dt * cos(arg) - Ct * sin(arg) * dphi_dt)
+    end
+    return A * pre_scale * s
 end
 
-@inline Sz_t(t,x,y,RS)    = Sz_tpq(t,x,y,0,0,RS)
-@inline Sz_tx(t,x,y,RS)   = Sz_tpq(t,x,y,1,0,RS)
-@inline Sz_ty(t,x,y,RS)   = Sz_tpq(t,x,y,0,1,RS)
-@inline Sz_txx(t,x,y,RS)  = Sz_tpq(t,x,y,2,0,RS)
-@inline Sz_tyy(t,x,y,RS)  = Sz_tpq(t,x,y,0,2,RS)
-@inline Sz_txy(t,x,y,RS)  = Sz_tpq(t,x,y,1,1,RS)
+@inline Sz_t(t,x,y,RS)   = Sz_tpq(t,x,y,0,0,RS)
+@inline Sz_tx(t,x,y,RS)  = Sz_tpq(t,x,y,1,0,RS)
+@inline Sz_ty(t,x,y,RS)  = Sz_tpq(t,x,y,0,1,RS)
+@inline Sz_txx(t,x,y,RS) = Sz_tpq(t,x,y,2,0,RS)
+@inline Sz_tyy(t,x,y,RS) = Sz_tpq(t,x,y,0,2,RS)
+@inline Sz_txy(t,x,y,RS) = Sz_tpq(t,x,y,1,1,RS)
 
 @inline function Sz_tt(t::Float64, x::Float64, y::Float64, RS::QuinticRandomFourierSequence)
     b, i1, i2, θ, w1, w2, dθdt, d2θdt2 = interp_data(t, RS)
-    F2 = block_dpq(x, y, i2, 0, 0, RS)
-    if b == 0
-        return (-sin(θ) * dθdt^2 + cos(θ) * d2θdt2) * F2
-    else
-        F1 = block_dpq(x, y, i1, 0, 0, RS)
-        term1 = (-w1 * dθdt^2 - w2 * d2θdt2) * F1
-        term2 = (-w2 * dθdt^2 + w1 * d2θdt2) * F2
-        return term1 + term2
+    A, two_pi_over_L = RS.A, 2π / RS.L
+    s = 0.0
+
+    dw1, dw2 = -sin(θ) * dθdt, cos(θ) * dθdt
+    d2w1, d2w2 = -cos(θ) * dθdt^2 - sin(θ) * d2θdt2, -sin(θ) * dθdt^2 + cos(θ) * d2θdt2
+
+    @inbounds @simd for m in 1:RS.M
+        c1 = (b == 0) ? 0.0 : RS.C[i1][m]; c2 = RS.C[i2][m]
+        p1 = (b == 0) ? 0.0 : RS.phi[i1][m]; p2 = RS.phi[i2][m]
+
+        Ct, dC_dt, d2C_dt2 = w1*c1 + w2*c2, dw1*c1 + dw2*c2, d2w1*c1 + d2w2*c2
+        phit, dphi_dt, d2phi_dt2 = w1*p1 + w2*p2, dw1*p1 + dw2*p2, d2w1*p1 + d2w2*p2
+
+        kxm, kym = RS.kx[i2][m], RS.ky[i2][m]
+        arg = two_pi_over_L * (kxm * x + kym * y) + phit
+        
+        cos_a, sin_a = cos(arg), sin(arg)
+        
+        # d2/dt2 [C*cos(phi)] = C''cos - 2C'sinφ' - Ccos(φ')^2 - Csinφ''
+        term = d2C_dt2*cos_a - 2.0*dC_dt*sin_a*dphi_dt - Ct*cos_a*dphi_dt^2 - Ct*sin_a*d2phi_dt2
+        s += term
     end
+    return A * s
 end
 
 
