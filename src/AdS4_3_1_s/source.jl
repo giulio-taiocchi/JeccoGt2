@@ -41,8 +41,12 @@ Sz_tt(t, x, y, ::NoSource) = 0.0
 #  - Mixed time-space derivatives include the b == 0 case
 #  - Use Random.seed!(s) before construction for reproducibility, or pass seed kwarg, still to do!
 
+
 using Random, LinearAlgebra
 
+# ---------------------------------------------------------
+# STRUCTURE & CONSTRUCTOR
+# ---------------------------------------------------------
 mutable struct QuinticRandomFourierSequence{T} <: Source
     time::T
     MM::Int
@@ -50,21 +54,17 @@ mutable struct QuinticRandomFourierSequence{T} <: Source
     delta::T
     L::T
     kradius::T
-
     C::Vector{Vector{T}}
     kx::Vector{Vector{T}}
     ky::Vector{Vector{T}}
     phi::Vector{Vector{T}}
-
     step::Int
     A::T
     width::T
 end
 
 function QuinticRandomFourierSequence(; MM, M, kradius=1.0, delta=1.0, L=1.0, seed=nothing, A=1.0, width=1.0)
-    if seed !== nothing
-        Random.seed!(seed)
-    end
+    if seed !== nothing; Random.seed!(seed); end
 
     pool = Tuple{Int, Int}[]
     r_search = ceil(Int, kradius + width)
@@ -76,35 +76,32 @@ function QuinticRandomFourierSequence(; MM, M, kradius=1.0, delta=1.0, L=1.0, se
     end
 
     selected_vectors = [ [rand(pool) for _ in 1:M] for _ in 1:MM ]
-    kx = [ [Float64(v[1]) for v in block] for block in selected_vectors ]
-    ky = [ [Float64(v[2]) for v in block] for block in selected_vectors ]
+    kx_data = [ [Float64(v[1]) for v in block] for block in selected_vectors ]
+    ky_data = [ [Float64(v[2]) for v in block] for block in selected_vectors ]
 
     sigma = delta
-    C   = [normalize(sigma .* randn(M)) for _ in 1:MM]
-    phi = [2π .* rand(M) for _ in 1:MM]
+    C_data   = [normalize(sigma .* randn(M)) for _ in 1:MM]
+    phi_data = [2π .* rand(M) for _ in 1:MM]
 
-    return QuinticRandomFourierSequence(0.0, MM, M, delta, L, kradius, C, kx, ky, phi, 0, A, width)
+    return QuinticRandomFourierSequence(0.0, MM, M, delta, L, kradius, C_data, kx_data, ky_data, phi_data, 0, A, width)
 end
 
 # ---------------------------------------------------------
-# INTERPOLATION LOGIC (Quintic Smooth Step)
+# INTERPOLATION CLOCK (Quintic)
 # ---------------------------------------------------------
 @inline function interp_data(t::Float64, RS::QuinticRandomFourierSequence)
     δ = RS.delta
     b = floor(Int, t / δ)
     i1 = mod(b, RS.MM) + 1
     i2 = mod(b + 1, RS.MM) + 1
-
     τ = (t - b * δ) / δ
     
-    # s(τ) is the quintic polynomial
     s = 10*τ^3 - 15*τ^4 + 6*τ^5
     ds_dτ = 30*τ^2 - 60*τ^3 + 30*τ^4
     d2s_dτ2 = 60*τ - 180*τ^2 + 120*τ^3
 
     θ = (π/2) * s
     w1, w2 = cos(θ), sin(θ)
-    
     dθdt = (π/2) * ds_dτ / δ
     d2θdt2 = (π/2) * d2s_dτ2 / (δ^2)
 
@@ -112,36 +109,65 @@ end
 end
 
 # ---------------------------------------------------------
-# SPATIAL EVALUATION (Amplitude + Phase Interpolation)
+# CORE ENGINES (Spatial & Temporal)
 # ---------------------------------------------------------
 @inline function F_dpq(t::Float64, x::Float64, y::Float64, p::Int, q::Int, RS::QuinticRandomFourierSequence)
     b, i1, i2, θ, w1, w2, _, _ = interp_data(t, RS)
-    
-    A = RS.A
-    s = 0.0
-    two_pi_over_L = 2π / RS.L
+    A, two_pi_L = RS.A, 2π / RS.L
     shift = (p + q) * (π/2)
-    pre_scale = (two_pi_over_L)^(p + q)
+    s = 0.0
     
-    @inbounds @simd for m in 1:RS.M
-        # Interpolate Amplitudes & Phases
-        c1 = (b == 0) ? 0.0 : RS.C[i1][m]
-        c2 = RS.C[i2][m]
-        p1 = (b == 0) ? 0.0 : RS.phi[i1][m]
-        p2 = RS.phi[i2][m]
+    @inbounds for m in 1:RS.M
+        c1, c2 = (b == 0 ? 0.0 : RS.C[i1][m]), RS.C[i2][m]
+        p1, p2 = (b == 0 ? 0.0 : RS.phi[i1][m]), RS.phi[i2][m]
+        kx1, kx2 = (b == 0 ? RS.kx[i2][m] : RS.kx[i1][m]), RS.kx[i2][m]
+        ky1, ky2 = (b == 0 ? RS.ky[i2][m] : RS.ky[i1][m]), RS.ky[i2][m]
+
+        Ct, phit = w1*c1 + w2*c2, w1*p1 + w2*p2
+        kxt, kyt = w1*kx1 + w2*kx2, w1*ky1 + w2*ky2
         
-        Ct = w1 * c1 + w2 * c2
-        phit = w1 * p1 + w2 * p2
+        pre = (two_pi_L * kxt)^p * (two_pi_L * kyt)^q
+        arg = two_pi_L * (kxt * x + kyt * y) + phit
         
-        kxm, kym = RS.kx[i2][m], RS.ky[i2][m]
-        arg = two_pi_over_L * (kxm * x + kym * y) + phit
-        
-        s += Ct * (kxm^p) * (kym^q) * pre_scale * cos(arg + shift)
+        s += Ct * pre * cos(arg + shift)
     end
     return A * s
 end
 
-# Spatial Wrappers
+@inline function Sz_tpq(t::Float64, x::Float64, y::Float64, p::Int, q::Int, RS::QuinticRandomFourierSequence)
+    b, i1, i2, θ, w1, w2, dθdt, _ = interp_data(t, RS)
+    A, two_pi_L = RS.A, 2π / RS.L
+    dw1, dw2 = -sin(θ)*dθdt, cos(θ)*dθdt
+    shift = (p + q) * (π/2)
+    s = 0.0
+
+    @inbounds for m in 1:RS.M
+        c1, c2 = (b==0 ? 0.0 : RS.C[i1][m]), RS.C[i2][m]
+        p1, p2 = (b==0 ? 0.0 : RS.phi[i1][m]), RS.phi[i2][m]
+        kx1, kx2 = (b==0 ? RS.kx[i2][m] : RS.kx[i1][m]), RS.kx[i2][m]
+        ky1, ky2 = (b==0 ? RS.ky[i2][m] : RS.ky[i1][m]), RS.ky[i2][m]
+
+        Ct, dCt = w1*c1 + w2*c2, dw1*c1 + dw2*c2
+        Pt, dPt = w1*p1 + w2*p2, dw1*p1 + dw2*p2
+        Kx, dKx = w1*kx1 + w2*kx2, dw1*kx1 + dw2*kx2
+        Ky, dKy = w1*ky1 + w2*ky2, dw1*ky1 + dw2*ky2
+
+        arg = two_pi_L*(Kx*x + Ky*y) + Pt + shift
+        darg = two_pi_L*(dKx*x + dKy*y) + dPt
+
+        pre = (two_pi_L*Kx)^p * (two_pi_L*Ky)^q
+        dpre = 0.0
+        if p > 0; dpre += p*(two_pi_L*Kx)^(p-1)*(two_pi_L*dKx)*(two_pi_L*Ky)^q; end
+        if q > 0; dpre += q*(two_pi_L*Ky)^(q-1)*(two_pi_L*dKy)*(two_pi_L*Kx)^p; end
+
+        s += (dCt*pre + Ct*dpre)*cos(arg) - (Ct*pre*darg)*sin(arg)
+    end
+    return A * s
+end
+
+# ---------------------------------------------------------
+# WRAPPERS: SPATIAL ONLY
+# ---------------------------------------------------------
 @inline Sz(t,x,y,RS)      = 1.0 + F_dpq(t,x,y,0,0,RS)
 @inline Sz_x(t,x,y,RS)    = F_dpq(t,x,y,1,0,RS)
 @inline Sz_xx(t,x,y,RS)   = F_dpq(t,x,y,2,0,RS)
@@ -157,66 +183,45 @@ end
 @inline Sz_xxyy(t,x,y,RS) = F_dpq(t,x,y,2,2,RS)
 
 # ---------------------------------------------------------
-# TIME DERIVATIVES (Full Chain + Product Rule)
+# WRAPPERS: TIME-SPATIAL (Sz_tpq)
 # ---------------------------------------------------------
-@inline function Sz_tpq(t::Float64, x::Float64, y::Float64, p::Int, q::Int, RS::QuinticRandomFourierSequence)
-    b, i1, i2, θ, w1, w2, dθdt, _ = interp_data(t, RS)
-    A, two_pi_over_L = RS.A, 2π / RS.L
-    shift, pre_scale = (p + q) * (π/2), (two_pi_over_L)^(p + q)
-    s = 0.0
+@inline Sz_t(t,x,y,RS)    = Sz_tpq(t,x,y,0,0,RS)
+@inline Sz_tx(t,x,y,RS)   = Sz_tpq(t,x,y,1,0,RS)
+@inline Sz_ty(t,x,y,RS)   = Sz_tpq(t,x,y,0,1,RS)
+@inline Sz_txx(t,x,y,RS)  = Sz_tpq(t,x,y,2,0,RS)
+@inline Sz_tyy(t,x,y,RS)  = Sz_tpq(t,x,y,0,2,RS)
+@inline Sz_txy(t,x,y,RS)  = Sz_tpq(t,x,y,1,1,RS)
 
-    dw1, dw2 = -sin(θ) * dθdt, cos(θ) * dθdt
-
-    @inbounds @simd for m in 1:RS.M
-        c1 = (b == 0) ? 0.0 : RS.C[i1][m]; c2 = RS.C[i2][m]
-        p1 = (b == 0) ? 0.0 : RS.phi[i1][m]; p2 = RS.phi[i2][m]
-
-        Ct, dC_dt = w1*c1 + w2*c2, dw1*c1 + dw2*c2
-        phit, dphi_dt = w1*p1 + w2*p2, dw1*p1 + dw2*p2
-
-        kxm, kym = RS.kx[i2][m], RS.ky[i2][m]
-        arg = two_pi_over_L * (kxm * x + kym * y) + phit + shift
-        
-        # d/dt [Ct * cos(arg)] = dC/dt*cos(arg) - Ct*sin(arg)*dphi/dt
-        s += (kxm^p) * (kym^q) * (dC_dt * cos(arg) - Ct * sin(arg) * dphi_dt)
-    end
-    return A * pre_scale * s
-end
-
-@inline Sz_t(t,x,y,RS)   = Sz_tpq(t,x,y,0,0,RS)
-@inline Sz_tx(t,x,y,RS)  = Sz_tpq(t,x,y,1,0,RS)
-@inline Sz_ty(t,x,y,RS)  = Sz_tpq(t,x,y,0,1,RS)
-@inline Sz_txx(t,x,y,RS) = Sz_tpq(t,x,y,2,0,RS)
-@inline Sz_tyy(t,x,y,RS) = Sz_tpq(t,x,y,0,2,RS)
-@inline Sz_txy(t,x,y,RS) = Sz_tpq(t,x,y,1,1,RS)
-
+# ---------------------------------------------------------
+# WRAPPERS: SECOND ORDER TIME (Sz_tt)
+# ---------------------------------------------------------
 @inline function Sz_tt(t::Float64, x::Float64, y::Float64, RS::QuinticRandomFourierSequence)
     b, i1, i2, θ, w1, w2, dθdt, d2θdt2 = interp_data(t, RS)
-    A, two_pi_over_L = RS.A, 2π / RS.L
+    A, two_pi_L = RS.A, 2π / RS.L
+    dw1, dw2 = -sin(θ)*dθdt, cos(θ)*dθdt
+    d2w1, d2w2 = -cos(θ)*dθdt^2 - sin(θ)*d2θdt2, -sin(θ)*dθdt^2 + cos(θ)*d2θdt2
     s = 0.0
 
-    dw1, dw2 = -sin(θ) * dθdt, cos(θ) * dθdt
-    d2w1, d2w2 = -cos(θ) * dθdt^2 - sin(θ) * d2θdt2, -sin(θ) * dθdt^2 + cos(θ) * d2θdt2
+    @inbounds for m in 1:RS.M
+        c1, c2 = (b==0 ? 0.0 : RS.C[i1][m]), RS.C[i2][m]
+        p1, p2 = (b==0 ? 0.0 : RS.phi[i1][m]), RS.phi[i2][m]
+        kx1, kx2 = (b==0 ? RS.kx[i2][m] : RS.kx[i1][m]), RS.kx[i2][m]
+        ky1, ky2 = (b==0 ? RS.ky[i2][m] : RS.ky[i1][m]), RS.ky[i2][m]
 
-    @inbounds @simd for m in 1:RS.M
-        c1 = (b == 0) ? 0.0 : RS.C[i1][m]; c2 = RS.C[i2][m]
-        p1 = (b == 0) ? 0.0 : RS.phi[i1][m]; p2 = RS.phi[i2][m]
+        Ct, dCt, d2Ct = w1*c1+w2*c2, dw1*c1+dw2*c2, d2w1*c1+d2w2*c2
+        Pt, dPt, d2Pt = w1*p1+w2*p2, dw1*p1+dw2*p2, d2w1*p1+d2w2*p2
+        Kx, dKx, d2Kx = w1*kx1+w2*kx2, dw1*kx1+dw2*kx2, d2w1*kx1+d2w2*kx2
+        Ky, dKy, d2Ky = w1*ky1+w2*ky2, dw1*ky1+dw2*ky2, d2w1*ky1+d2w2*ky2
 
-        Ct, dC_dt, d2C_dt2 = w1*c1 + w2*c2, dw1*c1 + dw2*c2, d2w1*c1 + d2w2*c2
-        phit, dphi_dt, d2phi_dt2 = w1*p1 + w2*p2, dw1*p1 + dw2*p2, d2w1*p1 + d2w2*p2
+        arg = two_pi_L*(Kx*x + Ky*y) + Pt
+        darg = two_pi_L*(dKx*x + dKy*y) + dPt
+        d2arg = two_pi_L*(d2Kx*x + d2Ky*y) + d2Pt
 
-        kxm, kym = RS.kx[i2][m], RS.ky[i2][m]
-        arg = two_pi_over_L * (kxm * x + kym * y) + phit
-        
-        cos_a, sin_a = cos(arg), sin(arg)
-        
-        # d2/dt2 [C*cos(phi)] = C''cos - 2C'sinφ' - Ccos(φ')^2 - Csinφ''
-        term = d2C_dt2*cos_a - 2.0*dC_dt*sin_a*dphi_dt - Ct*cos_a*dphi_dt^2 - Ct*sin_a*d2phi_dt2
-        s += term
+        # Expanded form for Sz_tt (p=0, q=0)
+        s += (d2Ct - Ct*darg^2)*cos(arg) - (2.0*dCt*darg + Ct*d2arg)*sin(arg)
     end
     return A * s
 end
-
 
 mutable struct RandomFourierSequence{T} <: Source
     time::T
