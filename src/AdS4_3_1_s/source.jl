@@ -45,46 +45,59 @@ Sz_tt(t, x, y, ::NoSource) = 0.0
 using Random, LinearAlgebra
 
 # ---------------------------------------------------------
-# STRUCTURE: With Pre-computed Buffers
+# STRUCTURE: Optimized for Periodic Forcing
 # ---------------------------------------------------------
 mutable struct QuinticRandomFourierSequence{T}
-    MM::Int
-    M::Int
-    delta::T
-    kx_scaled::Vector{T} # (2π/L) * kx
-    ky_scaled::Vector{T} # (2π/L) * ky
+    MM::Int             # Number of total data blocks
+    M::Int              # Number of Fourier modes
+    delta::T            # Timestep interval (Delta T)
+    L::T                # Domain size
+    kradius::T          # Central wave-number radius
+    width::T            # Annulus width for k-selection
+    A::T                # Overall amplitude scaling
+    seed::Union{Int, Nothing}
+
+    # Pre-calculated Geometry: (2π/L) * k
+    kx_s::Vector{T} 
+    ky_s::Vector{T}
+    
+    # Pre-calculated Data Sets
     C::Vector{Vector{T}}
     phi::Vector{Vector{T}} 
-    A::T
     
-    # Buffers for the current timestep
-    Ct::Vector{T}   # Morphed Amplitudes
-    Pt::Vector{T}   # Morphed Phases
-    dCt::Vector{T}  # Time derivative of Amplitudes
-    dPt::Vector{T}  # Time derivative of Phases
-    d2Ct::Vector{T} # Second time derivative
-    d2Pt::Vector{T} 
+    # Buffers: Updated once per timestep via update_buffer!()
+    Ct::Vector{T};  Pt::Vector{T}
+    dCt::Vector{T}; dPt::Vector{T}
+    d2Ct::Vector{T}; d2Pt::Vector{T}
 end
 
-function QuinticRandomFourierSequence(; MM, M, kradius=1.0, delta=1.0, L=1.0, seed=nothing, A=1.0, width=1.0)
+# ---------------------------------------------------------
+# CONSTRUCTOR
+# ---------------------------------------------------------
+function QuinticRandomFourierSequence(; MM, M, delta, L, kradius, A, seed=nothing, width=1.0)
     if seed !== nothing; Random.seed!(seed); end
 
-    # 1. Geometry
+    # 1. Generate k-pool (Integer constraint for Periodicity)
     pool = Tuple{Int, Int}[]
-    r_search = ceil(Int, kradius + width)
-    for nx in -r_search:r_search, ny in -r_search:r_search
+    r_max = ceil(Int, kradius + width)
+    for nx in -r_max:r_max, ny in -r_max:r_max
         mag = sqrt(nx^2 + ny^2)
         if (kradius - width) <= mag <= (kradius + width)
             push!(pool, (nx, ny))
         end
     end
+    if isempty(pool); error("No k-vectors in range. Check kradius/width."); end
+
+    # 2. Select M modes and scale them by 2π/L
     selected = [rand(pool) for _ in 1:M]
     scale = 2π / L
-    kx_s = [Float64(v[1]) * scale for v in selected]
-    ky_s = [Float64(v[2]) * scale for v in selected]
+    kx_scaled = [Float64(v[1]) * scale for v in selected]
+    ky_scaled = [Float64(v[2]) * scale for v in selected]
 
-    # 2. Data
+    # 3. Generate Amplitude blocks
     C_data = [normalize(randn(M)) for _ in 1:MM]
+    
+    # 4. Generate Phase blocks with "Shortest Path" unwrapping for C2 continuity
     raw_phi = [2π .* rand(M) for _ in 1:MM]
     phi_data = copy(raw_phi)
     for b in 1:(MM-1), m in 1:M
@@ -92,12 +105,15 @@ function QuinticRandomFourierSequence(; MM, M, kradius=1.0, delta=1.0, L=1.0, se
         phi_data[b+1][m] = phi_data[b][m] + diff
     end
 
-    return QuinticRandomFourierSequence(MM, M, delta, kx_s, ky_s, C_data, phi_data, A,
-        zeros(M), zeros(M), zeros(M), zeros(M), zeros(M), zeros(M))
+    return QuinticRandomFourierSequence(
+        MM, M, Float64(delta), Float64(L), Float64(kradius), Float64(width), Float64(A), seed,
+        kx_scaled, ky_scaled, C_data, phi_data,
+        zeros(M), zeros(M), zeros(M), zeros(M), zeros(M), zeros(M)
+    )
 end
 
 # ---------------------------------------------------------
-# STAGE 1: UPDATE BUFFER (Call once per timestep)
+# BUFFER UPDATE: Call this ONCE per solver timestep
 # ---------------------------------------------------------
 function update_buffer!(RS::QuinticRandomFourierSequence, t::Float64)
     δ = RS.delta
@@ -105,17 +121,20 @@ function update_buffer!(RS::QuinticRandomFourierSequence, t::Float64)
     i1, i2 = mod(b, RS.MM)+1, mod(b+1, RS.MM)+1
     τ = (t - b * δ) / δ
     
-    # Quintic weights
+    # Quintic Spline weights
     τ2=τ*τ; τ3=τ2*τ; τ4=τ3*τ; τ5=τ4*τ
     s = 10*τ3 - 15*τ4 + 6*τ5
     ds = (30*τ2 - 60*τ3 + 30*τ4) / δ
     d2s = (60*τ - 180*τ^2 + 120*τ3) / (δ^2)
 
     θ = (π/2) * s
-    w1, w2 = cos(θ), sin(θ)
-    dw1, dw2 = -sin(θ)*(π/2)*ds,  cos(θ)*(π/2)*ds
-    d2w1 = -cos(θ)*((π/2)*ds)^2 - sin(θ)*(π/2)*d2s
-    d2w2 = -sin(θ)*((π/2)*ds)^2 + cos(θ)*(π/2)*d2s
+    dθ = (π/2) * ds
+    d2θ = (π/2) * d2s
+    
+    sinθ, cosθ = sincos(θ)
+    dw1, dw2 = -sinθ*dθ, cosθ*dθ
+    d2w1 = -cosθ*(dθ^2) - sinθ*d2θ
+    d2w2 = -sinθ*(dθ^2) + cosθ*d2θ
 
     @inbounds for m in 1:RS.M
         c1 = (b == 0 ? 0.0 : RS.C[i1][m])
@@ -123,86 +142,155 @@ function update_buffer!(RS::QuinticRandomFourierSequence, t::Float64)
         p1 = (b == 0 ? RS.phi[i2][m] : RS.phi[i1][m])
         p2 = RS.phi[i2][m]
 
-        RS.Ct[m]   = w1*c1 + w2*c2
-        RS.Pt[m]   = w1*p1 + w2*p2
+        # Morphing C and phi
+        RS.Ct[m]   = cosθ*c1 + sinθ*c2
+        RS.Pt[m]   = cosθ*p1 + sinθ*p2
+        # First derivatives
         RS.dCt[m]  = dw1*c1 + dw2*c2
         RS.dPt[m]  = dw1*p1 + dw2*p2
+        # Second derivatives
         RS.d2Ct[m] = d2w1*c1 + d2w2*c2
         RS.d2Pt[m] = d2w1*p1 + d2w2*p2
     end
 end
 
 # ---------------------------------------------------------
-# STAGE 2: FAST EVALUATION (Hot Loops)
+# SPATIAL WRAPPERS: Evaluated on grid points
 # ---------------------------------------------------------
 
-# Base spatial kernel - No interpolation inside!
-@inline function F_dpq_fast(x::Float64, y::Float64, p::Int, q::Int, RS::QuinticRandomFourierSequence)
-    s = 0.0
-    shift = (p + q) * (π/2)
-    @inbounds @simd for m in 1:RS.M
-        kx, ky = RS.kx_scaled[m], RS.ky_scaled[m]
-        pre = (p==0 ? 1.0 : kx^p) * (q==0 ? 1.0 : ky^q)
-        arg = kx*x + ky*y + RS.Pt[m] + shift
-        s  += RS.Ct[m] * pre * cos(arg)
-    end
-    return RS.A * s
-end
-
-# ---------------------------------------------------------
-# ALL WRAPPERS (Spatial)
-# ---------------------------------------------------------
-@inline Sz(x,y,RS)      = 1.0 + F_dpq_fast(x,y,0,0,RS)
-@inline Sz_x(x,y,RS)    = F_dpq_fast(x,y,1,0,RS)
-@inline Sz_xx(x,y,RS)   = F_dpq_fast(x,y,2,0,RS)
-@inline Sz_xxx(x,y,RS)  = F_dpq_fast(x,y,3,0,RS)
-@inline Sz_xxxx(x,y,RS) = F_dpq_fast(x,y,4,0,RS)
-
-@inline Sz_y(x,y,RS)    = F_dpq_fast(x,y,0,1,RS)
-@inline Sz_yy(x,y,RS)   = F_dpq_fast(x,y,0,2,RS)
-@inline Sz_yyy(x,y,RS)  = F_dpq_fast(x,y,0,3,RS)
-@inline Sz_yyyy(x,y,RS) = F_dpq_fast(x,y,0,4,RS)
-
-@inline Sz_xy(x,y,RS)   = F_dpq_fast(x,y,1,1,RS)
-@inline Sz_xxyy(x,y,RS) = F_dpq_fast(x,y,2,2,RS)
-
-# ---------------------------------------------------------
-# ALL WRAPPERS (Temporal - Chain Rule on Buffers)
-# ---------------------------------------------------------
-@inline function Sz_t(x,y,RS::QuinticRandomFourierSequence)
-    s = 0.0
+@inline function Sz(x, y, RS)
+    val = 0.0
     @inbounds @simd for m in 1:RS.M
         arg = RS.kx_scaled[m]*x + RS.ky_scaled[m]*y + RS.Pt[m]
-        # d/dt [Ct * cos(Pt)] = dCt*cos(Pt) - Ct*sin(Pt)*dPt
-        s += RS.dCt[m]*cos(arg) - RS.Ct[m]*sin(arg)*RS.dPt[m]
+        val += RS.Ct[m] * cos(arg)
     end
-    return RS.A * s
+    return 1.0 + RS.A * val
 end
 
-@inline function Sz_tt(x,y,RS::QuinticRandomFourierSequence)
-    s = 0.0
+@inline function Sz_x(x, y, RS)
+    val = 0.0
     @inbounds @simd for m in 1:RS.M
         arg = RS.kx_scaled[m]*x + RS.ky_scaled[m]*y + RS.Pt[m]
-        # Chain rule: (C'' - C*P'^2)cos - (2C'P' + CP'')sin
-        s += (RS.d2Ct[m] - RS.Ct[m]*RS.dPt[m]^2)*cos(arg) - 
-             (2.0*RS.dCt[m]*RS.dPt[m] + RS.Ct[m]*RS.d2Pt[m])*sin(arg)
+        val += RS.Ct[m] * (-sin(arg)) * RS.kx_scaled[m]
     end
-    return RS.A * s
+    return RS.A * val
 end
 
-@inline function Sz_tx(x,y,RS::QuinticRandomFourierSequence)
-    s = 0.0
+@inline function Sz_xx(x, y, RS)
+    val = 0.0
     @inbounds @simd for m in 1:RS.M
         kx = RS.kx_scaled[m]
         arg = kx*x + RS.ky_scaled[m]*y + RS.Pt[m]
-        # derivative of Sz_x w.r.t time
-        s += kx * (RS.dCt[m]*sin(arg) + RS.Ct[m]*cos(arg)*RS.dPt[m])
+        val += RS.Ct[m] * (-cos(arg)) * (kx*kx)
     end
-    # Note: Sz_x uses cos(arg + pi/2) which is -sin(arg). 
-    # The derivative of -sin(arg) is -cos(arg)*arg'.
-    return -RS.A * s 
+    return RS.A * val
 end
 
+@inline function Sz_xxx(x, y, RS)
+    val = 0.0
+    @inbounds @simd for m in 1:RS.M
+        kx = RS.kx_scaled[m]
+        arg = kx*x + RS.ky_scaled[m]*y + RS.Pt[m]
+        val += RS.Ct[m] * sin(arg) * (kx*kx*kx)
+    end
+    return RS.A * val
+end
+
+@inline function Sz_xxxx(x, y, RS)
+    val = 0.0
+    @inbounds @simd for m in 1:RS.M
+        kx = RS.kx_scaled[m]
+        arg = kx*x + RS.ky_scaled[m]*y + RS.Pt[m]
+        val += RS.Ct[m] * cos(arg) * (kx*kx*kx*kx)
+    end
+    return RS.A * val
+end
+
+@inline function Sz_y(x, y, RS)
+    val = 0.0
+    @inbounds @simd for m in 1:RS.M
+        ky = RS.ky_scaled[m]
+        arg = RS.kx_scaled[m]*x + ky*y + RS.Pt[m]
+        val += RS.Ct[m] * (-sin(arg)) * ky
+    end
+    return RS.A * val
+end
+
+@inline function Sz_yy(x, y, RS)
+    val = 0.0
+    @inbounds @simd for m in 1:RS.M
+        ky = RS.ky_scaled[m]
+        arg = RS.kx_scaled[m]*x + ky*y + RS.Pt[m]
+        val += RS.Ct[m] * (-cos(arg)) * (ky*ky)
+    end
+    return RS.A * val
+end
+
+@inline function Sz_xy(x, y, RS)
+    val = 0.0
+    @inbounds @simd for m in 1:RS.M
+        kx, ky = RS.kx_scaled[m], RS.ky_scaled[m]
+        arg = kx*x + ky*y + RS.Pt[m]
+        val += RS.Ct[m] * (-cos(arg)) * (kx * ky)
+    end
+    return RS.A * val
+end
+
+@inline function Sz_xxyy(x, y, RS)
+    val = 0.0
+    @inbounds @simd for m in 1:RS.M
+        kx, ky = RS.kx_scaled[m], RS.ky_scaled[m]
+        arg = kx*x + ky*y + RS.Pt[m]
+        val += RS.Ct[m] * cos(arg) * (kx*kx * ky*ky)
+    end
+    return RS.A * val
+end
+
+# ---------------------------------------------------------
+# TEMPORAL WRAPPERS: Using Chain Rule on Buffers
+# ---------------------------------------------------------
+
+@inline function Sz_t(x, y, RS)
+    val = 0.0
+    @inbounds @simd for m in 1:RS.M
+        arg = RS.kx_scaled[m]*x + RS.ky_scaled[m]*y + RS.Pt[m]
+        # d/dt [Ct * cos(Pt)] = Ct'*cos(Pt) - Ct*sin(Pt)*Pt'
+        val += RS.dCt[m]*cos(arg) - RS.Ct[m]*sin(arg)*RS.dPt[m]
+    end
+    return RS.A * val
+end
+
+@inline function Sz_tt(x, y, RS)
+    val = 0.0
+    @inbounds @simd for m in 1:RS.M
+        arg = RS.kx_scaled[m]*x + RS.ky_scaled[m]*y + RS.Pt[m]
+        # (Ct'' - Ct*Pt'^2)cos(Pt) - (2Ct'Pt' + Ct*Pt'')sin(Pt)
+        val += (RS.d2Ct[m] - RS.Ct[m]*RS.dPt[m]^2)*cos(arg) - 
+               (2.0*RS.dCt[m]*RS.dPt[m] + RS.Ct[m]*RS.d2Pt[m])*sin(arg)
+    end
+    return RS.A * val
+end
+
+@inline function Sz_tx(x, y, RS)
+    val = 0.0
+    @inbounds @simd for m in 1:RS.M
+        kx = RS.kx_scaled[m]
+        arg = kx*x + RS.ky_scaled[m]*y + RS.Pt[m]
+        # d/dt [-Ct * sin(arg) * kx] = -kx * [Ct' * sin(arg) + Ct * cos(arg) * Pt']
+        val += kx * (RS.dCt[m]*sin(arg) + RS.Ct[m]*cos(arg)*RS.dPt[m])
+    end
+    return -RS.A * val
+end
+
+@inline function Sz_ty(x, y, RS)
+    val = 0.0
+    @inbounds @simd for m in 1:RS.M
+        ky = RS.ky_scaled[m]
+        arg = RS.kx_scaled[m]*x + ky*y + RS.Pt[m]
+        val += ky * (RS.dCt[m]*sin(arg) + RS.Ct[m]*cos(arg)*RS.dPt[m])
+    end
+    return -RS.A * val
+end
 mutable struct RandomFourierSequence{T} <: Source
     time::T
 
