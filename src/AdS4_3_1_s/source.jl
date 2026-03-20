@@ -54,6 +54,7 @@ using Jecco.AdS4_3_1_s: Source
 # ---------------------------------------------------------
 mutable struct QuinticRandomFourierSequence{T} <: Source
     time::T
+    step :: Integer = 0
     MM::Int
     M::Int
     delta::T
