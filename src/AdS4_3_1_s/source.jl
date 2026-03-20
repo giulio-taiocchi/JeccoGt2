@@ -46,43 +46,46 @@ Sz_tt(t, x, y, ::NoSource) = 0.0
 using Random, LinearAlgebra
 
 
-# ---------------------------------------------------------
+using Random, LinearAlgebra
+using Jecco.AdS4_3_1_s: Source 
 
+# ---------------------------------------------------------
+# STRUCTURE
 # ---------------------------------------------------------
 mutable struct QuinticRandomFourierSequence{T} <: Source
-    time::T             # Internal time tracker for Jecco
-    MM::Int             # Total data blocks
-    M::Int              # Number of modes
-    delta::T            # Delta T (Interval)
-    L::T                # Box Size
-    kradius::T          # Center of k-shell
-    width::T            # Shell width
-    A::T                # Amplitude
+    time::T
+    MM::Int
+    M::Int
+    delta::T
+    L::T
+    kradius::T
+    width::T
+    A::T
     seed::Union{Int, Nothing}
 
-    # Pre-calculated Geometry
+    # Internal Geometry: Fixed for periodicity
     kx_scaled::Vector{T} 
     ky_scaled::Vector{T}
     
-    # Random Data Sets
+    # Data Sets: MM sets of amplitudes and phases
     C::Vector{Vector{T}}
     phi::Vector{Vector{T}} 
     
-    # State Buffers (Morphed values for current 't')
+    # State Buffers: Updated automatically via sync_buffer!
     Ct::Vector{T};   Pt::Vector{T}
     dCt::Vector{T};  dPt::Vector{T}
     d2Ct::Vector{T}; d2Pt::Vector{T}
     
-    last_buffer_time::T # Logic to prevent redundant interpolation
+    last_buffer_time::T 
 end
 
 # ---------------------------------------------------------
 # CONSTRUCTOR
 # ---------------------------------------------------------
-function QuinticRandomFourierSequence(; MM, M, delta, L, kradius, A, seed=nothing, width=1.0)
+function QuinticRandomFourierSequence(; MM, M, delta=1.0, L=1.0, kradius=1.0, A=1.0, seed=nothing, width=1.0)
     if seed !== nothing; Random.seed!(seed); end
 
-    # 1. k-selection (Integer k for periodicity)
+    # 1. Select ONE set of integer k-vectors (Periodicity check)
     pool = Tuple{Int, Int}[]
     r_max = ceil(Int, kradius + width)
     for nx in -r_max:r_max, ny in -r_max:r_max
@@ -91,16 +94,19 @@ function QuinticRandomFourierSequence(; MM, M, delta, L, kradius, A, seed=nothin
             push!(pool, (nx, ny))
         end
     end
-    if isempty(pool); error("No k-vectors found. Check kradius/width."); end
+    if isempty(pool); error("No k-vectors found in range."); end
 
     scale = 2π / L
     selected = [rand(pool) for _ in 1:M]
     kxs = [Float64(v[1]) * scale for v in selected]
     kys = [Float64(v[2]) * scale for v in selected]
 
-    # 2. Amplitudes and Unwrapped Phases
-    C_data = [normalize(randn(M)) for _ in 1:MM]
+    # 2. Generate MM sets of random data (Amplitudes and Phases)
+    # sigma = delta logic from your old code preserved via delta
+    C_data = [normalize(delta .* randn(M)) for _ in 1:MM]
     raw_phi = [2π .* rand(M) for _ in 1:MM]
+    
+    # Shortest-path phase unwrapping (Crucial for C2 continuity)
     phi_data = copy(raw_phi)
     for b in 1:(MM-1), m in 1:M
         diff = mod(raw_phi[b+1][m] - phi_data[b][m] + π, 2π) - π
@@ -112,15 +118,14 @@ function QuinticRandomFourierSequence(; MM, M, delta, L, kradius, A, seed=nothin
         0.0, MM, M, T(delta), T(L), T(kradius), T(width), T(A), seed,
         kxs, kys, C_data, phi_data,
         zeros(M), zeros(M), zeros(M), zeros(M), zeros(M), zeros(M),
-        -1.0 # Force first sync
+        -1.0 
     )
 end
 
 # ---------------------------------------------------------
-# BUFFER SYNCHRONIZATION
+# BUFFER MANAGEMENT
 # ---------------------------------------------------------
 function sync_buffer!(RS::QuinticRandomFourierSequence, t::Float64)
-    # If time hasn't changed (e.g. multiple spatial calls at same t), skip
     if t == RS.last_buffer_time; return; end
     
     δ = RS.delta
@@ -135,28 +140,21 @@ function sync_buffer!(RS::QuinticRandomFourierSequence, t::Float64)
     d2s = (60*τ - 180*τ^2 + 120*τ3) / (δ^2)
 
     θ = (π/2) * s
-    dθ = (π/2) * ds
-    d2θ = (π/2) * d2s
-    
+    dθ, d2θ = (π/2)*ds, (π/2)*d2s
     sinθ, cosθ = sincos(θ)
+    
     dw1, dw2 = -sinθ*dθ, cosθ*dθ
-    d2w1 = -cosθ*(dθ^2) - sinθ*d2θ
-    d2w2 = -sinθ*(dθ^2) + cosθ*d2θ
+    d2w1, d2w2 = -cosθ*(dθ^2) - sinθ*d2θ, -sinθ*(dθ^2) + cosθ*d2θ
 
     @inbounds for m in 1:RS.M
-        # Handle Startup
-        c1 = (b == 0 ? 0.0 : RS.C[i1][m])
-        c2 = RS.C[i2][m]
-        p1 = (b == 0 ? RS.phi[i2][m] : RS.phi[i1][m])
-        p2 = RS.phi[i2][m]
+        # Logic from your old code: fade-in on first block
+        c1 = (b == 0 ? 0.0 : RS.C[i1][m]); c2 = RS.C[i2][m]
+        p1 = (b == 0 ? RS.phi[i2][m] : RS.phi[i1][m]); p2 = RS.phi[i2][m]
 
-        # Interp Params
         RS.Ct[m]   = cosθ*c1 + sinθ*c2
         RS.Pt[m]   = cosθ*p1 + sinθ*p2
-        # d/dt
         RS.dCt[m]  = dw1*c1 + dw2*c2
         RS.dPt[m]  = dw1*p1 + dw2*p2
-        # d2/dt2
         RS.d2Ct[m] = d2w1*c1 + d2w2*c2
         RS.d2Pt[m] = d2w1*p1 + d2w2*p2
     end
@@ -164,20 +162,19 @@ function sync_buffer!(RS::QuinticRandomFourierSequence, t::Float64)
 end
 
 # ---------------------------------------------------------
-# SPATIAL WRAPPERS
+# SPATIAL FUNCTIONS
 # ---------------------------------------------------------
 
-@inline function Sz(t, x, y, RS)
+@inline function Sz(t, x, y, RS::QuinticRandomFourierSequence)
     sync_buffer!(RS, t)
     val = 0.0
     @inbounds @simd for m in 1:RS.M
-        arg = RS.kx_scaled[m]*x + RS.ky_scaled[m]*y + RS.Pt[m]
-        val += RS.Ct[m] * cos(arg)
+        val += RS.Ct[m] * cos(RS.kx_scaled[m]*x + RS.ky_scaled[m]*y + RS.Pt[m])
     end
     return 1.0 + RS.A * val
 end
 
-@inline function Sz_x(t, x, y, RS)
+@inline function Sz_x(t, x, y, RS::QuinticRandomFourierSequence)
     sync_buffer!(RS, t)
     val = 0.0
     @inbounds @simd for m in 1:RS.M
@@ -188,7 +185,7 @@ end
     return RS.A * val
 end
 
-@inline function Sz_xx(t, x, y, RS)
+@inline function Sz_xx(t, x, y, RS::QuinticRandomFourierSequence)
     sync_buffer!(RS, t)
     val = 0.0
     @inbounds @simd for m in 1:RS.M
@@ -199,7 +196,7 @@ end
     return RS.A * val
 end
 
-@inline function Sz_xxx(t, x, y, RS)
+@inline function Sz_xxx(t, x, y, RS::QuinticRandomFourierSequence)
     sync_buffer!(RS, t)
     val = 0.0
     @inbounds @simd for m in 1:RS.M
@@ -210,7 +207,7 @@ end
     return RS.A * val
 end
 
-@inline function Sz_xxxx(t, x, y, RS)
+@inline function Sz_xxxx(t, x, y, RS::QuinticRandomFourierSequence)
     sync_buffer!(RS, t)
     val = 0.0
     @inbounds @simd for m in 1:RS.M
@@ -221,7 +218,7 @@ end
     return RS.A * val
 end
 
-@inline function Sz_y(t, x, y, RS)
+@inline function Sz_y(t, x, y, RS::QuinticRandomFourierSequence)
     sync_buffer!(RS, t)
     val = 0.0
     @inbounds @simd for m in 1:RS.M
@@ -232,7 +229,7 @@ end
     return RS.A * val
 end
 
-@inline function Sz_yy(t, x, y, RS)
+@inline function Sz_yy(t, x, y, RS::QuinticRandomFourierSequence)
     sync_buffer!(RS, t)
     val = 0.0
     @inbounds @simd for m in 1:RS.M
@@ -243,7 +240,7 @@ end
     return RS.A * val
 end
 
-@inline function Sz_yyy(t, x, y, RS)
+@inline function Sz_yyy(t, x, y, RS::QuinticRandomFourierSequence)
     sync_buffer!(RS, t)
     val = 0.0
     @inbounds @simd for m in 1:RS.M
@@ -254,7 +251,7 @@ end
     return RS.A * val
 end
 
-@inline function Sz_yyyy(t, x, y, RS)
+@inline function Sz_yyyy(t, x, y, RS::QuinticRandomFourierSequence)
     sync_buffer!(RS, t)
     val = 0.0
     @inbounds @simd for m in 1:RS.M
@@ -265,7 +262,7 @@ end
     return RS.A * val
 end
 
-@inline function Sz_xy(t, x, y, RS)
+@inline function Sz_xy(t, x, y, RS::QuinticRandomFourierSequence)
     sync_buffer!(RS, t)
     val = 0.0
     @inbounds @simd for m in 1:RS.M
@@ -276,7 +273,29 @@ end
     return RS.A * val
 end
 
-@inline function Sz_xxyy(t, x, y, RS)
+@inline function Sz_xxy(t, x, y, RS::QuinticRandomFourierSequence)
+    sync_buffer!(RS, t)
+    val = 0.0
+    @inbounds @simd for m in 1:RS.M
+        kx, ky = RS.kx_scaled[m], RS.ky_scaled[m]
+        arg = kx*x + ky*y + RS.Pt[m]
+        val += RS.Ct[m] * sin(arg) * (kx*kx * ky)
+    end
+    return RS.A * val
+end
+
+@inline function Sz_xyy(t, x, y, RS::QuinticRandomFourierSequence)
+    sync_buffer!(RS, t)
+    val = 0.0
+    @inbounds @simd for m in 1:RS.M
+        kx, ky = RS.kx_scaled[m], RS.ky_scaled[m]
+        arg = kx*x + ky*y + RS.Pt[m]
+        val += RS.Ct[m] * sin(arg) * (kx * ky*ky)
+    end
+    return RS.A * val
+end
+
+@inline function Sz_xxyy(t, x, y, RS::QuinticRandomFourierSequence)
     sync_buffer!(RS, t)
     val = 0.0
     @inbounds @simd for m in 1:RS.M
@@ -288,10 +307,10 @@ end
 end
 
 # ---------------------------------------------------------
-# TEMPORAL WRAPPERS
+# TEMPORAL FUNCTIONS
 # ---------------------------------------------------------
 
-@inline function Sz_t(t, x, y, RS)
+@inline function Sz_t(t, x, y, RS::QuinticRandomFourierSequence)
     sync_buffer!(RS, t)
     val = 0.0
     @inbounds @simd for m in 1:RS.M
@@ -301,7 +320,7 @@ end
     return RS.A * val
 end
 
-@inline function Sz_tt(t, x, y, RS)
+@inline function Sz_tt(t, x, y, RS::QuinticRandomFourierSequence)
     sync_buffer!(RS, t)
     val = 0.0
     @inbounds @simd for m in 1:RS.M
@@ -312,7 +331,7 @@ end
     return RS.A * val
 end
 
-@inline function Sz_tx(t, x, y, RS)
+@inline function Sz_tx(t, x, y, RS::QuinticRandomFourierSequence)
     sync_buffer!(RS, t)
     val = 0.0
     @inbounds @simd for m in 1:RS.M
@@ -323,7 +342,7 @@ end
     return -RS.A * val
 end
 
-@inline function Sz_ty(t, x, y, RS)
+@inline function Sz_ty(t, x, y, RS::QuinticRandomFourierSequence)
     sync_buffer!(RS, t)
     val = 0.0
     @inbounds @simd for m in 1:RS.M
@@ -334,6 +353,38 @@ end
     return -RS.A * val
 end
 
+@inline function Sz_txx(t, x, y, RS::QuinticRandomFourierSequence)
+    sync_buffer!(RS, t)
+    val = 0.0
+    @inbounds @simd for m in 1:RS.M
+        kx = RS.kx_scaled[m]
+        arg = kx*x + RS.ky_scaled[m]*y + RS.Pt[m]
+        val += (kx*kx) * (RS.dCt[m]*cos(arg) - RS.Ct[m]*sin(arg)*RS.dPt[m])
+    end
+    return -RS.A * val
+end
+
+@inline function Sz_tyy(t, x, y, RS::QuinticRandomFourierSequence)
+    sync_buffer!(RS, t)
+    val = 0.0
+    @inbounds @simd for m in 1:RS.M
+        ky = RS.ky_scaled[m]
+        arg = RS.kx_scaled[m]*x + ky*y + RS.Pt[m]
+        val += (ky*ky) * (RS.dCt[m]*cos(arg) - RS.Ct[m]*sin(arg)*RS.dPt[m])
+    end
+    return -RS.A * val
+end
+
+@inline function Sz_txy(t, x, y, RS::QuinticRandomFourierSequence)
+    sync_buffer!(RS, t)
+    val = 0.0
+    @inbounds @simd for m in 1:RS.M
+        kx, ky = RS.kx_scaled[m], RS.ky_scaled[m]
+        arg = kx*x + ky*y + RS.Pt[m]
+        val += (kx*ky) * (RS.dCt[m]*cos(arg) - RS.Ct[m]*sin(arg)*RS.dPt[m])
+    end
+    return -RS.A * val
+end
 
 mutable struct RandomFourierSequence{T} <: Source
     time::T
