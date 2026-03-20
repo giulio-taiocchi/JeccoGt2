@@ -47,7 +47,7 @@ using Random, LinearAlgebra
 # ---------------------------------------------------------
 # STRUCTURE: Optimized for Periodic Forcing
 # ---------------------------------------------------------
-mutable struct QuinticRandomFourierSequence{T}
+mutable struct QuinticRandomFourierSequence{T} <: Source
     MM::Int             # Number of total data blocks
     M::Int              # Number of Fourier modes
     delta::T            # Timestep interval (Delta T)
