@@ -1,3 +1,6 @@
+using Random
+using LinearAlgebra
+
 # no source
 Base.@kwdef mutable struct NoSource{T} <: Source
 	time :: T = 0.0
@@ -43,8 +46,340 @@ Sz_tt(t, x, y, ::NoSource) = 0.0
 
 
 
-using Random, LinearAlgebra
 
+# -----------------------------------------------------------------------------
+# STRUCTURE: SincosRandomFourierSequence with Full Derivative Suite
+# -----------------------------------------------------------------------------
+mutable struct SincosRandomFourierSequence{T} <: Source
+    time::T
+    MM::Int
+    M::Int
+    delta::T
+    L::T
+    kradius::T
+
+    # Independent spatial profiles for each macro time block
+    C::Vector{Vector{T}}
+    kx_scaled::Vector{T} 
+    ky_scaled::Vector{T} 
+    phi::Vector{Vector{T}}
+
+    step::Int
+    A::T
+    width::T
+
+    # Explicit time-dependent weights and analytical derivatives
+    cosθ::T;   sinθ::T
+    dcosθ::T;  dsinθ::T
+    d2cosθ::T; d2sinθ::T
+    
+    # Pre-calculated block selection metrics
+    i1::Int
+    i2::Int
+    
+    last_buffer_time::T 
+end
+
+# -----------------------------------------------------------------------------
+# CONSTRUCTOR
+# -----------------------------------------------------------------------------
+function SincosRandomFourierSequence(; MM, M, delta=1.0, L=1.0, kradius=1.0, A=1.0, seed=nothing, width=1.0)
+    if seed !== nothing; Random.seed!(seed); end
+
+    # 1. Harvest periodic wave vectors within designated bounds
+    pool = Tuple{Int, Int}[]
+    r_max = ceil(Int, kradius + width)
+    for nx in -r_max:r_max, ny in -r_max:r_max
+        mag = sqrt(nx^2 + ny^2)
+        if (kradius - width) <= mag <= (kradius + width)
+            push!(pool, (nx, ny))
+        end
+    end
+    if isempty(pool); error("No valid k-vectors found inside target shell."); end
+
+    scale = 2π / L
+    selected = [rand(pool) for _ in 1:M]
+    kxs_scaled = [Float64(v[1]) for v in selected] .* scale
+    kys_scaled = [Float64(v[2]) for v in selected] .* scale
+
+    # 2. Build independent configurations
+    raw_C = [normalize(randn(M)) for _ in 1:MM]
+    raw_phi = [2π .* rand(M) for _ in 1:MM]
+
+    # 3. Formulate padded tracking matrix (Index 1 acts as a zero-force soft-start)
+    C_data = Vector{Vector{Float64}}(undef, MM + 1)
+    phi_data = Vector{Vector{Float64}}(undef, MM + 1)
+    
+    C_data[1] = zeros(M)
+    phi_data[1] = copy(raw_phi[1]) 
+
+    for b in 1:MM
+        C_data[b+1] = raw_C[b]
+        phi_data[b+1] = raw_phi[b]
+    end
+
+    T = Float64
+    return SincosRandomFourierSequence{T}(
+        0.0, MM + 1, M, T(delta), T(L), T(kradius), 
+        C_data, kxs_scaled, kys_scaled, phi_data,         
+        0, T(A), T(width),                          
+        1.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+        1, 2,
+        -1.0                                        
+    )
+end
+
+# -----------------------------------------------------------------------------
+# RUNTIME BUFFER TRACKING ENGINE
+# -----------------------------------------------------------------------------
+function sync_buffer!(RS::SincosRandomFourierSequence, t::Float64)
+    if t == RS.last_buffer_time; return; end
+    
+    δ = RS.delta
+    b = floor(Int, t / δ)
+    RS.step = b 
+    
+    RS.i1 = mod(b, RS.MM) + 1
+    RS.i2 = mod(b + 1, RS.MM) + 1
+    
+    τ = (t - b * δ) / δ
+    θ = (π / 2) * τ
+    dθ = π / (2 * δ)
+    
+    RS.cosθ, RS.sinθ = sincos(θ)
+    
+    # Map analytical time-derivatives for the scalar mixing components
+    RS.dcosθ,  RS.dsinθ  = -RS.sinθ * dθ,  RS.cosθ * dθ
+    RS.d2cosθ, RS.d2sinθ = -RS.cosθ * dθ^2, -RS.sinθ * dθ^2
+    
+    RS.last_buffer_time = t
+end
+
+# -----------------------------------------------------------------------------
+# COMPLETE DERIVATIVE EVALUATION API
+# -----------------------------------------------------------------------------
+
+# --- Base Forcing Field: Sz ---
+@inline function Sz(t, x, y, RS::SincosRandomFourierSequence)
+    sync_buffer!(RS, t)
+    F1, F2 = 0.0, 0.0
+    @inbounds @simd for m in 1:RS.M
+        arg = RS.kx_scaled[m]*x + RS.ky_scaled[m]*y + RS.phi[RS.i1][m]
+        F1 += RS.C[RS.i1][m] * cos(arg)
+        arg2 = RS.kx_scaled[m]*x + RS.ky_scaled[m]*y + RS.phi[RS.i2][m]
+        F2 += RS.C[RS.i2][m] * cos(arg2)
+    end
+    return 1.0 + RS.A * (RS.cosθ * F1 + RS.sinθ * F2)
+end
+
+# --- Pure Time Derivatives ---
+@inline function Sz_t(t, x, y, RS::SincosRandomFourierSequence)
+    sync_buffer!(RS, t)
+    F1, F2 = 0.0, 0.0
+    @inbounds @simd for m in 1:RS.M
+        F1 += RS.C[RS.i1][m] * cos(RS.kx_scaled[m]*x + RS.ky_scaled[m]*y + RS.phi[RS.i1][m])
+        F2 += RS.C[RS.i2][m] * cos(RS.kx_scaled[m]*x + RS.ky_scaled[m]*y + RS.phi[RS.i2][m])
+    end
+    return RS.A * (RS.dcosθ * F1 + RS.dsinθ * F2)
+end
+
+@inline function Sz_tt(t, x, y, RS::SincosRandomFourierSequence)
+    sync_buffer!(RS, t)
+    F1, F2 = 0.0, 0.0
+    @inbounds @simd for m in 1:RS.M
+        F1 += RS.C[RS.i1][m] * cos(RS.kx_scaled[m]*x + RS.ky_scaled[m]*y + RS.phi[RS.i1][m])
+        F2 += RS.C[RS.i2][m] * cos(RS.kx_scaled[m]*x + RS.ky_scaled[m]*y + RS.phi[RS.i2][m])
+    end
+    return RS.A * (RS.d2cosθ * F1 + RS.d2sinθ * F2)
+end
+
+# --- First Spatial Order ---
+@inline function Sz_x(t, x, y, RS::SincosRandomFourierSequence)
+    sync_buffer!(RS, t)
+    F1, F2 = 0.0, 0.0
+    @inbounds @simd for m in 1:RS.M
+        F1 -= RS.kx_scaled[m] * RS.C[RS.i1][m] * sin(RS.kx_scaled[m]*x + RS.ky_scaled[m]*y + RS.phi[RS.i1][m])
+        F2 -= RS.kx_scaled[m] * RS.C[RS.i2][m] * sin(RS.kx_scaled[m]*x + RS.ky_scaled[m]*y + RS.phi[RS.i2][m])
+    end
+    return RS.A * (RS.cosθ * F1 + RS.sinθ * F2)
+end
+
+@inline function Sz_y(t, x, y, RS::SincosRandomFourierSequence)
+    sync_buffer!(RS, t)
+    F1, F2 = 0.0, 0.0
+    @inbounds @simd for m in 1:RS.M
+        F1 -= RS.ky_scaled[m] * RS.C[RS.i1][m] * sin(RS.kx_scaled[m]*x + RS.ky_scaled[m]*y + RS.phi[RS.i1][m])
+        F2 -= RS.ky_scaled[m] * RS.C[RS.i2][m] * sin(RS.kx_scaled[m]*x + RS.ky_scaled[m]*y + RS.phi[RS.i2][m])
+    end
+    return RS.A * (RS.cosθ * F1 + RS.sinθ * F2)
+end
+
+# --- Second Spatial Order ---
+@inline function Sz_xx(t, x, y, RS::SincosRandomFourierSequence)
+    sync_buffer!(RS, t)
+    F1, F2 = 0.0, 0.0
+    @inbounds @simd for m in 1:RS.M
+        fac = RS.kx_scaled[m]^2
+        F1 -= fac * RS.C[RS.i1][m] * cos(RS.kx_scaled[m]*x + RS.ky_scaled[m]*y + RS.phi[RS.i1][m])
+        F2 -= fac * RS.C[RS.i2][m] * cos(RS.kx_scaled[m]*x + RS.ky_scaled[m]*y + RS.phi[RS.i2][m])
+    end
+    return RS.A * (RS.cosθ * F1 + RS.sinθ * F2)
+end
+
+@inline function Sz_yy(t, x, y, RS::SincosRandomFourierSequence)
+    sync_buffer!(RS, t)
+    F1, F2 = 0.0, 0.0
+    @inbounds @simd for m in 1:RS.M
+        fac = RS.ky_scaled[m]^2
+        F1 -= fac * RS.C[RS.i1][m] * cos(RS.kx_scaled[m]*x + RS.ky_scaled[m]*y + RS.phi[RS.i1][m])
+        F2 -= fac * RS.C[RS.i2][m] * cos(RS.kx_scaled[m]*x + RS.ky_scaled[m]*y + RS.phi[RS.i2][m])
+    end
+    return RS.A * (RS.cosθ * F1 + RS.sinθ * F2)
+end
+
+@inline function Sz_xy(t, x, y, RS::SincosRandomFourierSequence)
+    sync_buffer!(RS, t)
+    F1, F2 = 0.0, 0.0
+    @inbounds @simd for m in 1:RS.M
+        fac = RS.kx_scaled[m] * RS.ky_scaled[m]
+        F1 -= fac * RS.C[RS.i1][m] * cos(RS.kx_scaled[m]*x + RS.ky_scaled[m]*y + RS.phi[RS.i1][m])
+        F2 -= fac * RS.C[RS.i2][m] * cos(RS.kx_scaled[m]*x + RS.ky_scaled[m]*y + RS.phi[RS.i2][m])
+    end
+    return RS.A * (RS.cosθ * F1 + RS.sinθ * F2)
+end
+
+# --- Third Spatial Order ---
+@inline function Sz_xxx(t, x, y, RS::SincosRandomFourierSequence)
+    sync_buffer!(RS, t)
+    F1, F2 = 0.0, 0.0
+    @inbounds @simd for m in 1:RS.M
+        fac = RS.kx_scaled[m]^3
+        F1 += fac * RS.C[RS.i1][m] * sin(RS.kx_scaled[m]*x + RS.ky_scaled[m]*y + RS.phi[RS.i1][m])
+        F2 += fac * RS.C[RS.i2][m] * sin(RS.kx_scaled[m]*x + RS.ky_scaled[m]*y + RS.phi[RS.i2][m])
+    end
+    return RS.A * (RS.cosθ * F1 + RS.sinθ * F2)
+end
+
+@inline function Sz_yyy(t, x, y, RS::SincosRandomFourierSequence)
+    sync_buffer!(RS, t)
+    F1, F2 = 0.0, 0.0
+    @inbounds @simd for m in 1:RS.M
+        fac = RS.ky_scaled[m]^3
+        F1 += fac * RS.C[RS.i1][m] * sin(RS.kx_scaled[m]*x + RS.ky_scaled[m]*y + RS.phi[RS.i1][m])
+        F2 += fac * RS.C[RS.i2][m] * sin(RS.kx_scaled[m]*x + RS.ky_scaled[m]*y + RS.phi[RS.i2][m])
+    end
+    return RS.A * (RS.cosθ * F1 + RS.sinθ * F2)
+end
+
+@inline function Sz_xxy(t, x, y, RS::SincosRandomFourierSequence)
+    sync_buffer!(RS, t)
+    F1, F2 = 0.0, 0.0
+    @inbounds @simd for m in 1:RS.M
+        fac = (RS.kx_scaled[m]^2) * RS.ky_scaled[m]
+        F1 += fac * RS.C[RS.i1][m] * sin(RS.kx_scaled[m]*x + RS.ky_scaled[m]*y + RS.phi[RS.i1][m])
+        F2 += fac * RS.C[RS.i2][m] * sin(RS.kx_scaled[m]*x + RS.ky_scaled[m]*y + RS.phi[RS.i2][m])
+    end
+    return RS.A * (RS.cosθ * F1 + RS.sinθ * F2)
+end
+
+@inline function Sz_xyy(t, x, y, RS::SincosRandomFourierSequence)
+    sync_buffer!(RS, t)
+    F1, F2 = 0.0, 0.0
+    @inbounds @simd for m in 1:RS.M
+        fac = RS.kx_scaled[m] * (RS.ky_scaled[m]^2)
+        F1 += fac * RS.C[RS.i1][m] * sin(RS.kx_scaled[m]*x + RS.ky_scaled[m]*y + RS.phi[RS.i1][m])
+        F2 += fac * RS.C[RS.i2][m] * sin(RS.kx_scaled[m]*x + RS.ky_scaled[m]*y + RS.phi[RS.i2][m])
+    end
+    return RS.A * (RS.cosθ * F1 + RS.sinθ * F2)
+end
+
+# --- Fourth Spatial Order ---
+@inline function Sz_xxxx(t, x, y, RS::SincosRandomFourierSequence)
+    sync_buffer!(RS, t)
+    F1, F2 = 0.0, 0.0
+    @inbounds @simd for m in 1:RS.M
+        fac = RS.kx_scaled[m]^4
+        F1 += fac * RS.C[RS.i1][m] * cos(RS.kx_scaled[m]*x + RS.ky_scaled[m]*y + RS.phi[RS.i1][m])
+        F2 += fac * RS.C[RS.i2][m] * cos(RS.kx_scaled[m]*x + RS.ky_scaled[m]*y + RS.phi[RS.i2][m])
+    end
+    return RS.A * (RS.cosθ * F1 + RS.sinθ * F2)
+end
+
+@inline function Sz_yyyy(t, x, y, RS::SincosRandomFourierSequence)
+    sync_buffer!(RS, t)
+    F1, F2 = 0.0, 0.0
+    @inbounds @simd for m in 1:RS.M
+        fac = RS.ky_scaled[m]^4
+        F1 += fac * RS.C[RS.i1][m] * cos(RS.kx_scaled[m]*x + RS.ky_scaled[m]*y + RS.phi[RS.i1][m])
+        F2 += fac * RS.C[RS.i2][m] * cos(RS.kx_scaled[m]*x + RS.ky_scaled[m]*y + RS.phi[RS.i2][m])
+    end
+    return RS.A * (RS.cosθ * F1 + RS.sinθ * F2)
+end
+
+@inline function Sz_xxyy(t, x, y, RS::SincosRandomFourierSequence)
+    sync_buffer!(RS, t)
+    F1, F2 = 0.0, 0.0
+    @inbounds @simd for m in 1:RS.M
+        fac = (RS.kx_scaled[m]^2) * (RS.ky_scaled[m]^2)
+        F1 += fac * RS.C[RS.i1][m] * cos(RS.kx_scaled[m]*x + RS.ky_scaled[m]*y + RS.phi[RS.i1][m])
+        F2 += fac * RS.C[RS.i2][m] * cos(RS.kx_scaled[m]*x + RS.ky_scaled[m]*y + RS.phi[RS.i2][m])
+    end
+    return RS.A * (RS.cosθ * F1 + RS.sinθ * F2)
+end
+
+# --- Mixed Space-Time Order ---
+@inline function Sz_tx(t, x, y, RS::SincosRandomFourierSequence)
+    sync_buffer!(RS, t)
+    F1, F2 = 0.0, 0.0
+    @inbounds @simd for m in 1:RS.M
+        F1 -= RS.kx_scaled[m] * RS.C[RS.i1][m] * sin(RS.kx_scaled[m]*x + RS.ky_scaled[m]*y + RS.phi[RS.i1][m])
+        F2 -= RS.kx_scaled[m] * RS.C[RS.i2][m] * sin(RS.kx_scaled[m]*x + RS.ky_scaled[m]*y + RS.phi[RS.i2][m])
+    end
+    return RS.A * (RS.dcosθ * F1 + RS.dsinθ * F2)
+end
+
+@inline function Sz_ty(t, x, y, RS::SincosRandomFourierSequence)
+    sync_buffer!(RS, t)
+    F1, F2 = 0.0, 0.0
+    @inbounds @simd for m in 1:RS.M
+        F1 -= RS.ky_scaled[m] * RS.C[RS.i1][m] * sin(RS.kx_scaled[m]*x + RS.ky_scaled[m]*y + RS.phi[RS.i1][m])
+        F2 -= RS.ky_scaled[m] * RS.C[RS.i2][m] * sin(RS.kx_scaled[m]*x + RS.ky_scaled[m]*y + RS.phi[RS.i2][m])
+    end
+    return RS.A * (RS.dcosθ * F1 + RS.dsinθ * F2)
+end
+
+@inline function Sz_txx(t, x, y, RS::SincosRandomFourierSequence)
+    sync_buffer!(RS, t)
+    F1, F2 = 0.0, 0.0
+    @inbounds @simd for m in 1:RS.M
+        fac = RS.kx_scaled[m]^2
+        F1 -= fac * RS.C[RS.i1][m] * cos(RS.kx_scaled[m]*x + RS.ky_scaled[m]*y + RS.phi[RS.i1][m])
+        F2 -= fac * RS.C[RS.i2][m] * cos(RS.kx_scaled[m]*x + RS.ky_scaled[m]*y + RS.phi[RS.i2][m])
+    end
+    return RS.A * (RS.dcosθ * F1 + RS.dsinθ * F2)
+end
+
+@inline function Sz_tyy(t, x, y, RS::SincosRandomFourierSequence)
+    sync_buffer!(RS, t)
+    F1, F2 = 0.0, 0.0
+    @inbounds @simd for m in 1:RS.M
+        fac = RS.ky_scaled[m]^2
+        F1 -= fac * RS.C[RS.i1][m] * cos(RS.kx_scaled[m]*x + RS.ky_scaled[m]*y + RS.phi[RS.i1][m])
+        F2 -= fac * RS.C[RS.i2][m] * cos(RS.kx_scaled[m]*x + RS.ky_scaled[m]*y + RS.phi[RS.i2][m])
+    end
+    return RS.A * (RS.dcosθ * F1 + RS.dsinθ * F2)
+end
+
+@inline function Sz_txy(t, x, y, RS::SincosRandomFourierSequence)
+    sync_buffer!(RS, t)
+    F1, F2 = 0.0, 0.0
+    @inbounds @simd for m in 1:RS.M
+        fac = RS.kx_scaled[m] * RS.ky_scaled[m]
+        F1 -= fac * RS.C[RS.i1][m] * cos(RS.kx_scaled[m]*x + RS.ky_scaled[m]*y + RS.phi[RS.i1][m])
+        F2 -= fac * RS.C[RS.i2][m] * cos(RS.kx_scaled[m]*x + RS.ky_scaled[m]*y + RS.phi[RS.i2][m])
+    end
+    return RS.A * (RS.dcosθ * F1 + RS.dsinθ * F2)
+end
 
 # ---------------------------------------------------------
 # STRUCTURE: Order matched to RandomFourierSequence
