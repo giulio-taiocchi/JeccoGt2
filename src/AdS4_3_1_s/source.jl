@@ -383,112 +383,35 @@ end
 
 
 
-using Random
-using LinearAlgebra
 
-# `Source` is assumed to be defined by the surrounding project, as in the
-# original file. If this file is used standalone, uncomment the next line:
-# abstract type Source end
 
-# -----------------------------------------------------------------------
-# NewQuinticRandomFourierSequence
-#
-# A time-varying random Fourier surface built by crossfading between MM
-# "buffers", each an independent random superposition of M plane waves
-# with random wavevectors, random unit-norm amplitudes, and random
-# phases. Consecutive buffers are blended in time using a quintic
-# (C2-smooth) ease curve, so the field, its velocity, and its
-# acceleration are all continuous across buffer boundaries.
-#
-# Design decisions, and why each one was (or wasn't) made:
-#
-#   * Storage: kx, ky, kx_scaled, ky_scaled, C, phi are (M x MM)
-#     `Matrix{T}` rather than `Vector{Vector{T}}`. Column b holds
-#     buffer b's data contiguously (column-major layout) instead of
-#     M separate heap-allocated small vectors per buffer. Clear win,
-#     no real downside — kept.
-#
-#   * `@views` on every column slice, to avoid allocating a copy per
-#     call. Clear win, no downside — kept.
-#
-#   * `zero(T)` instead of bare `0.0` literals in the hot loop. This
-#     is a real bug fix, not just style: a `Float64` literal forces
-#     every arithmetic op that touches it to promote, which silently
-#     defeats both SIMD width and memory bandwidth if T is Float32.
-#     Kept throughout.
-#
-#   * Immutable struct + pure `sync_buffer`, returning a `TimeWeights`
-#     value instead of caching state in mutable fields. The old mutable
-#     design had a real correctness hazard: calling any Sz* function
-#     concurrently on the same instance (e.g. a parallel grid
-#     evaluation) would race on the cached step/weight fields. Worth
-#     the change on correctness grounds alone.
-#
-#     The tradeoff: the old design cached weights across repeated calls
-#     at the same t, so e.g. Sz(t,x,y) then Sz_x(t,x,y) only paid for
-#     the quintic/trig computation once. A pure sync_buffer can't do
-#     that by itself. To avoid losing that, every Sz* function has two
-#     methods:
-#         Sz_x(x, y, RS, tw)   -- core; pass a pre-computed TimeWeights
-#         Sz_x(t, x, y, RS)    -- convenience; computes tw internally
-#     For grids / multiple derivative orders at the same t, compute
-#     `tw = sync_buffer(RS, t)` once and use the (x, y, RS, tw) form —
-#     that's the form that actually recovers the old caching benefit,
-#     safely, since tw is just a plain immutable value now instead of
-#     shared mutable state. The (t, x, y, RS) convenience form is fine
-#     for one-off evaluations but recomputes tw every call; don't use
-#     it in a hot loop over many points at fixed t.
-#
-#   * Codegen for the 20 Sz* functions. For c*cos(kx*x+ky*y+phi), the
-#     derivative of order p in x and q in y is:
-#         d^(p+q)/(dx^p dy^q) [c*cos(u)] = c * kx^p * ky^q * cos(u + (p+q)*pi/2)
-#     and cos(u + n*pi/2) cycles through {cos(u),-sin(u),-cos(u),sin(u)}
-#     as n mod 4 = {0,1,2,3}. Generating all 20 functions from this one
-#     rule removes ~250 lines of copy-pasted, easy-to-typo boilerplate
-#     and the class of bug where one function gets hand-edited but a
-#     sibling doesn't. The real cost is debuggability — stack traces
-#     point into generated code, and a reader has to know the mod-4
-#     trig-cycling trick instead of reading each derivative off the
-#     page directly. For a small, fixed set of derivatives like this
-#     (unlikely to grow or change shape often), that trade is worth it;
-#     if this were a set that different contributors edit piecemeal
-#     over time, hand-written functions would probably be easier to
-#     live with despite the duplication.
-#
-#   * Branch hoisted out of the hot loop: the old
-#     `RS.step == 0 ? zero(T) : C[i1][m]` ternary lived inside the
-#     per-mode loop. It's now a single `gate1` scalar (0 or 1) computed
-#     once outside the loop and multiplied in. The original's redundant
-#     `p1` special-case (which only mattered when already multiplied by
-#     zero) is dropped.
-#
-#   * @inbounds @simd, NOT @turbo/LoopVectorization. This was
-#     deliberately reverted from an earlier draft. LoopVectorization is
-#     a heavy dependency with real compile-time cost, its transcendental
-#     functions (cos/sin here) go through lower-precision approximations
-#     than libm, and it wasn't validated against this exact loop shape.
-#     Nothing here was profiled to show @inbounds @simd is actually the
-#     bottleneck — reach for @turbo later, backed by a benchmark on your
-#     real workload, not preemptively.
-# -----------------------------------------------------------------------
 
-struct NewQuinticRandomFourierSequence{T} <: Source
-    time::T         # kept for compatibility with external code that reads RS.time;
-                    # unused internally (sync_buffer takes t as an argument, not RS.time)
+mutable struct NewQuinticRandomFourierSequence{T} <: Source
+    time::T
     MM::Int
     M::Int
     delta::T
     L::T
     kradius::T
+
+    C::Vector{Vector{T}}
+    kx::Vector{Vector{T}}  
+    ky::Vector{Vector{T}}  
+    phi::Vector{Vector{T}}
+
+    step::Int
     A::T
     width::T
 
-    kx::Matrix{T}          # (M, MM) raw (unscaled) integer wavenumbers
-    ky::Matrix{T}          # (M, MM)
-    kx_scaled::Matrix{T}   # (M, MM) = kx .* (2*pi/L)
-    ky_scaled::Matrix{T}   # (M, MM)
-    C::Matrix{T}           # (M, MM) per-buffer unit-norm amplitudes
-    phi::Matrix{T}         # (M, MM) per-buffer random phases
+    # --- Internal Pre-scaled Buffers ---
+    kx_scaled::Vector{T} 
+    ky_scaled::Vector{T}
+    
+    # --- Scalar Time Weights ---
+    w1::T;   w2::T
+    dw1::T;  dw2::T
+    d2w1::T; d2w2::T
+    last_buffer_time::T 
 end
 
 # ---------------------------------------------------------
@@ -497,10 +420,7 @@ end
 function NewQuinticRandomFourierSequence(; MM, M, delta=1.0, L=1.0, kradius=1.0, A=1.0, seed=nothing, width=1.0)
     if seed !== nothing; Random.seed!(seed); end
 
-    T = promote_type(typeof(float(delta)), typeof(float(L)), typeof(float(kradius)),
-                      typeof(float(A)), typeof(float(width)))
-
-    pool = Tuple{Int,Int}[]
+    pool = Tuple{Int, Int}[]
     r_max = ceil(Int, kradius + width)
     for nx in -r_max:r_max, ny in -r_max:r_max
         mag = sqrt(nx^2 + ny^2)
@@ -508,169 +428,382 @@ function NewQuinticRandomFourierSequence(; MM, M, delta=1.0, L=1.0, kradius=1.0,
             push!(pool, (nx, ny))
         end
     end
-    isempty(pool) && error("No k-vectors found in range.")
+    if isempty(pool); error("No k-vectors found in range."); end
 
-    scale = T(2π / L)
+    scale = 2π / L
+    selected = [rand(pool) for _ in 1:M]
+    kxs_raw = [Float64(v[1]) for v in selected]
+    kys_raw = [Float64(v[2]) for v in selected]
+    
+    kxs_scaled = kxs_raw .* scale
+    kys_scaled = kys_raw .* scale
 
-    kx        = Matrix{T}(undef, M, MM)
-    ky        = Matrix{T}(undef, M, MM)
-    kx_scaled = Matrix{T}(undef, M, MM)
-    ky_scaled = Matrix{T}(undef, M, MM)
-    C         = Matrix{T}(undef, M, MM)
-    phi       = Matrix{T}(undef, M, MM)
-
-    # Each buffer gets its own independently-sampled wavevector set,
-    # its own unit-norm amplitude vector, and its own random phases.
-    for b in 1:MM
-        for m in 1:M
-            v = rand(pool)
-            kx[m, b] = T(v[1])
-            ky[m, b] = T(v[2])
-        end
-        @views kx_scaled[:, b] .= kx[:, b] .* scale
-        @views ky_scaled[:, b] .= ky[:, b] .* scale
-        @views C[:, b]         .= normalize(randn(T, M))
-        @views phi[:, b]       .= T(2π) .* rand(T, M)
+    C_data = [normalize(randn(M)) for _ in 1:MM]
+    kx_data = [copy(kxs_raw) for _ in 1:MM]
+    ky_data = [copy(kys_raw) for _ in 1:MM]
+    
+    raw_phi = [2π .* rand(M) for _ in 1:MM]
+    phi_data = copy(raw_phi)
+    for b in 1:(MM-1), m in 1:M
+        diff = mod(raw_phi[b+1][m] - phi_data[b][m] + π, 2π) - π
+        phi_data[b+1][m] = phi_data[b][m] + diff
     end
 
+    T = Float64
     return NewQuinticRandomFourierSequence{T}(
-        zero(T), MM, M, T(delta), T(L), T(kradius), T(A), T(width),
-        kx, ky, kx_scaled, ky_scaled, C, phi
+        0.0, MM, M, T(delta), T(L), T(kradius),     
+        C_data, kx_data, ky_data, phi_data,         
+        0, T(A), T(width),                          
+        kxs_scaled, kys_scaled,                     
+        0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 
+        -1.0                                        
     )
 end
 
 # ---------------------------------------------------------
-# TIME WEIGHTS (pure — no mutation, safe to call from any thread)
+# BUFFER MANAGEMENT
 # ---------------------------------------------------------
-struct TimeWeights{T}
-    step::Int
-    w1::T;   w2::T
-    dw1::T;  dw2::T
-    d2w1::T; d2w2::T
-end
-
-@inline function sync_buffer(RS::NewQuinticRandomFourierSequence{T}, t) where {T}
+function sync_buffer!(RS::NewQuinticRandomFourierSequence, t::Float64)
+    if t == RS.last_buffer_time; return; end
+    
     δ = RS.delta
     b = floor(Int, t / δ)
-    τ = (T(t) - b * δ) / δ
-
+    RS.step = b 
+    
+    τ = (t - b * δ) / δ
+    
     τ2 = τ * τ; τ3 = τ2 * τ; τ4 = τ3 * τ; τ5 = τ4 * τ
-    s   = 10*τ3 - 15*τ4 + 6*τ5
-    ds  = (30*τ2 - 60*τ3 + 30*τ4) / δ
-    d2s = (60*τ - 180*τ2 + 120*τ3) / (δ*δ)
+    s = 10*τ3 - 15*τ4 + 6*τ5
+    ds = (30*τ2 - 60*τ3 + 30*τ4) / δ
+    d2s = (60*τ - 180*τ2 + 120*τ3) / (δ^2) # Fixed typo here
 
-    θ   = T(π/2) * s
-    dθ  = T(π/2) * ds
-    d2θ = T(π/2) * d2s
+    θ = (π/2) * s
+    dθ, d2θ = (π/2)*ds, (π/2)*d2s
     sinθ, cosθ = sincos(θ)
+    
+    RS.w1,   RS.w2   = cosθ, sinθ
+    RS.dw1,  RS.dw2  = -sinθ*dθ, cosθ*dθ
+    RS.d2w1, RS.d2w2 = -cosθ*(dθ^2) - sinθ*d2θ, -sinθ*(dθ^2) + cosθ*d2θ
 
-    w1,   w2   = cosθ, sinθ
-    dw1,  dw2  = -sinθ*dθ, cosθ*dθ
-    d2w1, d2w2 = -cosθ*dθ^2 - sinθ*d2θ, -sinθ*dθ^2 + cosθ*d2θ
-
-    return TimeWeights{T}(b, w1, w2, dw1, dw2, d2w1, d2w2)
+    RS.last_buffer_time = t
 end
 
 # ---------------------------------------------------------
-# CODEGEN: build Sz, Sz_x, Sz_xx, ..., Sz_txy programmatically
+# SPATIAL FUNCTIONS
 # ---------------------------------------------------------
-# (suffix, p, q, torder): derivative of order p in x, q in y, torder in t
-# (0 -> value, 1 -> first t-derivative, 2 -> second t-derivative)
-const _DERIV_SPECS = (
-    ("",      0, 0, 0),   # Sz itself
-    ("_x",    1, 0, 0),
-    ("_xx",   2, 0, 0),
-    ("_xxx",  3, 0, 0),
-    ("_xxxx", 4, 0, 0),
-    ("_y",    0, 1, 0),
-    ("_yy",   0, 2, 0),
-    ("_yyy",  0, 3, 0),
-    ("_yyyy", 0, 4, 0),
-    ("_xy",   1, 1, 0),
-    ("_xxy",  2, 1, 0),
-    ("_xyy",  1, 2, 0),
-    ("_xxyy", 2, 2, 0),
-    ("_t",    0, 0, 1),
-    ("_tt",   0, 0, 2),
-    ("_tx",   1, 0, 1),
-    ("_ty",   0, 1, 1),
-    ("_txx",  2, 0, 1),
-    ("_tyy",  0, 2, 1),
-    ("_txy",  1, 1, 1),
-)
 
-# d^n/du^n cos(u) cycles through cos, -sin, -cos, sin as n mod 4 = 0,1,2,3
-_trig_for(n::Int) = iseven(n) ? :cos : :sin
-_sign_for(n::Int) = (n % 4 == 1 || n % 4 == 2) ? -1 : 1
+@inline function Sz(t, x, y, RS::NewQuinticRandomFourierSequence)
+    sync_buffer!(RS, t); val = 0.0
+    i1, i2 = mod(RS.step, RS.MM)+1, mod(RS.step+1, RS.MM)+1
+    @inbounds @simd for m in 1:RS.M
+        kx, ky = RS.kx_scaled[m], RS.ky_scaled[m]
+        c1 = (RS.step == 0 ? 0.0 : RS.C[i1][m]); c2 = RS.C[i2][m]
+        p1 = (RS.step == 0 ? RS.phi[i2][m] : RS.phi[i1][m]); p2 = RS.phi[i2][m]
 
-# kx1[m]^p as an Expr, specialized at codegen time (p is a compile-time
-# constant per generated function, so 0/1 are special-cased to avoid an
-# unnecessary `^` call at runtime).
-_kpow_expr(sym::Symbol, n::Int) =
-    n == 0 ? :(one(T)) :
-    n == 1 ? :($sym[m]) :
-    :($sym[m]^$n)
-
-for (suffix, p, q, torder) in _DERIV_SPECS
-    fname   = Symbol("Sz", suffix)
-    n       = p + q
-    trig    = _trig_for(n)
-    signval = _sign_for(n)
-    wsyms   = torder == 0 ? (:w1, :w2) : torder == 1 ? (:dw1, :dw2) : (:d2w1, :d2w2)
-    isbase  = suffix == ""
-
-    kx1p = _kpow_expr(:kx1, p); ky1q = _kpow_expr(:ky1, q)
-    kx2p = _kpow_expr(:kx2, p); ky2q = _kpow_expr(:ky2, q)
-
-    @eval begin
-        @inline function $fname(x, y, RS::NewQuinticRandomFourierSequence{T}, tw::TimeWeights{T}) where {T}
-            i1 = mod(tw.step, RS.MM) + 1
-            i2 = mod(tw.step + 1, RS.MM) + 1
-
-            @views kx1 = RS.kx_scaled[:, i1]
-            @views ky1 = RS.ky_scaled[:, i1]
-            @views kx2 = RS.kx_scaled[:, i2]
-            @views ky2 = RS.ky_scaled[:, i2]
-            @views c1v = RS.C[:, i1]
-            @views c2v = RS.C[:, i2]
-            @views p1v = RS.phi[:, i1]
-            @views p2v = RS.phi[:, i2]
-
-            # Outer boundary check, evaluated once (not per mode): during
-            # the very first interval (step == 0) buffer i1's amplitude
-            # contributes nothing, so the field fades in from flat rather
-            # than crossfading from a nonexistent "buffer -1".
-            gate1 = tw.step == 0 ? zero(T) : one(T)
-
-            wA = getfield(tw, $(QuoteNode(wsyms[1])))
-            wB = getfield(tw, $(QuoteNode(wsyms[2])))
-
-            val = zero(T)
-            @inbounds @simd for m in 1:RS.M
-                u1 = kx1[m]*x + ky1[m]*y + p1v[m]
-                u2 = kx2[m]*x + ky2[m]*y + p2v[m]
-                f1 = c1v[m] * gate1 * $signval * $(trig)(u1) * $kx1p * $ky1q
-                f2 = c2v[m] *         $signval * $(trig)(u2) * $kx2p * $ky2q
-                val += wA * f1 + wB * f2
-            end
-
-            return $(isbase ? :(one(T) + RS.A * val) : :(RS.A * val))
-        end
-
-        # Convenience overload matching the original (t, x, y, RS) call
-        # signature — computes the time weights internally. Prefer the
-        # (x, y, RS, tw) form above when evaluating multiple functions
-        # or multiple points at the same t.
-        @inline $fname(t, x, y, RS::NewQuinticRandomFourierSequence{T}) where {T} =
-            $fname(x, y, RS, sync_buffer(RS, t))
+        f1 = c1 * cos(kx*x + ky*y + p1)
+        f2 = c2 * cos(kx*x + ky*y + p2)
+        val += RS.w1 * f1 + RS.w2 * f2
     end
+    return 1.0 + RS.A * val
 end
 
+@inline function Sz_x(t, x, y, RS::NewQuinticRandomFourierSequence)
+    sync_buffer!(RS, t); val = 0.0
+    i1, i2 = mod(RS.step, RS.MM)+1, mod(RS.step+1, RS.MM)+1
+    @inbounds @simd for m in 1:RS.M
+        kx, ky = RS.kx_scaled[m], RS.ky_scaled[m]
+        c1 = (RS.step == 0 ? 0.0 : RS.C[i1][m]); c2 = RS.C[i2][m]
+        p1 = (RS.step == 0 ? RS.phi[i2][m] : RS.phi[i1][m]); p2 = RS.phi[i2][m]
 
+        f1_x = c1 * (-sin(kx*x + ky*y + p1)) * kx
+        f2_x = c2 * (-sin(kx*x + ky*y + p2)) * kx
+        val += RS.w1 * f1_x + RS.w2 * f2_x
+    end
+    return RS.A * val
+end
 
+@inline function Sz_xx(t, x, y, RS::NewQuinticRandomFourierSequence)
+    sync_buffer!(RS, t); val = 0.0
+    i1, i2 = mod(RS.step, RS.MM)+1, mod(RS.step+1, RS.MM)+1
+    @inbounds @simd for m in 1:RS.M
+        kx, ky = RS.kx_scaled[m], RS.ky_scaled[m]
+        c1 = (RS.step == 0 ? 0.0 : RS.C[i1][m]); c2 = RS.C[i2][m]
+        p1 = (RS.step == 0 ? RS.phi[i2][m] : RS.phi[i1][m]); p2 = RS.phi[i2][m]
 
+        f1_xx = c1 * (-cos(kx*x + ky*y + p1)) * (kx*kx)
+        f2_xx = c2 * (-cos(kx*x + ky*y + p2)) * (kx*kx)
+        val += RS.w1 * f1_xx + RS.w2 * f2_xx
+    end
+    return RS.A * val
+end
+
+@inline function Sz_xxx(t, x, y, RS::NewQuinticRandomFourierSequence)
+    sync_buffer!(RS, t); val = 0.0
+    i1, i2 = mod(RS.step, RS.MM)+1, mod(RS.step+1, RS.MM)+1
+    @inbounds @simd for m in 1:RS.M
+        kx, ky = RS.kx_scaled[m], RS.ky_scaled[m]
+        c1 = (RS.step == 0 ? 0.0 : RS.C[i1][m]); c2 = RS.C[i2][m]
+        p1 = (RS.step == 0 ? RS.phi[i2][m] : RS.phi[i1][m]); p2 = RS.phi[i2][m]
+
+        f1_xxx = c1 * sin(kx*x + ky*y + p1) * (kx^3)
+        f2_xxx = c2 * sin(kx*x + ky*y + p2) * (kx^3)
+        val += RS.w1 * f1_xxx + RS.w2 * f2_xxx
+    end
+    return RS.A * val
+end
+
+@inline function Sz_xxxx(t, x, y, RS::NewQuinticRandomFourierSequence)
+    sync_buffer!(RS, t); val = 0.0
+    i1, i2 = mod(RS.step, RS.MM)+1, mod(RS.step+1, RS.MM)+1
+    @inbounds @simd for m in 1:RS.M
+        kx, ky = RS.kx_scaled[m], RS.ky_scaled[m]
+        c1 = (RS.step == 0 ? 0.0 : RS.C[i1][m]); c2 = RS.C[i2][m]
+        p1 = (RS.step == 0 ? RS.phi[i2][m] : RS.phi[i1][m]); p2 = RS.phi[i2][m]
+
+        f1_xxxx = c1 * cos(kx*x + ky*y + p1) * (kx^4)
+        f2_xxxx = c2 * cos(kx*x + ky*y + p2) * (kx^4)
+        val += RS.w1 * f1_xxxx + RS.w2 * f2_xxxx
+    end
+    return RS.A * val
+end
+
+@inline function Sz_y(t, x, y, RS::NewQuinticRandomFourierSequence)
+    sync_buffer!(RS, t); val = 0.0
+    i1, i2 = mod(RS.step, RS.MM)+1, mod(RS.step+1, RS.MM)+1
+    @inbounds @simd for m in 1:RS.M
+        kx, ky = RS.kx_scaled[m], RS.ky_scaled[m]
+        c1 = (RS.step == 0 ? 0.0 : RS.C[i1][m]); c2 = RS.C[i2][m]
+        p1 = (RS.step == 0 ? RS.phi[i2][m] : RS.phi[i1][m]); p2 = RS.phi[i2][m]
+
+        f1_y = c1 * (-sin(kx*x + ky*y + p1)) * ky
+        f2_y = c2 * (-sin(kx*x + ky*y + p2)) * ky
+        val += RS.w1 * f1_y + RS.w2 * f2_y
+    end
+    return RS.A * val
+end
+
+@inline function Sz_yy(t, x, y, RS::NewQuinticRandomFourierSequence)
+    sync_buffer!(RS, t); val = 0.0
+    i1, i2 = mod(RS.step, RS.MM)+1, mod(RS.step+1, RS.MM)+1
+    @inbounds @simd for m in 1:RS.M
+        kx, ky = RS.kx_scaled[m], RS.ky_scaled[m]
+        c1 = (RS.step == 0 ? 0.0 : RS.C[i1][m]); c2 = RS.C[i2][m]
+        p1 = (RS.step == 0 ? RS.phi[i2][m] : RS.phi[i1][m]); p2 = RS.phi[i2][m]
+
+        f1_yy = c1 * (-cos(kx*x + ky*y + p1)) * (ky*ky)
+        f2_yy = c2 * (-cos(kx*x + ky*y + p2)) * (ky*ky)
+        val += RS.w1 * f1_yy + RS.w2 * f2_yy
+    end
+    return RS.A * val
+end
+
+@inline function Sz_yyy(t, x, y, RS::NewQuinticRandomFourierSequence)
+    sync_buffer!(RS, t); val = 0.0
+    i1, i2 = mod(RS.step, RS.MM)+1, mod(RS.step+1, RS.MM)+1
+    @inbounds @simd for m in 1:RS.M
+        kx, ky = RS.kx_scaled[m], RS.ky_scaled[m]
+        c1 = (RS.step == 0 ? 0.0 : RS.C[i1][m]); c2 = RS.C[i2][m]
+        p1 = (RS.step == 0 ? RS.phi[i2][m] : RS.phi[i1][m]); p2 = RS.phi[i2][m]
+
+        f1_yyy = c1 * sin(kx*x + ky*y + p1) * (ky^3)
+        f2_yyy = c2 * sin(kx*x + ky*y + p2) * (ky^3)
+        val += RS.w1 * f1_yyy + RS.w2 * f2_yyy
+    end
+    return RS.A * val
+end
+
+@inline function Sz_yyyy(t, x, y, RS::NewQuinticRandomFourierSequence)
+    sync_buffer!(RS, t); val = 0.0
+    i1, i2 = mod(RS.step, RS.MM)+1, mod(RS.step+1, RS.MM)+1
+    @inbounds @simd for m in 1:RS.M
+        kx, ky = RS.kx_scaled[m], RS.ky_scaled[m]
+        c1 = (RS.step == 0 ? 0.0 : RS.C[i1][m]); c2 = RS.C[i2][m]
+        p1 = (RS.step == 0 ? RS.phi[i2][m] : RS.phi[i1][m]); p2 = RS.phi[i2][m]
+
+        f1_yyyy = c1 * cos(kx*x + ky*y + p1) * (ky^4)
+        f2_yyyy = c2 * cos(kx*x + ky*y + p2) * (ky^4)
+        val += RS.w1 * f1_yyyy + RS.w2 * f2_yyyy
+    end
+    return RS.A * val
+end
+
+@inline function Sz_xy(t, x, y, RS::NewQuinticRandomFourierSequence)
+    sync_buffer!(RS, t); val = 0.0
+    i1, i2 = mod(RS.step, RS.MM)+1, mod(RS.step+1, RS.MM)+1
+    @inbounds @simd for m in 1:RS.M
+        kx, ky = RS.kx_scaled[m], RS.ky_scaled[m]
+        c1 = (RS.step == 0 ? 0.0 : RS.C[i1][m]); c2 = RS.C[i2][m]
+        p1 = (RS.step == 0 ? RS.phi[i2][m] : RS.phi[i1][m]); p2 = RS.phi[i2][m]
+
+        f1_xy = c1 * (-cos(kx*x + ky*y + p1)) * (kx * ky)
+        f2_xy = c2 * (-cos(kx*x + ky*y + p2)) * (kx * ky)
+        val += RS.w1 * f1_xy + RS.w2 * f2_xy
+    end
+    return RS.A * val
+end
+
+@inline function Sz_xxy(t, x, y, RS::NewQuinticRandomFourierSequence)
+    sync_buffer!(RS, t); val = 0.0
+    i1, i2 = mod(RS.step, RS.MM)+1, mod(RS.step+1, RS.MM)+1
+    @inbounds @simd for m in 1:RS.M
+        kx, ky = RS.kx_scaled[m], RS.ky_scaled[m]
+        c1 = (RS.step == 0 ? 0.0 : RS.C[i1][m]); c2 = RS.C[i2][m]
+        p1 = (RS.step == 0 ? RS.phi[i2][m] : RS.phi[i1][m]); p2 = RS.phi[i2][m]
+
+        f1_xxy = c1 * sin(kx*x + ky*y + p1) * (kx*kx * ky)
+        f2_xxy = c2 * sin(kx*x + ky*y + p2) * (kx*kx * ky)
+        val += RS.w1 * f1_xxy + RS.w2 * f2_xxy
+    end
+    return RS.A * val
+end
+
+@inline function Sz_xyy(t, x, y, RS::NewQuinticRandomFourierSequence)
+    sync_buffer!(RS, t); val = 0.0
+    i1, i2 = mod(RS.step, RS.MM)+1, mod(RS.step+1, RS.MM)+1
+    @inbounds @simd for m in 1:RS.M
+        kx, ky = RS.kx_scaled[m], RS.ky_scaled[m]
+        c1 = (RS.step == 0 ? 0.0 : RS.C[i1][m]); c2 = RS.C[i2][m]
+        p1 = (RS.step == 0 ? RS.phi[i2][m] : RS.phi[i1][m]); p2 = RS.phi[i2][m]
+
+        f1_xyy = c1 * sin(kx*x + ky*y + p1) * (kx * ky*ky)
+        f2_xyy = c2 * sin(kx*x + ky*y + p2) * (kx * ky*ky)
+        val += RS.w1 * f1_xyy + RS.w2 * f2_xyy
+    end
+    return RS.A * val
+end
+
+@inline function Sz_xxyy(t, x, y, RS::NewQuinticRandomFourierSequence)
+    sync_buffer!(RS, t); val = 0.0
+    i1, i2 = mod(RS.step, RS.MM)+1, mod(RS.step+1, RS.MM)+1
+    @inbounds @simd for m in 1:RS.M
+        kx, ky = RS.kx_scaled[m], RS.ky_scaled[m]
+        c1 = (RS.step == 0 ? 0.0 : RS.C[i1][m]); c2 = RS.C[i2][m]
+        p1 = (RS.step == 0 ? RS.phi[i2][m] : RS.phi[i1][m]); p2 = RS.phi[i2][m]
+
+        f1_xxyy = c1 * cos(kx*x + ky*y + p1) * (kx*kx * ky*ky)
+        f2_xxyy = c2 * cos(kx*x + ky*y + p2) * (kx*kx * ky*ky)
+        val += RS.w1 * f1_xxyy + RS.w2 * f2_xxyy
+    end
+    return RS.A * val
+end
 
 # ---------------------------------------------------------
+# TEMPORAL FUNCTIONS
+# ---------------------------------------------------------
+
+@inline function Sz_t(t, x, y, RS::NewQuinticRandomFourierSequence)
+    sync_buffer!(RS, t); val = 0.0
+    i1, i2 = mod(RS.step, RS.MM)+1, mod(RS.step+1, RS.MM)+1
+    @inbounds @simd for m in 1:RS.M
+        kx, ky = RS.kx_scaled[m], RS.ky_scaled[m]
+        c1 = (RS.step == 0 ? 0.0 : RS.C[i1][m]); c2 = RS.C[i2][m]
+        p1 = (RS.step == 0 ? RS.phi[i2][m] : RS.phi[i1][m]); p2 = RS.phi[i2][m]
+
+        f1 = c1 * cos(kx*x + ky*y + p1)
+        f2 = c2 * cos(kx*x + ky*y + p2)
+        val += RS.dw1 * f1 + RS.dw2 * f2
+    end
+    return RS.A * val
+end
+
+@inline function Sz_tt(t, x, y, RS::NewQuinticRandomFourierSequence)
+    sync_buffer!(RS, t); val = 0.0
+    i1, i2 = mod(RS.step, RS.MM)+1, mod(RS.step+1, RS.MM)+1
+    @inbounds @simd for m in 1:RS.M
+        kx, ky = RS.kx_scaled[m], RS.ky_scaled[m]
+        c1 = (RS.step == 0 ? 0.0 : RS.C[i1][m]); c2 = RS.C[i2][m]
+        p1 = (RS.step == 0 ? RS.phi[i2][m] : RS.phi[i1][m]); p2 = RS.phi[i2][m]
+
+        f1 = c1 * cos(kx*x + ky*y + p1)
+        f2 = c2 * cos(kx*x + ky*y + p2)
+        val += RS.d2w1 * f1 + RS.d2w2 * f2
+    end
+    return RS.A * val
+end
+
+@inline function Sz_tx(t, x, y, RS::NewQuinticRandomFourierSequence)
+    sync_buffer!(RS, t); val = 0.0
+    i1, i2 = mod(RS.step, RS.MM)+1, mod(RS.step+1, RS.MM)+1
+    @inbounds @simd for m in 1:RS.M
+        kx, ky = RS.kx_scaled[m], RS.ky_scaled[m]
+        c1 = (RS.step == 0 ? 0.0 : RS.C[i1][m]); c2 = RS.C[i2][m]
+        p1 = (RS.step == 0 ? RS.phi[i2][m] : RS.phi[i1][m]); p2 = RS.phi[i2][m]
+
+        f1_x = c1 * (-sin(kx*x + ky*y + p1)) * kx
+        f2_x = c2 * (-sin(kx*x + ky*y + p2)) * kx
+        val += RS.dw1 * f1_x + RS.dw2 * f2_x
+    end
+    return RS.A * val
+end
+
+@inline function Sz_ty(t, x, y, RS::NewQuinticRandomFourierSequence)
+    sync_buffer!(RS, t); val = 0.0
+    i1, i2 = mod(RS.step, RS.MM)+1, mod(RS.step+1, RS.MM)+1
+    @inbounds @simd for m in 1:RS.M
+        kx, ky = RS.kx_scaled[m], RS.ky_scaled[m]
+        c1 = (RS.step == 0 ? 0.0 : RS.C[i1][m]); c2 = RS.C[i2][m]
+        p1 = (RS.step == 0 ? RS.phi[i2][m] : RS.phi[i1][m]); p2 = RS.phi[i2][m]
+
+        f1_y = c1 * (-sin(kx*x + ky*y + p1)) * ky
+        f2_y = c2 * (-sin(kx*x + ky*y + p2)) * ky
+        val += RS.dw1 * f1_y + RS.dw2 * f2_y
+    end
+    return RS.A * val
+end
+
+@inline function Sz_txx(t, x, y, RS::NewQuinticRandomFourierSequence)
+    sync_buffer!(RS, t); val = 0.0
+    i1, i2 = mod(RS.step, RS.MM)+1, mod(RS.step+1, RS.MM)+1
+    @inbounds @simd for m in 1:RS.M
+        kx, ky = RS.kx_scaled[m], RS.ky_scaled[m]
+        c1 = (RS.step == 0 ? 0.0 : RS.C[i1][m]); c2 = RS.C[i2][m]
+        p1 = (RS.step == 0 ? RS.phi[i2][m] : RS.phi[i1][m]); p2 = RS.phi[i2][m]
+
+        f1_xx = c1 * (-cos(kx*x + ky*y + p1)) * (kx*kx)
+        f2_xx = c2 * (-cos(kx*x + ky*y + p2)) * (kx*kx)
+        val += RS.dw1 * f1_xx + RS.dw2 * f2_xx
+    end
+    return RS.A * val
+end
+
+@inline function Sz_tyy(t, x, y, RS::NewQuinticRandomFourierSequence)
+    sync_buffer!(RS, t); val = 0.0
+    i1, i2 = mod(RS.step, RS.MM)+1, mod(RS.step+1, RS.MM)+1
+    @inbounds @simd for m in 1:RS.M
+        kx, ky = RS.kx_scaled[m], RS.ky_scaled[m]
+        c1 = (RS.step == 0 ? 0.0 : RS.C[i1][m]); c2 = RS.C[i2][m]
+        p1 = (RS.step == 0 ? RS.phi[i2][m] : RS.phi[i1][m]); p2 = RS.phi[i2][m]
+
+        f1_yy = c1 * (-cos(kx*x + ky*y + p1)) * (ky*ky)
+        f2_yy = c2 * (-cos(kx*x + ky*y + p2)) * (ky*ky)
+        val += RS.dw1 * f1_yy + RS.dw2 * f2_yy
+    end
+    return RS.A * val
+end
+
+@inline function Sz_txy(t, x, y, RS::NewQuinticRandomFourierSequence)
+    sync_buffer!(RS, t); val = 0.0
+    i1, i2 = mod(RS.step, RS.MM)+1, mod(RS.step+1, RS.MM)+1
+    @inbounds @simd for m in 1:RS.M
+        kx, ky = RS.kx_scaled[m], RS.ky_scaled[m]
+        c1 = (RS.step == 0 ? 0.0 : RS.C[i1][m]); c2 = RS.C[i2][m]
+        p1 = (RS.step == 0 ? RS.phi[i2][m] : RS.phi[i1][m]); p2 = RS.phi[i2][m]
+
+        f1_xy = c1 * (-cos(kx*x + ky*y + p1)) * (kx * ky)
+        f2_xy = c2 * (-cos(kx*x + ky*y + p2)) * (kx * ky)
+        val += RS.dw1 * f1_xy + RS.dw2 * f2_xy
+    end
+    return RS.A * val
+end
+
+# ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+#------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+#------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+
+
+
 # STRUCTURE: Order matched to RandomFourierSequence
 # ---------------------------------------------------------
 mutable struct QuinticRandomFourierSequence{T} <: Source
