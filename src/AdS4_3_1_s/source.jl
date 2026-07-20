@@ -381,6 +381,205 @@ end
     return RS.A * (RS.dcosθ * F1 + RS.dsinθ * F2)
 end
 
+
+
+using Random
+using LinearAlgebra
+
+
+struct NewQuinticRandomFourierSequence{T} <: Source
+    MM::Int
+    M::Int
+    delta::T
+    L::T
+    kradius::T
+    A::T
+    width::T
+
+    kx::Matrix{T}          # (M, MM) raw (unscaled) integer wavenumbers
+    ky::Matrix{T}          # (M, MM)
+    kx_scaled::Matrix{T}   # (M, MM) = kx .* (2*pi/L)
+    ky_scaled::Matrix{T}   # (M, MM)
+    C::Matrix{T}           # (M, MM) per-buffer unit-norm amplitudes
+    phi::Matrix{T}         # (M, MM) per-buffer random phases
+end
+
+# ---------------------------------------------------------
+# CONSTRUCTOR
+# ---------------------------------------------------------
+function NewQuinticRandomFourierSequence(; MM, M, delta=1.0, L=1.0, kradius=1.0, A=1.0, seed=nothing, width=1.0)
+    if seed !== nothing; Random.seed!(seed); end
+
+    T = promote_type(typeof(float(delta)), typeof(float(L)), typeof(float(kradius)),
+                      typeof(float(A)), typeof(float(width)))
+
+    pool = Tuple{Int,Int}[]
+    r_max = ceil(Int, kradius + width)
+    for nx in -r_max:r_max, ny in -r_max:r_max
+        mag = sqrt(nx^2 + ny^2)
+        if (kradius - width) <= mag <= (kradius + width)
+            push!(pool, (nx, ny))
+        end
+    end
+    isempty(pool) && error("No k-vectors found in range.")
+
+    scale = T(2π / L)
+
+    kx        = Matrix{T}(undef, M, MM)
+    ky        = Matrix{T}(undef, M, MM)
+    kx_scaled = Matrix{T}(undef, M, MM)
+    ky_scaled = Matrix{T}(undef, M, MM)
+    C         = Matrix{T}(undef, M, MM)
+    phi       = Matrix{T}(undef, M, MM)
+
+    # Each buffer gets its own independently-sampled wavevector set,
+    # its own unit-norm amplitude vector, and its own random phases.
+    for b in 1:MM
+        for m in 1:M
+            v = rand(pool)
+            kx[m, b] = T(v[1])
+            ky[m, b] = T(v[2])
+        end
+        @views kx_scaled[:, b] .= kx[:, b] .* scale
+        @views ky_scaled[:, b] .= ky[:, b] .* scale
+        @views C[:, b]         .= normalize(randn(T, M))
+        @views phi[:, b]       .= T(2π) .* rand(T, M)
+    end
+
+    return NewQuinticRandomFourierSequence{T}(
+        MM, M, T(delta), T(L), T(kradius), T(A), T(width),
+        kx, ky, kx_scaled, ky_scaled, C, phi
+    )
+end
+
+# ---------------------------------------------------------
+# TIME WEIGHTS (pure — no mutation, safe to call from any thread)
+# ---------------------------------------------------------
+struct TimeWeights{T}
+    step::Int
+    w1::T;   w2::T
+    dw1::T;  dw2::T
+    d2w1::T; d2w2::T
+end
+
+@inline function sync_buffer(RS::NewQuinticRandomFourierSequence{T}, t) where {T}
+    δ = RS.delta
+    b = floor(Int, t / δ)
+    τ = (T(t) - b * δ) / δ
+
+    τ2 = τ * τ; τ3 = τ2 * τ; τ4 = τ3 * τ; τ5 = τ4 * τ
+    s   = 10*τ3 - 15*τ4 + 6*τ5
+    ds  = (30*τ2 - 60*τ3 + 30*τ4) / δ
+    d2s = (60*τ - 180*τ2 + 120*τ3) / (δ*δ)
+
+    θ   = T(π/2) * s
+    dθ  = T(π/2) * ds
+    d2θ = T(π/2) * d2s
+    sinθ, cosθ = sincos(θ)
+
+    w1,   w2   = cosθ, sinθ
+    dw1,  dw2  = -sinθ*dθ, cosθ*dθ
+    d2w1, d2w2 = -cosθ*dθ^2 - sinθ*d2θ, -sinθ*dθ^2 + cosθ*d2θ
+
+    return TimeWeights{T}(b, w1, w2, dw1, dw2, d2w1, d2w2)
+end
+
+# ---------------------------------------------------------
+# CODEGEN: build Sz, Sz_x, Sz_xx, ..., Sz_txy programmatically
+# ---------------------------------------------------------
+# (suffix, p, q, torder): derivative of order p in x, q in y, torder in t
+# (0 -> value, 1 -> first t-derivative, 2 -> second t-derivative)
+const _DERIV_SPECS = (
+    ("",      0, 0, 0),   # Sz itself
+    ("_x",    1, 0, 0),
+    ("_xx",   2, 0, 0),
+    ("_xxx",  3, 0, 0),
+    ("_xxxx", 4, 0, 0),
+    ("_y",    0, 1, 0),
+    ("_yy",   0, 2, 0),
+    ("_yyy",  0, 3, 0),
+    ("_yyyy", 0, 4, 0),
+    ("_xy",   1, 1, 0),
+    ("_xxy",  2, 1, 0),
+    ("_xyy",  1, 2, 0),
+    ("_xxyy", 2, 2, 0),
+    ("_t",    0, 0, 1),
+    ("_tt",   0, 0, 2),
+    ("_tx",   1, 0, 1),
+    ("_ty",   0, 1, 1),
+    ("_txx",  2, 0, 1),
+    ("_tyy",  0, 2, 1),
+    ("_txy",  1, 1, 1),
+)
+
+# d^n/du^n cos(u) cycles through cos, -sin, -cos, sin as n mod 4 = 0,1,2,3
+_trig_for(n::Int) = iseven(n) ? :cos : :sin
+_sign_for(n::Int) = (n % 4 == 1 || n % 4 == 2) ? -1 : 1
+
+# kx1[m]^p as an Expr, specialized at codegen time (p is a compile-time
+# constant per generated function, so 0/1 are special-cased to avoid an
+# unnecessary `^` call at runtime).
+_kpow_expr(sym::Symbol, n::Int) =
+    n == 0 ? :(one(T)) :
+    n == 1 ? :($sym[m]) :
+    :($sym[m]^$n)
+
+for (suffix, p, q, torder) in _DERIV_SPECS
+    fname   = Symbol("Sz", suffix)
+    n       = p + q
+    trig    = _trig_for(n)
+    signval = _sign_for(n)
+    wsyms   = torder == 0 ? (:w1, :w2) : torder == 1 ? (:dw1, :dw2) : (:d2w1, :d2w2)
+    isbase  = suffix == ""
+
+    kx1p = _kpow_expr(:kx1, p); ky1q = _kpow_expr(:ky1, q)
+    kx2p = _kpow_expr(:kx2, p); ky2q = _kpow_expr(:ky2, q)
+
+    @eval begin
+        @inline function $fname(x, y, RS::NewQuinticRandomFourierSequence{T}, tw::TimeWeights{T}) where {T}
+            i1 = mod(tw.step, RS.MM) + 1
+            i2 = mod(tw.step + 1, RS.MM) + 1
+
+            @views kx1 = RS.kx_scaled[:, i1]
+            @views ky1 = RS.ky_scaled[:, i1]
+            @views kx2 = RS.kx_scaled[:, i2]
+            @views ky2 = RS.ky_scaled[:, i2]
+            @views c1v = RS.C[:, i1]
+            @views c2v = RS.C[:, i2]
+            @views p1v = RS.phi[:, i1]
+            @views p2v = RS.phi[:, i2]
+
+            # Outer boundary check, evaluated once (not per mode): during
+            # the very first interval (step == 0) buffer i1's amplitude
+            # contributes nothing, so the field fades in from flat rather
+            # than crossfading from a nonexistent "buffer -1".
+            gate1 = tw.step == 0 ? zero(T) : one(T)
+
+            wA = getfield(tw, $(QuoteNode(wsyms[1])))
+            wB = getfield(tw, $(QuoteNode(wsyms[2])))
+
+            val = zero(T)
+            @inbounds @simd for m in 1:RS.M
+                u1 = kx1[m]*x + ky1[m]*y + p1v[m]
+                u2 = kx2[m]*x + ky2[m]*y + p2v[m]
+                f1 = c1v[m] * gate1 * $signval * $(trig)(u1) * $kx1p * $ky1q
+                f2 = c2v[m] *         $signval * $(trig)(u2) * $kx2p * $ky2q
+                val += wA * f1 + wB * f2
+            end
+
+            return $(isbase ? :(one(T) + RS.A * val) : :(RS.A * val))
+        end
+
+        # Convenience overload matching the original (t, x, y, RS) call
+        # signature — computes the time weights internally. Prefer the
+        # (x, y, RS, tw) form above when evaluating multiple functions
+        # or multiple points at the same t.
+        @inline $fname(t, x, y, RS::NewQuinticRandomFourierSequence{T}) where {T} =
+            $fname(x, y, RS, sync_buffer(RS, t))
+    end
+end
+
+
 # ---------------------------------------------------------
 # STRUCTURE: Order matched to RandomFourierSequence
 # ---------------------------------------------------------
