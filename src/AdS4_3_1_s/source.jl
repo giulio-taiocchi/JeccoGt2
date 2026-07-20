@@ -386,8 +386,95 @@ end
 using Random
 using LinearAlgebra
 
+# `Source` is assumed to be defined by the surrounding project, as in the
+# original file. If this file is used standalone, uncomment the next line:
+# abstract type Source end
+
+# -----------------------------------------------------------------------
+# NewQuinticRandomFourierSequence
+#
+# A time-varying random Fourier surface built by crossfading between MM
+# "buffers", each an independent random superposition of M plane waves
+# with random wavevectors, random unit-norm amplitudes, and random
+# phases. Consecutive buffers are blended in time using a quintic
+# (C2-smooth) ease curve, so the field, its velocity, and its
+# acceleration are all continuous across buffer boundaries.
+#
+# Design decisions, and why each one was (or wasn't) made:
+#
+#   * Storage: kx, ky, kx_scaled, ky_scaled, C, phi are (M x MM)
+#     `Matrix{T}` rather than `Vector{Vector{T}}`. Column b holds
+#     buffer b's data contiguously (column-major layout) instead of
+#     M separate heap-allocated small vectors per buffer. Clear win,
+#     no real downside — kept.
+#
+#   * `@views` on every column slice, to avoid allocating a copy per
+#     call. Clear win, no downside — kept.
+#
+#   * `zero(T)` instead of bare `0.0` literals in the hot loop. This
+#     is a real bug fix, not just style: a `Float64` literal forces
+#     every arithmetic op that touches it to promote, which silently
+#     defeats both SIMD width and memory bandwidth if T is Float32.
+#     Kept throughout.
+#
+#   * Immutable struct + pure `sync_buffer`, returning a `TimeWeights`
+#     value instead of caching state in mutable fields. The old mutable
+#     design had a real correctness hazard: calling any Sz* function
+#     concurrently on the same instance (e.g. a parallel grid
+#     evaluation) would race on the cached step/weight fields. Worth
+#     the change on correctness grounds alone.
+#
+#     The tradeoff: the old design cached weights across repeated calls
+#     at the same t, so e.g. Sz(t,x,y) then Sz_x(t,x,y) only paid for
+#     the quintic/trig computation once. A pure sync_buffer can't do
+#     that by itself. To avoid losing that, every Sz* function has two
+#     methods:
+#         Sz_x(x, y, RS, tw)   -- core; pass a pre-computed TimeWeights
+#         Sz_x(t, x, y, RS)    -- convenience; computes tw internally
+#     For grids / multiple derivative orders at the same t, compute
+#     `tw = sync_buffer(RS, t)` once and use the (x, y, RS, tw) form —
+#     that's the form that actually recovers the old caching benefit,
+#     safely, since tw is just a plain immutable value now instead of
+#     shared mutable state. The (t, x, y, RS) convenience form is fine
+#     for one-off evaluations but recomputes tw every call; don't use
+#     it in a hot loop over many points at fixed t.
+#
+#   * Codegen for the 20 Sz* functions. For c*cos(kx*x+ky*y+phi), the
+#     derivative of order p in x and q in y is:
+#         d^(p+q)/(dx^p dy^q) [c*cos(u)] = c * kx^p * ky^q * cos(u + (p+q)*pi/2)
+#     and cos(u + n*pi/2) cycles through {cos(u),-sin(u),-cos(u),sin(u)}
+#     as n mod 4 = {0,1,2,3}. Generating all 20 functions from this one
+#     rule removes ~250 lines of copy-pasted, easy-to-typo boilerplate
+#     and the class of bug where one function gets hand-edited but a
+#     sibling doesn't. The real cost is debuggability — stack traces
+#     point into generated code, and a reader has to know the mod-4
+#     trig-cycling trick instead of reading each derivative off the
+#     page directly. For a small, fixed set of derivatives like this
+#     (unlikely to grow or change shape often), that trade is worth it;
+#     if this were a set that different contributors edit piecemeal
+#     over time, hand-written functions would probably be easier to
+#     live with despite the duplication.
+#
+#   * Branch hoisted out of the hot loop: the old
+#     `RS.step == 0 ? zero(T) : C[i1][m]` ternary lived inside the
+#     per-mode loop. It's now a single `gate1` scalar (0 or 1) computed
+#     once outside the loop and multiplied in. The original's redundant
+#     `p1` special-case (which only mattered when already multiplied by
+#     zero) is dropped.
+#
+#   * @inbounds @simd, NOT @turbo/LoopVectorization. This was
+#     deliberately reverted from an earlier draft. LoopVectorization is
+#     a heavy dependency with real compile-time cost, its transcendental
+#     functions (cos/sin here) go through lower-precision approximations
+#     than libm, and it wasn't validated against this exact loop shape.
+#     Nothing here was profiled to show @inbounds @simd is actually the
+#     bottleneck — reach for @turbo later, backed by a benchmark on your
+#     real workload, not preemptively.
+# -----------------------------------------------------------------------
 
 struct NewQuinticRandomFourierSequence{T} <: Source
+    time::T         # kept for compatibility with external code that reads RS.time;
+                    # unused internally (sync_buffer takes t as an argument, not RS.time)
     MM::Int
     M::Int
     delta::T
@@ -447,7 +534,7 @@ function NewQuinticRandomFourierSequence(; MM, M, delta=1.0, L=1.0, kradius=1.0,
     end
 
     return NewQuinticRandomFourierSequence{T}(
-        MM, M, T(delta), T(L), T(kradius), T(A), T(width),
+        zero(T), MM, M, T(delta), T(L), T(kradius), T(A), T(width),
         kx, ky, kx_scaled, ky_scaled, C, phi
     )
 end
@@ -578,6 +665,9 @@ for (suffix, p, q, torder) in _DERIV_SPECS
             $fname(x, y, RS, sync_buffer(RS, t))
     end
 end
+
+
+
 
 
 # ---------------------------------------------------------
